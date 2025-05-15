@@ -138,6 +138,69 @@
                     </div>
                 </div>
             </div>
+            <div id="companies" position="after">
+                <h2>Evolution API Credentials For Whatsapp</h2>
+                <div class="row mt16 o_settings_container">
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <field name="evolution_api_enabled"
+                                           class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label string="Evolution Api Whatsapp Enabled"
+                                   for="evolution_api_enabled"/>
+                            <div class="text-muted">
+                               Evolution Api Whatsapp Enabled
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_right_pane">
+                            <label string="URL base"
+                                   for="evolution_base_url"/>
+                            <div class="text-muted">URL base for Evolution API
+                            </div>
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <field name="evolution_base_url"
+                                           class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_right_pane">
+                            <label string="Evolution URL apikey"
+                                   for="whatsapp_business"/>
+                            <div class="text-muted">URL apiKey                                
+                            </div>
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <field name="evolution_apikey"
+                                           class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_right_pane">
+                            <label string="Evolution Instance"
+                                   for="evolution_instance"/>
+                            <div class="text-muted">Evolution Instance</div>
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <field name="evolution_instance"
+                                           class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </field>
     </record>
 </odoo>

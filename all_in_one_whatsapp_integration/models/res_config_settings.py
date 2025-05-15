@@ -61,3 +61,23 @@ class ResConfigSettings(models.TransientModel):
                                 config_parameter='all_in_one_whatsapp_integration'
                                                    '.cloud_api_enabled',
                                 help="Enabled Whatsapp twilio account")
+    
+    evolution_api_enabled = fields.Boolean(string="Evolution API whatsapp Enabled",
+                                config_parameter='all_in_one_whatsapp_integration'
+                                                   '.evolution_api_enabled',
+                                help="Enabled API Evoution For Whatsapp")
+    
+    evolution_base_url = fields.Char(string="Url base",
+                              help="Url base for Evolution API",
+                              config_parameter='all_in_one_whatsapp_integration.'
+                                               'evolution_base_url',)
+    
+    evolution_instance = fields.Char(string="Instance",
+                              help="Instance for Evolution API",
+                              config_parameter='all_in_one_whatsapp_integration.'
+                                               'evolution_instance',)
+
+    evolution_apikey = fields.Char(string="apiKey",
+                              help="URL apikey for Evolution API",
+                              config_parameter='all_in_one_whatsapp_integration.'
+                                               'evolution_apikey',)                                

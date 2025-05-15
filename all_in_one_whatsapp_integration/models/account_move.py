@@ -56,8 +56,11 @@ class AccountMove(models.Model):
             [self.id], render_fields=['body_html'])
         body_html = mail_template_values[self.id].pop('body_html', '')
         whatsapp_message = html2text.html2text(body_html)
-        report = self.env['ir.actions.report']._render_qweb_pdf(
+        try:
+            report = self.env['ir.actions.report']._render_qweb_pdf(
             'account.account_invoices', self.id)
+        except Exception as e:
+            print(_('Error al generar el reporte PDF: %s') % str(e))
         report_attachment = self.env['ir.attachment'].sudo().create({
             'name': 'Invoice Report',
             'type': 'binary',

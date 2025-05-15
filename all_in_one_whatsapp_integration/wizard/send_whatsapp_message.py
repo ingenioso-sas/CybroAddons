@@ -20,10 +20,12 @@
 #
 ###############################################################################
 import requests
+import logging
 import urllib.parse as parse
 from twilio.rest import Client
 from odoo import fields, models
 
+_logger = logging.getLogger(__name__)
 
 class SendWhatsappMessage(models.TransientModel):
     """ This function helps to send a message to a user."""
@@ -36,10 +38,15 @@ class SendWhatsappMessage(models.TransientModel):
                     ("all_in_one_whatsapp_integration.twilio_enabled"))
         cloud_api_enabled = (self.env["ir.config_parameter"].sudo().get_param
                     ("all_in_one_whatsapp_integration.cloud_api_enabled"))
+        evolution_api_enabled = (self.env["ir.config_parameter"].sudo().get_param
+                    ("all_in_one_whatsapp_integration.evolution_api_enabled"))
         if(twilio_whatsapp_enabled):
             options.append(('twilio', 'Twilio'))
         if(cloud_api_enabled):
             options.append(('cloud', 'Cloud WhatsApp'))
+        if(evolution_api_enabled):
+            options.append(('evolution', 'Evolution WhatsApp'))
+
 
         return options
 
@@ -149,4 +156,41 @@ class SendWhatsappMessage(models.TransientModel):
                 json=payload,
                 headers=headers
             )
+            return response
+        elif self.send_mode == 'evolution':
+            if " " in number:            
+                number = number.replace(" ", "").replace("+","")
+            evolution_base_url = self.env['ir.config_parameter'].sudo().get_param(
+                'all_in_one_whatsapp_integration.evolution_base_url')
+            evolution_instance = self.env['ir.config_parameter'].sudo().get_param(
+                'all_in_one_whatsapp_integration.evolution_instance')
+            evolution_apikey = self.env['ir.config_parameter'].sudo().get_param(
+                'all_in_one_whatsapp_integration.evolution_apikey')
+            url = f"{evolution_base_url}/message/sendText/{evolution_instance}"
+
+            payload = {
+                "number": number,
+                "options":{
+                    "delay":1200,
+                    "presence": "composing",
+                    "linkPreview": False
+                },
+                "textMessage":{
+                    "text": self.whatsapp_message
+                }              
+            }
+            headers = {
+                'Content-Type': 'application/json',
+                'apikey': evolution_apikey
+            }
+
+            try:
+                response = requests.post(url, json=payload, headers=headers)
+                if response.status_code == 200:
+                    _logger.info(f"Mensaje WhatsApp enviado correctamente a {self.sale_user_id.name}: {response.text}")
+                else:
+                    _logger.error(f"Error al enviar mensaje a {self.sale_user_id.name}: {response.status_code} {response.text}")
+            except Exception as e:
+                _logger.exception(f"Error al conectar con Evolution API: {e}")
+
             return response
