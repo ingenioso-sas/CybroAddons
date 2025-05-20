@@ -20,6 +20,7 @@
 #
 #############################################################################
 from odoo import fields, models
+from odoo.addons.all_in_one_whatsapp_integration.wizard.whatsapp_mode_message import WhatsappModeMessage
 
 
 class WhatsappSendMessage(models.TransientModel):
@@ -31,19 +32,23 @@ class WhatsappSendMessage(models.TransientModel):
     mobile = fields.Char(related='user_id.mobile', required=True)
     message = fields.Text(string="Message", required=True)
 
-    def action_send_message(self):
-        """This method is called to send the WhatsApp message using the
-         provided details."""
-        if self.message and self.mobile:
-            message_string = ''
-            message = self.message.split(' ')
-            for msg in message:
-                message_string = message_string + msg + '%20'
-            message_string = message_string[:(len(message_string) - 3)]
-            return {
-                'type': 'ir.actions.act_url',
-                'url': "https://api.whatsapp.com/send?phone=" +
-                       self.user_id.mobile + "&text=" + message_string,
-                'target': 'new',
-                'res_id': self.id,
-            }
+    def action_send_message(self):        
+        whatsapp_message_mode = WhatsappModeMessage(self.env)
+        return whatsapp_message_mode.action_send_custom_message(self.mobile,self.message)
+
+    # def action_send_message(self):
+    #     """This method is called to send the WhatsApp message using the
+    #      provided details."""
+    #     if self.message and self.mobile:
+    #         message_string = ''
+    #         message = self.message.split(' ')
+    #         for msg in message:
+    #             message_string = message_string + msg + '%20'
+    #         message_string = message_string[:(len(message_string) - 3)]
+    #         return {
+    #             'type': 'ir.actions.act_url',
+    #             'url': "https://api.whatsapp.com/send?phone=" +
+    #                    self.user_id.mobile + "&text=" + message_string,
+    #             'target': 'new',
+    #             'res_id': self.id,
+    #         }
