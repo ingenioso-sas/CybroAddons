@@ -39,15 +39,45 @@ class Website(models.Model):
             change its currency into customers currency """
         res = super()._get_current_pricelist()
         default = self.env['product.pricelist'].search([])
-        if res in default:
-            datas = self.get_user_location()
-            if datas:
-                country = CountryInfo(datas['country'])
-                currency = country.currencies()
-                currency_dict = self.env['res.currency'].sudo().search([
-                    ('name', '=', currency[0]),
-                    ('active', 'in', [True, False])])
-                if currency_dict:
-                    currency_dict.active = True
-                    res.currency_id = currency_dict
+        public = self.env.ref('base.public_user').id
+        if public!=self.env.user.id:
+            if res in default:
+                datas = self.get_user_location()
+                if datas:
+                    country = CountryInfo(datas['country'])
+                    currency = country.currencies()
+                    currency_dict = self.env['res.currency'].sudo().search([
+                        ('name', '=', currency[0]),
+                        ('active', 'in', [True, False])])
+                    if currency_dict:
+                        currency_dict.active = True
+                        res.currency_id = currency_dict
+        else:
+            response = requests.get("https://api.ipify.org?format=json")
+            if response.status_code == 200:
+                data = response.json()
+                user_ip = data.get("ip")
+                response = requests.get(
+                    f'http://ip-api.com/json/{user_ip}',
+                    timeout=20).json()
+                if response.get("country"):
+                    country = CountryInfo(response.get("country"))
+                    currency = country.currencies()
+                    currency_dict = self.env['res.currency'].sudo().search([
+                        ('name', '=', currency[0]),
+                        ('active', 'in', [True, False])])
+                    if currency_dict:
+                        currency_dict.active = True
+                        res.currency_id = currency_dict
+                    lang = country.languages()
+                    language = self.env['res.lang'].sudo().search([
+                        ('iso_code', '=', lang[0]),
+                        ('active', 'in', [True, False])])
+                    if language:
+                        language.active = True
+                        web=self.env['website'].sudo().browse(self.id
+                                                             )
+                        web.sudo().write({
+                            'language_ids':[(4, language.id)],
+                        })
         return res

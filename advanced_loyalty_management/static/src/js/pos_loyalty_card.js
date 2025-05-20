@@ -1,5 +1,5 @@
 /** @odoo-module **/
-
+import { _t } from "@web/core/l10n/translation";
 import { patch } from "@web/core/utils/patch";
 import { Order } from "@point_of_sale/app/store/models";
 import { roundPrecision as round_pr } from "@web/core/utils/numbers";
@@ -39,7 +39,11 @@ patch(Order.prototype,{
         const discountProduct = reward.discount_line_product_id;
         const rewardCode = _newRandomRewardCode();
         const points = this._getRealCouponPoints(args["coupon_id"])
-        const cost = reward.clear_wallet ? points :reward.pointsToRedeem
+        const cost = reward.clear_wallet ? this._getRealCouponPoints(args["coupon_id"]) :reward.pointsToRedeem
+        if (!discount || discount <= 0) {
+        console.error("Invalid redemption discount:", { reward });
+        return [];
+    }
         return[
         {
             product: discountProduct,

@@ -2,7 +2,7 @@
     :target: https://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 
-MRP Order from Multiple Sale Order
+MRP ORDER FROM MULTIPLE SALE ORDER
 ==================================
 This module allows users to Create MRP order by selecting multiple sale orders in the sales module.
 

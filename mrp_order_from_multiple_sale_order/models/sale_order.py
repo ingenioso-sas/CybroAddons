@@ -31,9 +31,9 @@ class SaleOrder(models.Model):
     mrp_count = fields.Integer(compute='_compute_mrp_count',
                                string="MRP Count",
                                help="Get total count of mrp order")
-    mrp_production_ids = fields.Many2many("mrp.production",
-                                          string="MRP Orders",
-                                          help="Get MRP order in sale order")
+    mrp_order_ids = fields.Many2many("mrp.production",
+                                      string="MRP Orders",
+                                      help="Get MRP order in sale order")
 
     def _compute_mrp_count(self):
         """Compute function for getting total count of manufacturing order
@@ -46,7 +46,7 @@ class SaleOrder(models.Model):
         """Button action for generating Manufacturing Orders while
         selecting Sale Orders."""
         for order in self:
-            if order.mrp_production_ids:
+            if order.mrp_order_ids:
                 raise ValidationError(
                     "The sale order has already a manufacturing order.!")
             if order.state == "draft":
@@ -57,7 +57,7 @@ class SaleOrder(models.Model):
                             'product_id': line.product_id.id,
                             'sale_order_id': order.id,
                         })
-                order.mrp_production_ids = self.env['mrp.production'].search(
+                order.mrp_order_ids = self.env['mrp.production'].search(
                     [('sale_order_id', '=', order.id)])
             else:
                 raise ValidationError("Choose the draft sale order.!")

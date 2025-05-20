@@ -21,3 +21,19 @@
 #### Version 17.0.1.0.4
 #### BUG FIX
 - Fix the issue - Floor and Time is not showing in the kitchen display.
+
+#### 01.03.2025
+#### Version 17.0.1.1.4
+#### UPDT
+- UPDT - Added a new feature that automatically removes kitchen screen orders
+  when the session is closed.
+
+#### 29.03.2025
+#### Version 17.0.1.1.4
+#### ADD
+- ADD - Created a new i18n translation folder and portuguese PO file added inside the i18n translation folder.
+
+#### 19.04.2025
+#### Version 17.0.1.1.5
+#### BUG FIX
+- Fix the issue - Send button is activated again with negative numbers.

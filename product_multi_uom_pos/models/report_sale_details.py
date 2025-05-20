@@ -221,6 +221,7 @@ class ReportSaleDetails(models.AbstractModel):
         products = []
         refund_products = []
         for category_name, product_list in products_sold.items():
+            print("product_list.items()",product_list.items())
             category_dictionnary = {
                 'name': category_name,
                 'products': sorted([{
@@ -235,6 +236,7 @@ class ReportSaleDetails(models.AbstractModel):
                     'base_amount': base_amount,
                 } for (product, price_unit, discount, uom), (qty, product_total, base_amount, uom) in product_list.items()], key=lambda l: l['product_name']),
             }
+
             products.append(category_dictionnary)
         products = sorted(products, key=lambda l: str(l['name']))
 
@@ -248,10 +250,10 @@ class ReportSaleDetails(models.AbstractModel):
                     'quantity': qty,
                     'price_unit': price_unit,
                     'discount': discount,
-                    'uom': product.uom_id.name,
+                    'uom': uom,
                     'total_paid': product_total,
                     'base_amount': base_amount,
-                } for (product, price_unit, discount), (qty, product_total, base_amount) in product_list.items()], key=lambda l: l['product_name']),
+                } for (product, price_unit, discount,uom), (qty, product_total, base_amount,uom) in product_list.items()], key=lambda l: l['product_name']),
             }
             refund_products.append(category_dictionnary)
         refund_products = sorted(refund_products, key=lambda l: str(l['name']))
@@ -291,6 +293,8 @@ class ReportSaleDetails(models.AbstractModel):
                 'invoices': session._get_invoice_total_list(),
             })
             invoiceTotal += session._get_total_invoice()
+        print('refund_info',refund_products)
+        print('products_info',products)
 
         return {
             'opening_note': sessions[0].opening_notes if len(sessions) == 1 else False,
@@ -329,33 +333,28 @@ class ReportSaleDetails(models.AbstractModel):
         for key1 in keys1:
             products.setdefault(key1, {})
             products[key1].setdefault(key2, [0.0, 0.0, 0.0, line.uom_id.name])  # Add UOM to the product data
-
             # Add quantities and amounts
             products[key1][key2][0] += line.qty
             products[key1][key2][1] += line.currency_id.round(
                 line.price_unit * line.qty * (100 - line.discount) / 100.0)
             products[key1][key2][2] += line.price_subtotal
             # UOM is already stored in [3] (as line.uom_id.name)
-
         # Calculate taxes if applicable
         if line.tax_ids_after_fiscal_position:
             line_taxes = line.tax_ids_after_fiscal_position.sudo().compute_all(
                 line.price_unit * (1 - (line.discount or 0.0) / 100.0), currency, line.qty,
                 product=line.product_id, partner=line.order_id.partner_id or False
             )
-
             # Store tax amounts and base amounts
             base_amounts = {}
             for tax in line_taxes['taxes']:
                 taxes.setdefault(tax['id'], {'name': tax['name'], 'tax_amount': 0.0, 'base_amount': 0.0})
                 taxes[tax['id']]['tax_amount'] += tax['amount']
                 base_amounts[tax['id']] = tax['base']
-
             # Add base amounts to taxes
             for tax_id, base_amount in base_amounts.items():
                 taxes[tax_id]['base_amount'] += base_amount
         else:
             taxes.setdefault(0, {'name': _('No Taxes'), 'tax_amount': 0.0, 'base_amount': 0.0})
             taxes[0]['base_amount'] += line.price_subtotal_incl
-
         return products, taxes

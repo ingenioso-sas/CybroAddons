@@ -21,7 +21,7 @@
 #############################################################################
 {
     'name': 'Website Geolocation Based Language and Currency',
-    'version': '17.0.1.0.0',
+    'version': '17.0.1.1.1',
     'category': 'eCommerce, Productivity',
     'summary': """Website Geolocation Based Language and Currency Application
      for Odoo 17""",

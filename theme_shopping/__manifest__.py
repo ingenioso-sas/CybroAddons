@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': 'Theme Shopping',
-    'version': '17.0.1.0.0',
+    'version': '17.0.1.0.1',
     'category': 'Theme/eCommerce',
     'summary': "Theme Shopping is an attractive and modern eCommerce Website "
                "theme",
@@ -37,6 +37,7 @@
                 'website_sale_comparison', 'website_mass_mailing'],
     'data': [
         'views/header_templates.xml',
+        'views/homepage.xml',
         'views/footer_templates.xml',
         'views/about_us_views.xml',
         'views/blog_templates.xml',

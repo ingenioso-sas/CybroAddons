@@ -45,3 +45,9 @@
 #### Version 17.0.3.1.5
 ##### UPDATE
 - Updated the tracking number to custom receipt screen and fixed the issues when tip is enabled. 
+
+#### 27.01.2025
+#### Version 17.0.3.1.6
+#### BUGFIX
+
+- Fixed the issue of not getting customer data in props.
