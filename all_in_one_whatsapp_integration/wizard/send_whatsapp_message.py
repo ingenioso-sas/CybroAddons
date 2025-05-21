@@ -21,6 +21,7 @@
 ###############################################################################
 import requests
 import logging
+import base64
 import urllib.parse as parse
 from twilio.rest import Client
 from odoo import fields, models
@@ -160,41 +161,8 @@ class SendWhatsappMessage(models.TransientModel):
             return response
         elif self.send_mode == 'evolution':
             whatsapp_message_mode = WhatsappModeMessage(self.env)
-            return whatsapp_message_mode.action_send_custom_message(number,self.whatsapp_message)
-            #return whatsapp_message_mode.action_send_PDF_document_url_message(number,"invoicereport",self.whatsapp_message,  "https://evolution-api.com/files/evolution-api.pdf")
-            # if " " in number:            
-            #     number = number.replace(" ", "").replace("+","")
-            # evolution_base_url = self.env['ir.config_parameter'].sudo().get_param(
-            #     'all_in_one_whatsapp_integration.evolution_base_url')
-            # evolution_instance = self.env['ir.config_parameter'].sudo().get_param(
-            #     'all_in_one_whatsapp_integration.evolution_instance')
-            # evolution_apikey = self.env['ir.config_parameter'].sudo().get_param(
-            #     'all_in_one_whatsapp_integration.evolution_apikey')
-            # url = f"{evolution_base_url}/message/sendText/{evolution_instance}"
-
-            # payload = {
-            #     "number": number,
-            #     "options":{
-            #         "delay":1200,
-            #         "presence": "composing",
-            #         "linkPreview": False
-            #     },
-            #     "textMessage":{
-            #         "text": self.whatsapp_message
-            #     }              
-            # }
-            # headers = {
-            #     'Content-Type': 'application/json',
-            #     'apikey': evolution_apikey
-            # }
-            # response = None 
-            # try:
-            #     response = requests.post(url, json=payload, headers=headers)
-            #     if response.status_code == 200:
-            #         _logger.info(f"Mensaje WhatsApp enviado correctamente a {self.sale_user_id.name}: {response.text}")
-            #     else:
-            #         _logger.error(f"Error al enviar mensaje a {self.sale_user_id.name}: {response.status_code} {response.text}")
-            # except Exception as e:
-            #     _logger.exception(f"Error al conectar con Evolution API: {e}")
-
-            # return response
+            #return whatsapp_message_mode.action_send_custom_message(number,self.whatsapp_message)
+            contenido_binario = base64.b64decode(attachment.datas, validate=True)
+            base64_limpio = base64.b64encode(contenido_binario).decode('utf-8')
+            return whatsapp_message_mode.action_send_attachment_document_message(number, f"{attachment.display_name}.pdf", self.whatsapp_message, base64_limpio)
+            
