@@ -12,3 +12,9 @@
 
 - The Key word is replaced from the index , manifest and controllers.
 
+#### 29.10.2024
+#### Version 17.0.1.1.1
+#### BUG FIX
+
+- Fixed the bug when logging in as public user
+

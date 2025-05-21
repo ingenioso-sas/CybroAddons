@@ -9,6 +9,7 @@
         <xpath expr="//div[@id='o_wblog_blog_top']"
                position="replace">
             <section class="st-hero_section-banner">
+                <div class="oe_structure"/>
                 <div class="container st-hero_section-content">
                     <h3 class="st-hero_section-banner--head">Blog</h3>
                 </div>

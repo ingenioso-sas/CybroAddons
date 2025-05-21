@@ -31,3 +31,9 @@
 #### Version 17.0.1.0.3
 ##### Update
 - Solved the issue occurred during the refund ,made changes in orderline
+
+
+#### 13.01.2025
+#### Version 17.0.1.0.4
+##### BUG FIX
+- Solved the issue sale details report

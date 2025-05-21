@@ -29,7 +29,7 @@
         Sale Order tree view for displays MRP Orders.-->
         <field name="arch" type="xml">
             <xpath expr="//field[@name='team_id']" position="after">
-                <field name="mrp_production_ids" widget="many2many_tags"/>
+                <field name="mrp_order_ids" widget="many2many_tags"/>
             </xpath>
         </field>
     </record>
@@ -43,7 +43,7 @@
         Quotation tree view for displays MRP Orders.-->
         <field name="arch" type="xml">
             <xpath expr="//field[@name='tag_ids']" position="after">
-                <field name="mrp_production_ids" widget="many2many_tags"/>
+                <field name="mrp_order_ids" widget="many2many_tags"/>
             </xpath>
         </field>
     </record>

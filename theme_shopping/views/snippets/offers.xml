@@ -15,45 +15,47 @@
         It includes member images, names, and roles. The template follows a responsive design,
         utilizing container elements and CSS classes for proper alignment and styling.
         It offers a visually appealing and organized representation of the team members. -->
-        <section class="container offer_snippet" style="margin-bottom: 35px;">
-            <div class="owl-carousel owl-carosel-hero"
-                 id="offer_product_carousel">
-                <div class="st-hero_section item">
-                    <h3 class="st-hero__headline">Explore Our New Fashion Sale
-                    </h3>
-                    <a t-attf-href="/shop">
-                        <button class="btn st-btn__sm">Shop Now</button>
-                    </a>
-                    <div class="st-hero__img ">
-                        <img src="/theme_shopping/static/src/images/hero-img.jpg"
-                             alt="" class="st-auto-image"/>
+<!--        <div id="wrap" class="oe_structure oe_empty o_editable">-->
+            <section class="container offer_snippet" style="margin-bottom: 35px;">
+                <div class="owl-carousel owl-carosel-hero"
+                     id="offer_product_carousel">
+                    <div class="st-hero_section item">
+                        <h3 class="st-hero__headline">Explore Our New Fashion Sale
+                        </h3>
+                        <a href="/shop">
+                            <button class="btn st-btn__sm">Shop Now</button>
+                        </a>
+                        <div class="st-hero__img ">
+                            <img src="/theme_shopping/static/src/images/hero-img.jpg"
+                                 alt="" class="st-auto-image"/>
+                        </div>
                     </div>
-                </div>
-                <div class="st-hero_section item">
-                    <h3 class="st-hero__headline">Explore Our New Fashion Sale
-                    </h3>
-                    <a t-attf-href="/shop">
-                        <button class="btn st-btn__sm">Shop Now</button>
-                    </a>
+                    <div class="st-hero_section item">
+                        <h3 class="st-hero__headline">Explore Our New Fashion Sale
+                        </h3>
+                        <a href="/shop">
+                            <button class="btn st-btn__sm">Shop Now</button>
+                        </a>
 
-                    <div class="st-hero__img">
-                        <img src="/theme_shopping/static/src/images/hero-img.jpg"
-                             alt="" class="st-auto-image"/>
+                        <div class="st-hero__img">
+                            <img src="/theme_shopping/static/src/images/hero-img.jpg"
+                                 alt="" class="st-auto-image"/>
+                        </div>
                     </div>
-                </div>
-                <div class="st-hero_section item">
-                    <h3 class="st-hero__headline">Explore Our New Fashion Sale
-                    </h3>
-                    <a t-attf-href="/shop">
-                        <button class="btn st-btn__sm">Shop Now</button>
-                    </a>
+                    <div class="st-hero_section item">
+                        <h3 class="st-hero__headline">Explore Our New Fashion Sale
+                        </h3>
+                        <a href="/shop">
+                            <button class="btn st-btn__sm">Shop Now</button>
+                        </a>
 
-                    <div class="st-hero__img">
-                        <img src="/theme_shopping/static/src/images/hero-img.jpg"
-                             alt="" class="st-auto-image"/>
+                        <div class="st-hero__img">
+                            <img src="/theme_shopping/static/src/images/hero-img.jpg"
+                                 alt="" class="st-auto-image"/>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+<!--        </div>-->
     </template>
 </odoo>

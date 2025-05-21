@@ -14,6 +14,7 @@
         utilizing container elements and CSS classes for proper alignment and styling.
         It offers a visually appealing and organized representation of the team members. -->
         <section class="st-secondary_wrapper">
+            <div class="oe_structure"/>
             <div class="container ">
                 <div class="row py-4">
                     <div class="col-12 col-md-4 my-md-5">

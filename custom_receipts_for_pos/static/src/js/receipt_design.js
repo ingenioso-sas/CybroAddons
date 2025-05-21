@@ -13,14 +13,17 @@ patch(OrderReceipt.prototype, {
         this.pos = useState(useService("pos"));
     },
     get templateProps() {
+        const order = this.pos.get_order();
+        const partner = order ? order.get_partner() : null;
 
         return {
             pos:this.pos,
             data: this.props.data,
-            order: this.pos.orders,
+            order: order,
             receipt:this.props.data,
             orderlines:this.props.data.orderlines,
-            paymentlines:this.props.data.paymentlines
+            paymentlines:this.props.data.paymentlines,
+            partner: partner,
         };
     },
     get templateComponent() {

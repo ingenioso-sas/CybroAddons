@@ -20,8 +20,8 @@
 #
 ###############################################################################
 {
-    'name': "MRP Order from Multiple Sale Order",
-    'version': '17.0.1.0.0',
+    'name': "MRP ORDER FROM MULTIPLE SALE ORDER",
+    'version': '17.0.1.0.1',
     'category': 'Sales',
     'summary': """Create MRP Order by choosing multiple Sale Order.""",
     'description': 'This module allows users to Create MRP order by selecting '

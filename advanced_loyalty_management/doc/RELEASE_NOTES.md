@@ -10,3 +10,8 @@
 #### Version 17.0.1.0.1
 #### ADD
 - BUG FIX
+
+#### 08.01.2025
+#### Version 17.0.1.0.2
+#### ADD
+- BUG FIX

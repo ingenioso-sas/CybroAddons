@@ -6,7 +6,7 @@
         <xpath expr="//div[hasclass('status-buttons')]//CashierName" position="before">
                 <div class="sale-order-button" t-on-click="onClick" style="margin-right:490px; ">
                     <i class="fa fa-hand-pointer-o" aria-hidden="true"/>
-                    <span style="padding-left: 10px;">Click And Collect</span>
+                    <span style="padding-left: 10px;">Click And Collects</span>
                 </div>
             </xpath>
          <xpath expr="//li[@t-if='showCashMoveButton']" position="after">

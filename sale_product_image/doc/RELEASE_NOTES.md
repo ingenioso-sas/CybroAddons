@@ -11,3 +11,9 @@
 ##### Bug fixes
 
 - Updated the image size in the report
+
+#### 10.12.2024
+#### Version 17.0.1.1.0
+##### Bug fixes
+
+- Updated the image in the portal sale orders

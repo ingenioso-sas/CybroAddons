@@ -13,36 +13,40 @@
         It includes member images, names, and roles. The template follows a responsive design,
         utilizing container elements and CSS classes for proper alignment and styling.
         It offers a visually appealing and organized representation of the team members. -->
-         <section class="st-secondary_wrapper">
-            <div class="container py-5">
-                <h3 class="st-abt__main--heading">Introducing our team members</h3>
-                <div class="row my-md-5">
-                    <div class=" col-6 col-md-3">
-                        <div class="st-aboutus_team-imgcontainer">
-                            <img src="/theme_shopping/static/src/images/team-member1.png" alt="team" class="st-auto-image img-fluid"/>
+            <section class="st-secondary_wrapper">
+                <div class="container py-5">
+                    <h3 class="st-abt__main--heading">Introducing our team members</h3>
+                    <div class="row my-md-5">
+                        <div class=" col-6 col-md-3">
+                            <div class="st-aboutus_team-imgcontainer">
+                                <img src="/theme_shopping/static/src/images/team-member1.png" alt="team"
+                                     class="st-auto-image img-fluid"/>
+                            </div>
+                            <span class="st-aboutus_light--text d-block ">Project Manager</span>
                         </div>
-                        <span class="st-aboutus_light--text d-block ">Project Manager</span>
-                    </div>
-                    <div class=" col-6 col-md-3">
-                        <div class="st-aboutus_team-imgcontainer">
-                            <img src="/theme_shopping/static/src/images/team-member2.png" alt="team" class="st-auto-image img-fluid"/>
+                        <div class=" col-6 col-md-3">
+                            <div class="st-aboutus_team-imgcontainer">
+                                <img src="/theme_shopping/static/src/images/team-member2.png" alt="team"
+                                     class="st-auto-image img-fluid"/>
+                            </div>
+                            <span class="st-aboutus_light--text d-block ">Marketing Manager</span>
                         </div>
-                        <span class="st-aboutus_light--text d-block ">Marketing Manager</span>
-                    </div>
-                    <div class=" col-6 col-md-3">
-                        <div class="st-aboutus_team-imgcontainer">
-                            <img src="/theme_shopping/static/src/images/team-member3.png" alt="team" class="st-auto-image img-fluid"/>
+                        <div class=" col-6 col-md-3">
+                            <div class="st-aboutus_team-imgcontainer">
+                                <img src="/theme_shopping/static/src/images/team-member3.png" alt="team"
+                                     class="st-auto-image img-fluid"/>
+                            </div>
+                            <span class="st-aboutus_light--text d-block ">Developer</span>
                         </div>
-                        <span class="st-aboutus_light--text d-block ">Developer</span>
-                    </div>
-                    <div class=" col-6 col-md-3">
-                        <div class="st-aboutus_team-imgcontainer">
-                            <img src="/theme_shopping/static/src/images/team-member4.png" alt="team" class="st-auto-image img-fluid"/>
+                        <div class=" col-6 col-md-3">
+                            <div class="st-aboutus_team-imgcontainer">
+                                <img src="/theme_shopping/static/src/images/team-member4.png" alt="team"
+                                     class="st-auto-image img-fluid"/>
+                            </div>
+                            <span class="st-aboutus_light--text d-block ">Designer</span>
                         </div>
-                        <span class="st-aboutus_light--text d-block ">Designer</span>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
     </template>
 </odoo>
