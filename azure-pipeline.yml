@@ -1,0 +1,44 @@
+parameters:
+  - name: pool_name
+    displayName: agent pool location
+    type: string
+    default: default
+
+resources:
+ repositories:
+   - repository: templates
+     name: 'proy_ing/pipeline_templates'
+     type: git
+     ref: refs/heads/feature/devops
+
+
+trigger:
+  branches:
+    include:
+     - 17.0
+  paths:
+    include:
+      - hide_cost_price/*
+      - dashboard_pos/*
+      - base_accounting_kit/*
+
+pool:
+  name: 'default'
+
+
+extends:
+  template: templates/azure-pipeline-odooapp.yml@templates
+  parameters:
+    sonarqube_project_key: '$(sonarqube_project_key)'
+    sonarqube_project_name: 'cybro-addons'
+    serviceConnection: sonarqube-connection
+    sonarUrl: $(sonarqube_url)
+    filter_version: "^13.0.[0-9\\.]+$"
+    pool_name: ${{parameters.pool_name}}
+    strategy_matrix:
+      - name: hide_cost_price
+        value: 'hide_cost_price'
+      - name: dashboard_pos
+        value: 'dashboard_pos'
+      - name: base_accounting_kit
+        value: 'base_accounting_kit'
