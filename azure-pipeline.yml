@@ -15,7 +15,7 @@ resources:
 trigger:
   branches:
     include:
-     - 17.0
+     - 13.0
   paths:
     include:
       - hide_cost_price/*
