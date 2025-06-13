@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Product Template Form View -->
+         <record model="ir.ui.view" id="product_form_hide_decimal_quantity">
+            <field name="name">product.template.form.hide_decimal_quantity</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="attributes">
+                    <attribute name="widget">float</attribute>
+                    <attribute name="digits" delete="1"/>
+                    </xpath>
+                    <xpath expr="//field[@name='order_line']/form//field[@name='product_uom_qty']" position="attributes">
+                    <attribute name="widget">float</attribute>
+                    <attribute name="digits" delete="1"/>
+                    </xpath>          
+            </field>
+        </record>
+        <!-- Product Variant Form View -->
+        <!-- <record model="ir.ui.view" id="product_variant_form_hide_update_quantity">
+            <field name="name">product.product.form.hide_update_quantity</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.product_form_view_procurement_button"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_update_quantity_on_hand']" position="attributes">
+                    <attribute name="groups">hide_update_product_quantity.view_product_quantity</attribute>
+                </xpath>               
+            </field>
+        </record> -->
+    </data>
+</odoo>   
