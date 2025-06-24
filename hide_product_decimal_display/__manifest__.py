@@ -6,10 +6,11 @@
     'company': 'IngeniosoSAS',
     'website': 'https://www.ingenioso.co',
     'category': 'Extra Tools',
-    'depends': ['sale', 'stock', 'base', 'product', 'purchase'],
+    'depends': ['sale', 'stock', 'base', 'product', 'purchase', 'sale_stock'],
     'data': [
         'views/sale_order_line.xml',
         'views/purchase_order_line.xml',
+        'views/product.xml',
         'data/decimal_precision.xml',
     ],
     'installable': True,
