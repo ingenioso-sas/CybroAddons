@@ -1,9 +1,9 @@
-Hide Product Cost Price v13
+Hide Update Product Quantity v13
 ===========================
 
-The cost price of the product will be only visible for the users added in the group "view cost price".
-If user is not there in the group, the cost price of the product will remain invisible for the user.
-By default administrator will be added to this group
+The ability to update product quantities directly from the product will only be available to users added to the "Update Product Quantity" group.
+If the user is not in the group, the product quantity cannot be updated this way.
+By default, the administrator will be added to this group.
 
 Depends
 =======
@@ -26,15 +26,15 @@ GNU AGPL, Version 3 (AGPLv3)
 Bug Tracker
 ===========
 
-Contact odoo@cybrosys.com
+Contact soporte@ingenioso.co
 
 Authors
 -------
-* Sonu Soman <sonu@cybrosys.info>
+* Ingenioso developers <soporte@ingenioso.co>
 
 Maintainer
 ----------
 
-This module is maintained by Cybrosys Technologies.
+This module is maintained by IngeniosoSAS.
 
-For support and more information, please visit https://www.cybrosys.com.
+For support and more information, please visit https://www.ingenioso.co.

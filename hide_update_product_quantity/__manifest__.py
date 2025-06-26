@@ -2,7 +2,7 @@
 {
     'name': 'Hide Update Product Quantity',
     'summary': """Hide Botton update Product quantity Will be Visible Only for Specified Group""",
-    'version': '13.0.1.0',
+    'version': '13.0.0.0',
     'description': """Hide Botton update Product quantity Will be Visible Only for Specified Group""",
     'author': 'IngeniosoSAS',
     'company': 'IngeniosoSAS',
