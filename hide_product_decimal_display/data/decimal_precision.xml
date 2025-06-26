@@ -1,0 +1,6 @@
+<odoo>
+    <record id="decimal_product_qty_display_only" model="decimal.precision">
+        <field name="name">Product Qty Display Only</field>
+        <field name="digits">0</field>
+    </record>
+</odoo>
