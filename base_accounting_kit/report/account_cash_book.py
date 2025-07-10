@@ -48,7 +48,8 @@ class ReportCashBook(models.AbstractModel):
             filters = init_filters.replace('account_move_line__move_id',
                                            'm').replace('account_move_line',
                                                         'l')
-            sql = ("""SELECT 0 AS lid, l.account_id AS account_id, '' AS ldate, '' AS lcode, 0.0 AS amount_currency, '' AS lref, 'Initial Balance' AS lname, COALESCE(SUM(l.debit),0.0) AS debit, COALESCE(SUM(l.credit),0.0) AS credit, COALESCE(SUM(l.debit),0) - COALESCE(SUM(l.credit), 0) as balance, '' AS lpartner_id,\
+            initial_balance_name = _("Initial Balance")
+            sql = ("""SELECT 0 AS lid, l.account_id AS account_id, '' AS ldate, '' AS lcode, 0.0 AS amount_currency, '' AS lref, %s AS lname, COALESCE(SUM(l.debit),0.0) AS debit, COALESCE(SUM(l.credit),0.0) AS credit, COALESCE(SUM(l.debit),0) - COALESCE(SUM(l.credit), 0) as balance, '' AS lpartner_id,\
                     '' AS move_name, '' AS mmove_id, '' AS currency_code,\
                     NULL AS currency_id,\
                     '' AS invoice_id, '' AS invoice_type, '' AS invoice_number,\
@@ -58,8 +59,8 @@ class ReportCashBook(models.AbstractModel):
                     LEFT JOIN res_currency c ON (l.currency_id=c.id)\
                     LEFT JOIN res_partner p ON (l.partner_id=p.id)\
                     JOIN account_journal j ON (l.journal_id=j.id)\
-                    WHERE l.account_id IN %s""" + filters + ' GROUP BY l.account_id')
-            params = (tuple(accounts.ids),) + tuple(init_where_params)
+                    WHERE l.account_id IN %s""" + filters + """ GROUP BY l.account_id""")
+            params = (initial_balance_name, tuple(accounts.ids),) + tuple(init_where_params)
             cr.execute(sql, params)
             for row in cr.dictfetchall():
                 move_lines[row.pop('account_id')].append(row)
