@@ -40,7 +40,7 @@ class WhatsappModeMessage:
 
         payload = {
             "number": number,
-            "options": extra_options,
+            "options": base_options,
         }
 
         if extra_sections:
@@ -69,27 +69,27 @@ class WhatsappModeMessage:
         number = self.clean_number(number)        
         type_msg = "sendText"
         url = self.build_URL(type_msg)    
-        #url = f"{self.evolution_base_url}/message/sendText/{self.evolution_instance}"
-        # base_options = {
-        #     "linkPreview": False
-        # }
-        # extra_sections = {
-        #     "textMessage":{
-        #             "text": whatsapp_message
-        #         }
-        # }
-        # payload = self.build_payload_whatsapp(number, base_options, extra_sections)
-        payload = {
-                "number": number,
-                "options":{
-                    "delay":1200,
-                    "presence": "composing",
-                    "linkPreview": False
-                },
-                "textMessage":{
+        url = f"{self.evolution_base_url}/message/sendText/{self.evolution_instance}"
+        base_options = {
+            "linkPreview": False
+        }
+        extra_sections = {
+            "textMessage":{
                     "text": whatsapp_message
                 }
-            }        
+        }
+        payload = self.build_payload_whatsapp(number, base_options, extra_sections)
+        # payload = {
+        #         "number": number,
+        #         "options":{
+        #             "delay":1200,
+        #             "presence": "composing",
+        #             "linkPreview": False
+        #         },
+        #         "textMessage":{
+        #             "text": whatsapp_message
+        #         }
+        #     }        
         return self.send_request_whatsapp(url,payload)
     
     def action_send_image_message(self, number, whatsapp_message, message_type_media):
