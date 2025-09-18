@@ -1,34 +1,34 @@
 odoo.define('pos_low_sales_price.validation', function (require) {
     'use strict';
 
-    var core = require('web.core');
-    var _t = core._t;
+    const core = require('web.core');
+    const _t = core._t;
 
-    var PaymentScreenWidget = require('point_of_sale.screens').PaymentScreenWidget;
+    const PaymentScreenWidget = require('point_of_sale.screens').PaymentScreenWidget;
 
-    var PosLowSalesPriceValidation = PaymentScreenWidget.include({
+    const PosLowSalesPriceValidation = PaymentScreenWidget.include({
         validate_order: function (force_validation) {
 
-            var product_list = [];
-            var order = this.pos.get_order();
-            var orderlines = order.get_orderlines();
+            const product_list = [];
+            const order = this.pos.get_order();
+            const orderlines = order.get_orderlines();
 
             // Validar force_validation
             if (!force_validation) {
                 // Validar si hay productos con precio de venta menor al costo
-                for (var i = 0; i < orderlines.length; i++) {
-                    var line = orderlines[i];
+                for (const item of orderlines) {
+                    const line = item;
                     if (line.product.lst_price < line.product.standard_price || line.price < line.product.standard_price) {
                         product_list.push("'" + line.product.display_name + "'");
                     }
                 }
             }
             if (product_list.length > 0) {
-                var content = '';
+                let content = '';
                 if (product_list.length === 1) {
                     content = _.str.sprintf(_t("The Sales Prices of %s are less than the Cost Price. Do you want to continue validation?"), product_list.join(','));
                 } else {
-                    var lastIndex = product_list.length - 1;
+                    const lastIndex = product_list.length - 1;
                     product_list[lastIndex] = _.str.sprintf(_t("and %s "), product_list[lastIndex]);
                     content = _.str.sprintf(_t("The Sales Prices of %s are less than the Cost Price. Do you want to continue validation?"), product_list.join(','));
                 }
@@ -44,7 +44,7 @@ odoo.define('pos_low_sales_price.validation', function (require) {
             }
         },
         _showConfirmationPopup(message) {
-            var self = this;
+            const self = this;
             self.gui.show_popup('confirm', {
                 'title': _t('Alert'),
                 'body': message,

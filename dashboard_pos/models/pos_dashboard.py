@@ -20,8 +20,8 @@
 #
 ###################################################################################
 import pytz
-from odoo import models, fields, api, _
-from datetime import timedelta, datetime, date
+from odoo import models, api, _
+from datetime import datetime, date
 
 
 class PosDashboard(models.Model):
@@ -93,10 +93,10 @@ class PosDashboard(models.Model):
        product_template on product_product.product_tmpl_id = product_template.id  where pos_order_line.company_id =''' + str(
                 company_id) + ''' group by product_template.id ORDER 
        BY total_quantity DESC Limit 10 ''')
-        selling_product = cr.fetchall()
+        # selling_product = cr.fetchall()
         sessions = self.env['pos.config'].search([])
         sessions_list = []
-        dict = {
+        dictSession = {
             'closing_control': _('Closed'),
             'opened': _('Opened'),
             'new_session': _('New Session'),
@@ -105,9 +105,9 @@ class PosDashboard(models.Model):
         for session in sessions:
             sessions_list.append({
                 'session': session.name,
-                'status': dict.get(session.pos_session_state)
+                'status': dictSession.get(session.pos_session_state)
             })
-        payments =[]
+        payments = []
         for rec in payment_details:
             rec = list(rec)
             sym_id = rec[1]
@@ -133,7 +133,7 @@ class PosDashboard(models.Model):
         total_order_count = 0
         total_refund_count = 0
         today_sale = 0
-        a = 0
+        
         for rec in pos_order:
             if rec.amount_total < 0.0 and rec.date_order.date() == default_date:
                 today_refund_total = today_refund_total + 1
@@ -152,8 +152,8 @@ class PosDashboard(models.Model):
         val = '%.2f%s' % (total, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
         pos_session = self.env['pos.session'].search([])
         total_session = 0
-        for record in pos_session:
-            total_session = total_session + 1
+        # for record in pos_session:
+        total_session = len(pos_session)
         return {
             'total_sale': val,
             'total_order_count': total_order_count,
@@ -197,9 +197,7 @@ class PosDashboard(models.Model):
         top_product = self._cr.dictfetchall()
 
         total_quantity = []
-        for record in top_product:
-            # if record.get('total_quantity') != 0:
-            #     print(total_quantity.append(record.get('total_quantity')))
+        for record in top_product:            
             total_quantity.append(record.get('total_quantity'))
         product_name = []
         for record in top_product:
