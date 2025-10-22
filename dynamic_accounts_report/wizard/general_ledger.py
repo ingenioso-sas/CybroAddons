@@ -454,13 +454,12 @@ class GeneralView(models.TransientModel):
              filters['analytics']]) + '  Target Moves : ' + filters.get('target_move'),
                           date_head)
 
-
         sheet.write('A8', 'Code', sub_heading)
         sheet.write('B8', 'Amount', sub_heading)
         sheet.write('C8', 'Date', sub_heading)
         sheet.write('D8', 'JRNL', sub_heading)
         sheet.write('E8', 'Partner', sub_heading)
-        sheet.write('F8', 'ID', sub_heading)
+        sheet.write('F8', 'Partner ID', sub_heading)
         sheet.write('G8', 'Move', sub_heading)
         sheet.write('H8', 'Entry Label', sub_heading)
         sheet.write('I8', 'Debit', sub_heading)

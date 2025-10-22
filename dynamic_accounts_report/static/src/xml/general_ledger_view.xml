@@ -318,7 +318,7 @@
                         <th>Date</th>
                         <th>JRNL</th>
                         <th>Partner</th>
-                        <th>ID</th>
+                        <th>Partner ID</th>
                         <th>Move</th>
                         <th>Entry Label</th>
                         <th class="mon_fld">Debit</th>
