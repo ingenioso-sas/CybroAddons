@@ -25,7 +25,6 @@ trigger:
 pool:
   name: 'default'
 
-
 extends:
   template: templates/azure-pipeline-odooapp.yml@templates
   parameters:
