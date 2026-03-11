@@ -5,7 +5,7 @@
 #### ADD
 Initial Commit for Infinito Backend Theme
 
-#### 04.12.2024
+#### 25.11.2025
 #### Version 17.0.1.0.1
-##### BUGFIX
-- Fixed the style issue in the sidebar menu buttons.
+#### UPDT
+Resolved the issue of recent apps
