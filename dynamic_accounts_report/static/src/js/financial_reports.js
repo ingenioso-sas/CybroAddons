@@ -113,7 +113,6 @@ odoo.define('dynamic_accounts_report.financial_reports', function (require) {
 
                         self.$('.table_view_dfr').html(QWeb.render('dfr_table', {
 
-                                            report_lines : datas['report_lines'],
                                             filter : datas['filters'],
                                             currency : datas['currency'],
                                             credit_total : datas['credit_total'],

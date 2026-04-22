@@ -318,6 +318,7 @@
                         <th>Date</th>
                         <th>JRNL</th>
                         <th>Partner</th>
+                        <th>Partner ID</th>
                         <th>Move</th>
                         <th>Entry Label</th>
                         <th class="mon_fld">Debit</th>
@@ -356,6 +357,9 @@
                             </td>
                             <td>
                                 <t t-esc="account_line.partner_name"/>
+                            </td>
+                            <td>
+                                <t t-esc="account_line.partner_vat"/>
                             </td>
                             <td t-att-style="style">
                                 <t t-esc="account_line.move_name"/>
