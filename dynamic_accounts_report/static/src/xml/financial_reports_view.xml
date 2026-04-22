@@ -29,49 +29,36 @@
 						<t t-set="none_value" t-value="_"/>
 						<t t-foreach="bs_lines" t-as="a">
 							<t t-if="a['code']">
-								<t t-foreach="report_lines" t-as="account">
-
-
-									<t t-set="common_id" t-value="0"/>
-									<t t-if="account['id'] == a['account']">
-										<tr style="border: 1.5px solid black;" class="gl-line"
-											data-toggle="collapse"
-											t-att-data-account-id="account['id']"
-											t-attf-data-target=".a{{account['id']}}">
-											<td colspan="6" style="border: 0px solid black; padding-left: 50px;">
-												<span>
-													<t t-esc="account['code']"/>
-													-
-													<t t-esc="account['name']"/>
-												</span>
-												<div class="" style="display: inline-block;">
-												<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-												</a>
-													<div class="dropdown-menu " role="menu">
-														<div class="o_foldable_menu o_closed_menu " >
-															<div class="form-group ">
-																<div class="show-gl" aria-atomic="true" id="" data-target-input="">
-																	<li role="presentation">
-																		<a role="menuitem" style="background-color:aqua; font-weight:bold;" t-att-data-account-id="account['id']" class="show-gl" >View General Ledger</a>
-																	</li>
-																</div>
-															</div>
-
+								<tr style="border: 1.5px solid black;" class="gl-line"
+									data-toggle="collapse"
+									t-att-data-account-id="a['account']"
+									t-attf-data-target=".a{{a['account']}}">
+									<td colspan="6" style="border: 0px solid black; padding-left: 50px;">
+										<span>
+											<t t-esc="a['name']"/>
+										</span>
+										<div class="" style="display: inline-block;">
+										<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+										</a>
+											<div class="dropdown-menu " role="menu">
+												<div class="o_foldable_menu o_closed_menu " >
+													<div class="form-group ">
+														<div class="show-gl" aria-atomic="true" id="" data-target-input="">
+															<li role="presentation">
+																<a role="menuitem" style="background-color:aqua; font-weight:bold;" t-att-data-account-id="a['account']" class="show-gl" >View General Ledger</a>
+															</li>
 														</div>
 													</div>
+
 												</div>
-											</td>
-											<td t-att-style="fr_padding"><t t-esc="a['m_debit']" t-att-style="style"/></td>
-											<td t-att-style="fr_padding"><t t-esc="a['m_credit']" t-att-style="style"/></td>
-											<td t-att-style="fr_padding"><t t-esc="a['m_balance']" t-att-style="style"/></td>
-
-
-
-											<t t-set="common_id" t-value="'a'+account['id']"/>
-										</tr>
-									</t>
-								</t>
-
+											</div>
+										</div>
+									</td>
+									<td t-att-style="fr_padding"><t t-esc="a['m_debit']" t-att-style="style"/></td>
+									<td t-att-style="fr_padding"><t t-esc="a['m_credit']" t-att-style="style"/></td>
+									<td t-att-style="fr_padding"><t t-esc="a['m_balance']" t-att-style="style"/></td>
+									<t t-set="common_id" t-value="'a'+a['account']"/>
+								</tr>
 							</t>
 							<t t-else="">
 								<t t-set="style" t-value="'padding: 5px;padding-left: 25px;'"/>

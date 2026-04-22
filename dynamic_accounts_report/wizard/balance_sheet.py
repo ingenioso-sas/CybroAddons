@@ -29,7 +29,7 @@ class BalanceSheetView(models.TransientModel):
     display_account = fields.Selection(
         [('all', 'All'), ('movement', 'With movements'),
          ('not_zero', 'With balance is not equal to 0')],
-        string='Display Accounts', required=True, default='movement')
+        string='Display Accounts', required=True, default='not_zero')
     target_move = fields.Selection(
         [('all', 'All'), ('posted', 'Posted')],
         string='Target Move', required=True, default='posted')
@@ -83,6 +83,10 @@ class BalanceSheetView(models.TransientModel):
 
             new_records = list(filter(filter_code, records['Accounts']))
             records['Accounts'] = new_records
+        # Determine if it's a Profit and Loss report to set strict_range correctly
+        is_p_and_l = 'profit' in tag.lower() or 'ganancia' in tag.lower() or 'pérdida' in tag.lower()
+        strict_range = True if is_p_and_l else False
+
         trans_tag = self.env['ir.translation'].search([('value', '=', tag), ('module', '=', 'dynamic_accounts_report')],
                                                       limit=1).src
         if trans_tag:
@@ -90,8 +94,29 @@ class BalanceSheetView(models.TransientModel):
         else:
             tag_upd = tag
 
-        account_report_id = self.env['account.financial.report'].with_context(lang='en_US').search([
-            ('name', 'ilike', tag_upd)])
+        # Try to find the financial report using multiple possible names and the current language
+        report_names = [tag_upd, tag]
+        if 'profit' in tag_upd.lower() or 'ganancia' in tag_upd.lower():
+            report_names.extend(['Profit and Loss', 'Profit & Loss', 'Pérdidas y Ganancias', 'Ganancia y perdida', 'Estado de Resultados'])
+        if 'balance' in tag_upd.lower() or 'situación' in tag_upd.lower():
+            report_names.extend(['Balance Sheet', 'Estado de Situación Financiera', 'Balance General', 'Estado de Situacion Financiera'])
+
+        account_report_id = self.env['account.financial.report'].search([
+            ('name', 'in', report_names)], limit=1)
+
+        # Fallback to searching for root reports with similar names if exact match fails
+        if not account_report_id:
+            if 'profit' in tag_upd.lower() or 'ganancia' in tag_upd.lower():
+                account_report_id = self.env['account.financial.report'].search([
+                    ('name', 'ilike', 'Profit'), ('parent_id', '=', False)], limit=1)
+            if not account_report_id and ('balance' in tag_upd.lower() or 'situación' in tag_upd.lower()):
+                account_report_id = self.env['account.financial.report'].search([
+                    ('name', 'ilike', 'Balance'), ('parent_id', '=', False)], limit=1)
+
+        # Final fallback to ilike with original tag
+        if not account_report_id:
+            account_report_id = self.env['account.financial.report'].search([
+                ('name', 'ilike', tag_upd)], limit=1)
 
         new_data = {'id': self.id, 'date_from': False,
                     'enable_filter': True,
@@ -100,49 +125,26 @@ class BalanceSheetView(models.TransientModel):
                     'target_move': filters['target_move'],
                     'view_format': 'vertical',
                     'company_id': self.company_id,
-                    'used_context': {'journal_ids': False,
+                    'used_context': {'journal_ids': r.journal_ids.ids,
                                      'state': filters['target_move'].lower(),
                                      'date_from': filters['date_from'],
                                      'date_to': filters['date_to'],
-                                     'strict_range': False,
-                                     'company_id': self.company_id,
+                                     'strict_range': strict_range,
+                                     'company_id': self.company_id.id,
+                                     'analytic_account_ids': r.analytic_ids.ids,
+                                     'analytic_tag_ids': r.analytic_tag_ids.ids,
                                      'lang': 'en_US'}}
 
         account_lines = self.get_account_lines(new_data)
         report_lines = self.view_report_pdf(account_lines, new_data)[
             'report_lines']
-        move_line_accounts = []
-        move_lines_dict = {}
-
-        for rec in records['Accounts']:
-            move_line_accounts.append(rec['id'])
-            move_lines_dict[rec['id']] = {}
-            move_lines_dict[rec['id']]['debit'] = rec['debit']
-            move_lines_dict[rec['id']]['credit'] = rec['credit']
-            move_lines_dict[rec['id']]['balance'] = rec['balance']
-        report_lines_move = []
+        report_lines_move = report_lines
         parent_list = []
-
-        def filter_movelines_parents(obj):
-            for each in obj:
-                if each['report_type'] == 'accounts':
-                    if each['account'] in move_line_accounts:
-                        report_lines_move.append(each)
-                        parent_list.append(each['p_id'])
-
-                elif each['report_type'] == 'account_report':
-                    report_lines_move.append(each)
-                else:
-                    report_lines_move.append(each)
-
-        filter_movelines_parents(report_lines)
-
         for rec in report_lines_move:
-            if rec['report_type'] == 'accounts':
-                if rec['account'] in move_line_accounts:
-                    rec['debit'] = move_lines_dict[rec['account']]['debit']
-                    rec['credit'] = move_lines_dict[rec['account']]['credit']
-                    rec['balance'] = move_lines_dict[rec['account']]['balance']
+            if rec.get('p_id'):
+                parent_list.append(rec.get('p_id'))
+            if rec.get('r_id'):
+                parent_list.append(rec.get('r_id'))
 
         parent_list = list(set(parent_list))
         max_level = 0
@@ -427,7 +429,12 @@ class BalanceSheetView(models.TransientModel):
 
     def _get_accounts(self, accounts, init_balance, display_account, data):
         cr = self.env.cr
-        MoveLine = self.env['account.move.line']
+        MoveLine = self.env['account.move.line'].with_context(
+            date_from=data.get('date_from'),
+            date_to=data.get('date_to'),
+            state=data.get('target_move', 'posted').lower(),
+            strict_range=False,
+        )
         move_lines = {x: [] for x in accounts.ids}
         currency_id = self.env.company.currency_id
 
@@ -439,6 +446,7 @@ class BalanceSheetView(models.TransientModel):
         final_filters = " AND ".join(wheres)
         final_filters = final_filters.replace('account_move_line__move_id',
                                               'm').replace(
+            'account_move_line__account_id', 'acc').replace(
             'account_move_line', 'l')
         new_final_filter = final_filters
 
@@ -446,11 +454,6 @@ class BalanceSheetView(models.TransientModel):
             new_final_filter += " AND m.state = 'posted'"
         else:
             new_final_filter += " AND m.state in ('draft','posted')"
-
-        if data.get('date_from'):
-            new_final_filter += " AND l.date >= '%s'" % data.get('date_from')
-        if data.get('date_to'):
-            new_final_filter += " AND l.date <= '%s'" % data.get('date_to')
 
         if data['journals']:
             new_final_filter += ' AND j.id IN %s' % str(
