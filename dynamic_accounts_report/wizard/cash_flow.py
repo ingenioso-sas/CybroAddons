@@ -124,7 +124,7 @@ class AccountCasgFlow(models.TransientModel):
             'levels': r.levels,
             'target_move': r.target_move,
             'journals_list': [(j.id, j.name, j.code) for j in journals],
-            'accounts_list': [(a.id, a.name) for a in accounts],
+            'accounts_list': [(a.id, '%s - %s' % (a.code, a.name)) for a in accounts],
             'company_name': ', '.join(self.env.companies.mapped('name')),
         }
         filter_dict.update(default_filters)

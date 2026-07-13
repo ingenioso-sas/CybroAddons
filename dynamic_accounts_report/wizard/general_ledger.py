@@ -176,7 +176,7 @@ class GeneralView(models.TransientModel):
             if j.company_id != o_company:
                 accounts.append(('divider', j.company_id.name))
                 o_company = j.company_id
-            accounts.append((j.id, j.name))
+            accounts.append((j.id, "%s - %s" % (j.code, j.name)))
 
 
 
@@ -192,7 +192,7 @@ class GeneralView(models.TransientModel):
             'target_move': r.target_move,
             # 'journals_list': [(j.id, j.name, j.code) for j in journals],
             'journals_list': journals,
-            # 'accounts_list': [(a.id, a.name) for a in accounts],
+            # 'accounts_list': [(a.id, '%s - %s' % (a.code, a.name)) for a in accounts],
             'accounts_list': accounts,
             'account_tag_list': [(a.id, a.name) for a in account_tags],
             'analytic_list': [(anl.id, anl.name) for anl in analytics],

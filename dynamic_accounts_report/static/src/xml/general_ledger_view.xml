@@ -154,9 +154,9 @@
                 </div>
             </div>
             <br></br>
-            <div class="sub_container_right row" style="width:30%;height:3%;top:0px;position: relative;">
+            <div class="sub_container_right d-flex flex-wrap align-items-center" style="justify-content: flex-end;">
 
-                        <div class="time_range" style="">
+                        <div class="mr-3 mb-2 time_range" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown" >
                                 <span class="fa fa-calendar" title="Dates" role="img" aria-label="Dates"></span>
                                 Date Range
@@ -188,7 +188,7 @@
                             </div>
                         </div>
                         <t t-if="title == 'General Ledger'">
-                        <div class="journals_filter" style="">
+                        <div class="mr-3 mb-2 journals_filter" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Journals:
@@ -220,7 +220,7 @@
                         </div>
                         </t>
 
-                        <div class="accounts_filter">
+                        <div class="mr-3 mb-2 accounts_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Accounts:
@@ -250,7 +250,7 @@
                             <span id="acc_res"></span>
                         </div>
 
-                        <div class="analytics_filter">
+                        <div class="mr-3 mb-2 analytics_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Analytic Accounts:
@@ -265,7 +265,7 @@
                             <span id="analytic_res"></span>
                         </div>
 
-                        <div class="analytic_tags_filter">
+                        <div class="mr-3 mb-2 analytic_tags_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Analytic Tags:

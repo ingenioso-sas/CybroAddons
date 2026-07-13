@@ -116,7 +116,7 @@ class AgeingView(models.TransientModel):
             if j.company_id != o_company:
                 accounts.append(('divider', j.company_id.name))
                 o_company = j.company_id
-            accounts.append((j.id, j.name))
+            accounts.append((j.id, "%s - %s" % (j.code, j.name)))
 
 
         filter_dict = {
