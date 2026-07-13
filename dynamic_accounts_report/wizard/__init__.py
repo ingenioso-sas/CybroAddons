@@ -6,3 +6,5 @@ from . import balance_sheet_config
 from . import partner_leadger
 from . import ageing
 from . import daybook
+from . import financial_audit
+from . import res_config_settings

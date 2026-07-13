@@ -127,6 +127,9 @@ class PartnerView(models.TransientModel):
         filters['category_list'] = data.get('category_list')
         filters['account_type_list'] = data.get('account_type_list')
         filters['target_move'] = data.get('target_move').capitalize()
+        enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
+        enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
+        filters['enable_audit_button'] = enable_static or enable_ai
         return filters
 
     def get_filter_data(self, option):

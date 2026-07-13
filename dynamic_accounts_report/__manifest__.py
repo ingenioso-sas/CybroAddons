@@ -22,7 +22,7 @@
 
 {
     'name': 'Dynamic Financial Reports',
-    'version': '13.0.1.0.7',
+    'version': '13.0.1.1.0',
     'category': 'Accounting',
     'summary': """Dynamic Financial Reports with drill 
                 down and filters– Community Edition""",
@@ -37,6 +37,8 @@
     'depends': ['base', 'base_accounting_kit'],
     'data': [
         'security/ir.model.access.csv',
+        'wizard/financial_audit_view.xml',
+        'wizard/res_config_settings_view.xml',
         'views/templates.xml',
         'views/views.xml',
         'views/kit_menus.xml',

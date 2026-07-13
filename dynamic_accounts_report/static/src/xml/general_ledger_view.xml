@@ -145,6 +145,12 @@
                             style="position: relative;height:30px;color:white;background-color: #00A0AD;border-color: #00A0AD; padding:3px;">
                         Export (XLSX)
                     </button>
+<t t-if="filter_data.enable_audit_button">
+                    <button type="button" class="btn btn-primary" id="audit"
+                            style="position: relative;height:30px;color:white;background-color: #e0a800;border-color: #d39e00; padding:3px; margin-left: 5px;">
+                        Auditar Cifras
+                    </button>
+                    </t>
                 </div>
             </div>
             <br></br>

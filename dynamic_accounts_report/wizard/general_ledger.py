@@ -140,6 +140,9 @@ class GeneralView(models.TransientModel):
         filters['company_name'] = data.get('company_name')
         filters['target_move'] = data.get('target_move').capitalize()
 
+        enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
+        enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
+        filters['enable_audit_button'] = enable_static or enable_ai
         return filters
 
     def get_filter_data(self, option):
