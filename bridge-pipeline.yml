@@ -1,0 +1,52 @@
+# ==============================================================================
+# bridge-pipeline.yml
+#
+# PROPÓSITO:
+#   Pipeline puente cuyo repositorio PRIMARIO es el repo de GitHub.
+#   Se dispara automáticamente al hacer push a ramas de versión Odoo (ej: 13.0).
+#   Su única tarea es invocar el pipeline principal de despliegue en ADO,
+#   utilizando el template "trigger_deploy_bridge.yml" en "pipeline_templates".
+#
+# UBICACIÓN:
+#   Este archivo debe vivir en la raíz del repositorio de GitHub:
+#   ingenioso-sas/account-financial-tools  =>  bridge-pipeline.yml
+#                                          (o ajusta la ruta al crear el pipeline en ADO)
+#
+# REQUISITOS EN AZURE DEVOPS (Librería / Variable Groups):
+#   Debe existir el grupo de variables llamado "GeneralProd" con:
+#     - azure_pat_bridge_pipeline: PAT de Azure DevOps con permisos Build (Read & execute)
+#       y Code (Read) - Configurado como variable secreta.
+#     - DEPLOY_ADDONS_PIPELINE_ID: ID del pipeline azure-pipeline.yml de despliegue (ej. '14').
+#
+# SETUP EN AZURE DEVOPS:
+#   1. Nuevo pipeline → GitHub → seleccionar "ingenioso-sas/account-financial-tools"
+#   2. Seleccionar este archivo YAML
+#   3. Guardar (ADO creará el webhook en GitHub automáticamente)
+#   4. Ir al pipeline de despliegue → Security →
+#      conceder a "[Proyecto] Build Service" el permiso "Queue builds"
+# ==============================================================================
+
+resources:
+  repositories:
+    - repository: templates
+      name: "proy_ing/pipeline_templates"
+      type: git
+      ref: refs/heads/master
+
+trigger:
+  branches:
+    include:
+    # Solo activa en ramas que sigan el patrón de versión Odoo: 13.0, 14.0, 16.0-dev, etc.
+    - '13.0.*'
+
+pool: default  # Mismo pool que el pipeline de despliegue
+
+variables:
+- group: GeneralProd
+
+jobs:
+- template: templates/jobs/trigger_deploy_bridge.yml@templates
+  parameters:
+    azure_pat: $(azure_pat_bridge_pipeline)
+    deploy_pipeline_id: $(DEPLOY_ADDONS_PIPELINE_ID)
+    poolName: default
