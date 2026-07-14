@@ -41,3 +41,5 @@ extends:
         value: 'dashboard_pos'
       - name: base_accounting_kit
         value: 'base_accounting_kit'
+      - name: dynamic_accounts_report
+        value: 'dynamic_accounts_report'
