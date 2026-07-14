@@ -14,7 +14,7 @@ General Public License, Version 3 (LGPL v3).
 
 Company
 -------
-* 'Cybrosys Techno Solutions <https://cybrosys.com/>`__
+* 'Cybrosys Techno Solutions <https://cybrosys.com/>`_
 
 Credits
 -------
