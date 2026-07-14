@@ -40,5 +40,5 @@ For support and more information, please visit https://www.cybrosys.com
 
 Further information
 ===================
-HTML Description: `<static/description/index.html>`__
+HTML Description: `<static/description/index.html>`
 
