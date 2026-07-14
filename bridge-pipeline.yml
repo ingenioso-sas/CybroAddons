@@ -37,7 +37,8 @@ trigger:
   branches:
     include:
     # Solo activa en ramas que sigan el patrón de versión Odoo: 13.0, 14.0, 16.0-dev, etc.
-    - '13.0.*'
+    - 13.0
+    - 13.0-dev
 
 pool: default  # Mismo pool que el pipeline de despliegue
 
