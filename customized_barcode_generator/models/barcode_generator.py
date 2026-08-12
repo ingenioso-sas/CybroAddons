@@ -72,9 +72,14 @@ class CostToCode(models.Model):
     cost_in_code = fields.Char(string='Cost in code', compute='get_cost_in_code')
 
 
+    @api.model
+    def _get_active_barcode_code(self):
+        """Active substitution code."""
+        return self.env['barcode.code'].sudo().search([('active_check', '=', True)], limit=1)
+
     def get_cost_in_code(self):
-        code = self.env['barcode.code'].sudo().search([('active_check', '=', True)])
-        active_check = self.env['ir.config_parameter'].sudo().search([('key','=','active_standard_price'),('value','=',True)])
+        code = self._get_active_barcode_code()
+        active_check = self.env['ir.config_parameter'].sudo().get_param('active_standard_price')
         if active_check:
             if code:
                 real = str(self.standard_price).split('.')[0]
@@ -106,7 +111,7 @@ class CostToCode(models.Model):
             return " "
 
     def get_product_ref(self):
-        active_check = self.env['ir.config_parameter'].sudo().search([('key','=','active_ref'),('value','=',True)])
+        active_check = self.env['ir.config_parameter'].sudo().get_param('active_ref')
         if active_check:
             return self.default_code
         else:
