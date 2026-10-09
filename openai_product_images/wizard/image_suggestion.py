@@ -3,7 +3,7 @@
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
-#    Copyright (C) 2024-TODAY Cybrosys Technologies(<https://www.cybrosys.com>).
+#    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>).
 #    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
 #
 #    You can modify it under the terms of the GNU AFFERO
@@ -19,73 +19,95 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ################################################################################
-import requests
-from requests.structures import CaseInsensitiveDict
-import json
-import base64
-from odoo import fields, models, _
-from odoo.exceptions import ValidationError
+from openai import OpenAI
+from odoo import fields, models
+from odoo.tools.translate import _
+from odoo.exceptions import UserError
 
 
 class ImageSuggestion(models.TransientModel):
-    """image for product from dalle"""
+    """Image generator for product from OpenAI"""
     _name = 'image.suggestion'
+    _description = 'Model For Creation Of Product Images Using OpenAI'
     _rec_name = 'product_tmpl_id'
-    _description = 'model for creation of dalle image '
 
-    image_prompt = fields.Char(string="Prompt for image",
-                               help="field to fill prompt", required=True)
-    product_tmpl_id = fields.Many2one('product.template', string="Product",
-                                      help="field to store product",
-                                      required=True)
-    num_image = fields.Integer(string="Number of image needed",
-                               help="field to store  number of image",
-                               required=True,
-                               default=1)
+    image_prompt = fields.Char(
+        string="Prompt for Image",
+        help="Describe the image you want to generate",
+        required=True
+    )
+    product_tmpl_id = fields.Many2one(
+        'product.template',
+        string="Product",
+        help="Select the product for which image needs to be generated",
+        required=True
+    )
+    num_image = fields.Integer(
+        string="Number of Images",
+        help="Number of images to generate",
+        required=True,
+        default=1
+    )
     size_image = fields.Selection(
-        [('256x256', '256x256'), ('512x512', '512x512')], string="Resolution",
-        help="field to store image size", required=True)
+        [
+            ('1024x1024', '1024x1024'),
+            ('1024x1536', '1024x1536 (Portrait)'),
+            ('1536x1024', '1536x1024 (Landscape)')
+        ],
+        string="Resolution",
+        help="Resolution of generated images",
+        required=True,
+        default='1024x1024'
+    )
+    quality = fields.Selection(
+        [
+            ('low', 'Low'),
+            ('medium', 'Medium'),
+            ('high', 'High')
+        ],
+        string="Quality",
+        help="Image quality setting for OpenAI",
+        required=True,
+        default='medium'
+    )
 
-    def action_search(self):
-        """Summary:
-              Function to search  image suggestion from dalle
-           Returns:
-               returns the created media image of corresponding product
-        """
+    def action_generate_images(self):
+        """Generate product images from OpenAI"""
         api_key = self.env['ir.config_parameter'].sudo().get_param(
             'openai_api_key')
+
         if not api_key:
-            raise ValidationError(
-                _("Invalid API key provided. Please ensure that you have "
-                  "entered the correct API key. "))
-        headers = CaseInsensitiveDict()
-        headers["Content-Type"] = "application/json"
-        headers["Authorization"] = f"Bearer {api_key}"
-        data = '{"model": "dall-e-2",' \
-               ' "prompt": "' + self.image_prompt + '", "num_images": ' + \
-               str(self.num_image) + ', "size": "' \
-               + self.size_image + '", "response_format": "url"}'
-        resp = requests.post("https://api.openai.com/v1/images/generations",
-                             headers=headers, data=data)
-        if resp.status_code != 200:
-            raise ValidationError("Failed to generate image")
-        response_text = json.loads(resp.text)
-        for url in response_text['data']:
-            image_url = url['url']
-            # Get image data and encode it in base64
-            image_resp = requests.get(image_url)
-            if image_resp.status_code != 200:
-                raise ValidationError("Failed to retrieve image")
-            image_b64 = base64.b64encode(image_resp.content)
-            # Store encoded image as binary field on model
-            self.env['dalle.image.suggestion'].create(
-                {'product_image': image_b64,
-                 'product_tmpl_id': self.product_tmpl_id.id, })
-        return {
-            'name': self.product_tmpl_id.name,
-            'view_mode': 'tree,form',
-            'res_model': 'dalle.image.suggestion',
-            'type': 'ir.actions.act_window',
-            'domain': [('product_tmpl_id', '=', self.product_tmpl_id.id)],
-            'target': 'current',
-        }
+            raise UserError(_("OpenAI API key is not configured. Please set OpenAI API key in configuration settings."))
+
+        client = OpenAI(api_key=api_key)
+
+        total_images = self.num_image or 1
+
+        try:
+            last_image_b64 = False
+
+            for i in range(total_images):
+                response = client.images.generate(
+                    model="gpt-image-2",
+                    prompt=self.image_prompt,
+                    size=self.size_image,
+                    quality=self.quality,
+                    n=1,
+                )
+                image_b64_encoded = response.data[0].b64_json.encode('utf-8')
+                last_image_b64 = image_b64_encoded
+
+                # Save each image to history table
+                self.env['openai.image.suggestion'].create({
+                    'product_image': image_b64_encoded,
+                    'product_tmpl_id': self.product_tmpl_id.id,
+                })
+
+            # Optionally set last generated image as product main image
+            if last_image_b64:
+                self.product_tmpl_id.write({'image_1920': last_image_b64})
+
+            return {'type': 'ir.actions.act_window_close'}
+
+        except Exception as e:
+            raise UserError(f"Error generating image: {str(e)}")

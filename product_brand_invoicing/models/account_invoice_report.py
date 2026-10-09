@@ -43,13 +43,4 @@ class AccountInvoiceReport(models.Model):
                'template.brand_id as brand_id,' + query[1])
         return res
 
-    def _group_by(self):
-        """
-        This method adds 'template.brand_id' to the existing 'template.categ_id' in
-        the SQL GROUP BY clause for the Account Invoice Report.
-        :return: The extended SQL GROUP BY clause as a string.
-        """
-        res = super()._group_by()
-        query = res.split('template.categ_id,', 1)
-        res = query[0] + 'template.categ_id,template.brand_id,' + query[1]
-        return res
+

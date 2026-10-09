@@ -6,7 +6,6 @@ a#closeSidebar, a#openSidebar {
 #sidebar_panel {
     height: 100%;
 	position: fixed;
-    background-color: var(--tr-button-bg);
     box-shadow: 0px 4px 11px 0px #888;
     display: none;
     width: 200px;
@@ -285,6 +284,7 @@ nav.o_main_navbar.small_nav {
     display: flex;
     justify-content: center;
     position: relative;
+    z-index: 999;
     .drag-infinito {
         height: 30px;
         width: 30px;

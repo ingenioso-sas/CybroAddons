@@ -21,7 +21,7 @@
 #############################################################################
 {
     'name': 'Employee Ideas',
-    'version': '17.0.1.0.0',
+    'version': '17.0.1.0.1',
     'category': 'Human Resources',
     'summary': """ Share the ideas """,
     'description': """ Can easily share the ideas of an employee to others""",
@@ -39,7 +39,7 @@
          'wizard/give_vote_views.xml',
          'report/employee_idea_report_templates.xml',
             ],
-    'images': ['static/description/banner.jpg'],
+    'images': ['static/description/banner.png'],
     'license': 'LGPL-3',
     'installable': True,
     'auto_install': False,

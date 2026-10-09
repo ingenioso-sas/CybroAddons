@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': 'Merge Invoices',
-    'version': '17.0.1.0.0',
+    'version': '17.0.1.0.1',
     'category': 'Accounting',
     'summary': 'This module will helps to merge different Account moves',
     'description': "This module helps to manage invoices, credit note,"

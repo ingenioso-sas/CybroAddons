@@ -14,3 +14,13 @@
 #### Version 17.0.1.1.1
 ##### BUG FIX
 - Added the initial balance in partner ledger (xlsx and PDF)
+
+#### 10.07.2024
+#### Version 17.0.1.1.3
+##### BUG FIX
+- Fixed an issue where the Trial Balance initial balance was showing the total debit and credit amounts, even when the accounts were balanced.
+
+#### 27.07.2026
+#### Version 17.0.1.1.4
+##### BUG FIX
+- Removed eval() functions to fix security issues during publication.

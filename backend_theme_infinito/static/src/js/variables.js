@@ -1,5 +1,4 @@
 /** @odoo-module **/
-import { useState } from "@odoo/owl";
 /**
  * Object containing CSS variable names and their corresponding ranges for generating color variations.
  * @type {Object.<string, number[]>}
