@@ -91,9 +91,12 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                         args: [[this.wizard_id]],
                     }).then(function(datas) {
                             _.each(datas['report_lines'], function(rep_lines) {
+                            rep_lines.initial = self.format_currency(datas['currency'],rep_lines.initial || 0);
                             rep_lines.debit = self.format_currency(datas['currency'],rep_lines.debit);
                             rep_lines.credit = self.format_currency(datas['currency'],rep_lines.credit);
                             rep_lines.balance = self.format_currency(datas['currency'],rep_lines.balance);
+                            rep_lines.final_debit = self.format_currency(datas['currency'],rep_lines.final_debit || 0);
+                            rep_lines.final_credit = self.format_currency(datas['currency'],rep_lines.final_credit || 0);
 
 
 
@@ -113,8 +116,11 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                                             report_lines : datas['report_lines'],
                                             filter : datas['filters'],
                                             currency : datas['currency'],
-                                            credit_total : self.format_currency(datas['currency'],datas['debit_total']),
                                             debit_total : self.format_currency(datas['currency'],datas['debit_total']),
+                                            credit_total : self.format_currency(datas['currency'],datas['credit_total']),
+                                            initial_total : self.format_currency(datas['currency'],datas['initial_total'] || 0),
+                                            final_debit_total : self.format_currency(datas['currency'],datas['final_debit_total'] || 0),
+                                            final_credit_total : self.format_currency(datas['currency'],datas['final_credit_total'] || 0),
                                         }));
                 });
 
@@ -301,6 +307,15 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
               post_res.innerHTML="posted";
 
               }
+            }
+            if ($(".puc_level").length) {
+                filter_data_selected.puc_level = $(".puc_level")[0].value || '0';
+            }
+            if (this.$el.find('input[name="account_from_code"]').length) {
+                filter_data_selected.account_from_code = this.$el.find('input[name="account_from_code"]').val() || '';
+            }
+            if (this.$el.find('input[name="account_to_code"]').length) {
+                filter_data_selected.account_to_code = this.$el.find('input[name="account_to_code"]').val() || '';
             }
             rpc.query({
                 model: 'account.trial.balance',
