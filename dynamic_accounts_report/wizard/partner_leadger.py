@@ -127,6 +127,9 @@ class PartnerView(models.TransientModel):
         filters['category_list'] = data.get('category_list')
         filters['account_type_list'] = data.get('account_type_list')
         filters['target_move'] = data.get('target_move').capitalize()
+        enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
+        enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
+        filters['enable_audit_button'] = enable_static or enable_ai
         return filters
 
     def get_filter_data(self, option):
@@ -160,7 +163,7 @@ class PartnerView(models.TransientModel):
             if j.company_id != o_company:
                 accounts.append(('divider', j.company_id.name))
                 o_company = j.company_id
-            accounts.append((j.id, j.name))
+            accounts.append((j.id, "%s - %s" % (j.code, j.name)))
 
 
 

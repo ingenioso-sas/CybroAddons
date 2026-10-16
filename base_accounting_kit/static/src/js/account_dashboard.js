@@ -8,7 +8,36 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
     var _t = core._t;
     var QWeb = core.qweb;
     var self = this;
-    var currency;
+    // Moneda por defecto para evitar TypeError si el rpc get_currency aún no resolvió.
+    // Se sobrescribe con el valor real del backend en willStart/renderElement.
+    var currency = {language: 'en-US', symbol: '', position: 'before'};
+    var _currencyPromise = null;
+    function ensure_currency() {
+        if (currency && currency.language && currency.symbol !== undefined) {
+            // Si ya tenemos símbolo/lenguaje reales, reutilizar. Si es el default
+            // (symbol === ''), igual intentamos refrescar una vez vía rpc.
+            if (currency.symbol !== '' || (_currencyPromise && _currencyPromise._resolved)) {
+                return Promise.resolve(currency);
+            }
+        }
+        if (!_currencyPromise) {
+            _currencyPromise = rpc.query({
+                model: "account.move",
+                method: "get_currency",
+            }).then(function (result) {
+                if (result && result.language) {
+                    currency = result;
+                }
+                _currencyPromise._resolved = true;
+                return currency;
+            }, function () {
+                // Ante fallo de red/permisos, no romper el dashboard: usar default.
+                _currencyPromise._resolved = true;
+                return currency;
+            });
+        }
+        return _currencyPromise;
+    }
     var ActionMenu = AbstractAction.extend({
         template: 'Invoicedashboard',
         events: {
@@ -390,13 +419,9 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
             if ($('#toggle-two')[0].checked == true) {
                 posted = "posted"
             }
-            rpc.query({
-                model: "account.move",
-                method: "get_currency",
-            }).then(function (result) {
-                currency = result;
-            })
-            rpc.query({
+            // FIX race-condition: encadenar get_currency antes de formatear.
+            ensure_currency().then(function (cur) {
+            return rpc.query({
                 model: "account.move",
                 method: "get_top_10_customers_month",
                 args: [posted,f]
@@ -425,7 +450,8 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
                     });
 
 
-                })
+                });
+            });
         },
 
         onclick_income_last_year: function (ev) {
@@ -674,14 +700,9 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
                 posted = "posted"
             }
 
-            rpc.query({
-                model: "account.move",
-                method: "get_currency",
-            }).then(function (result) {
-                currency = result;
-            })
-
-            rpc.query({
+            // FIX race-condition: encadenar get_currency antes de formatear.
+            ensure_currency().then(function (cur) {
+            return rpc.query({
                 model: "account.move",
                 method: "get_total_invoice_current_year",
                 args: [posted],
@@ -748,7 +769,8 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
                     $('#total_supplier_invoice_paid_current_year').append('<div" class="logo">' + '<span>' + supplier_invoice_paid_current_year + '</span><span>'+_t('Total Paid')+'<span></div>');
                     $('#total_supplier_invoice_current_year').append('<div" class="logo">' + '<span>' + supplier_invoice_total_current_year + '</span><span>'+_t('Total Invoice')+'<span></div>');
 
-                })
+                });
+            });
         },
         onclick_invoice_this_month: function (ev) {
             ev.preventDefault();
@@ -759,13 +781,11 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
             if ($('#toggle-two')[0].checked == true) {
                 posted = "posted"
             }
-            rpc.query({
-                model: "account.move",
-                method: "get_currency",
-            }).then(function (result) {
-                currency = result;
-            })
-            rpc.query({
+            // FIX race-condition: encadenar get_currency antes de formatear.
+            // Nota: get_total_invoice_current_month ya devuelve currency en result[8],
+            // se usa ese valor como fuente principal con fallback a ensure_currency().
+            ensure_currency().then(function (cur) {
+            return rpc.query({
                 model: "account.move",
                 method: "get_total_invoice_current_month",
                 args: [posted],
@@ -816,6 +836,12 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
                     $('#tot_invoice_current_month').attr("value", customer_invoice_paid_current_month);
                     $('#tot_invoice_current_month').attr("max", customer_invoice_total_current_month);
 
+                    // El backend ya devuelve la moneda en result[8]; usarla si viene válida.
+                    if (result[8] && result[8].language) {
+                        currency = result[8];
+                    } else if (cur && cur.language) {
+                        currency = cur;
+                    }
                     customer_invoice_paid_current_month = self.format_currency(currency, customer_invoice_paid_current_month);
                     customer_invoice_total_current_month = self.format_currency(currency, customer_invoice_total_current_month);
                     supplier_invoice_paid_current_month = self.format_currency(currency, supplier_invoice_paid_current_month);
@@ -828,7 +854,8 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
                     $('#total_supplier_invoice_paid_current_month').append('<div" class="logo">' + '<span>' + supplier_invoice_paid_current_month + '</span><span>'+_t('Total Paid')+'<span></div>');
                     $('#total_supplier_invoice_current_month').append('<div" class="logo">' + '<span>' + supplier_invoice_total_current_month + '</span><span>'+_t('Total Invoice')+'<span></div>');
 
-                })
+                });
+            });
         },
         onclick_income_this_month: function (ev) {
             ev.preventDefault();
@@ -1068,15 +1095,12 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
                     }
 
 
-                    rpc.query({
-                        model: "account.move",
-                        method: "get_currency",
-                    })
-                        .then(function (result) {
-                            currency = result;
-
-                        })
-
+                    // FIX race-condition: esperar a la moneda antes de lanzar
+                    // todos los rpc que luego usan self.format_currency(currency,...).
+                    // Antes get_currency y el resto corrían en paralelo y a veces
+                    // format_currency recibía undefined -> TypeError reading 'language'.
+                    ensure_currency().then(function () {
+                        self.currency = currency;
 
                     rpc.query({
                         model: "account.move",
@@ -1265,7 +1289,11 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
 
                             $('#tot_invoice_current_month').attr("value", customer_invoice_paid_current_month);
                             $('#tot_invoice_current_month').attr("max", customer_invoice_total_current_month);
-                            currency = result[8]
+                            // FIX: solo sobrescribir si el backend devuelve moneda válida,
+                            // si no, conservar la obtenida vía ensure_currency().
+                            if (result[8] && result[8].language) {
+                                currency = result[8];
+                            }
                             customer_invoice_paid_current_month = self.format_currency(currency, customer_invoice_paid_current_month);
                             customer_invoice_total_current_month = self.format_currency(currency, customer_invoice_total_current_month);
                             supplier_invoice_paid_current_month = self.format_currency(currency, supplier_invoice_paid_current_month);
@@ -1693,23 +1721,41 @@ odoo.define('AccountingDashboard.AccountingDashboard', function (require) {
 
                             }
                         })
+                    });
                 });
         },
         format_currency: function(currency, amount){
+             // FIX defensivo: nunca romper el dashboard por moneda indefinida.
+             // Causa original: TypeError Cannot read properties of undefined (reading 'language').
+             currency = currency || window.currency || {language: 'en-US', symbol: '', position: 'before'};
+             if (!currency.language) {
+                 currency.language = 'en-US';
+             }
              if (typeof(amount) != 'number'){
                 amount = parseFloat(amount);
              }
-             var formatted_value = (parseInt(amount)).toLocaleString(currency.language, {minimumFractionDigits: 2})
-             if (currency.position === "after") {
-                return formatted_value += ' ' + currency.symbol;
-             } else {
-                return currency.symbol + ' ' + formatted_value;
+             if (isNaN(amount)) {
+                 amount = 0;
              }
+             var formatted_value;
+             try {
+                 formatted_value = amount.toLocaleString(currency.language, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+             } catch (e) {
+                 formatted_value = amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+             }
+             if (currency.position === "after") {
+                return formatted_value + ' ' + (currency.symbol || '');
+             }
+             return (currency.symbol || '') + ' ' + formatted_value;
         },
         willStart: function () {
             var self = this;
             self.drpdn_show = false;
-            return Promise.all([ajax.loadLibs(this), this._super()]);
+            // Precargar moneda antes del primer render para reducir la ventana de carrera.
+            var currencyDef = ensure_currency().then(function (cur) {
+                self.currency = cur;
+            }, function () {});
+            return Promise.all([ajax.loadLibs(this), this._super(), currencyDef]);
         },
     });
     core.action_registry.add('invoice_dashboard', ActionMenu);

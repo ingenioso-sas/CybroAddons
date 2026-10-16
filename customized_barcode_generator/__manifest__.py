@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Cost Price as Code in Barcode',
-    'version': '13.0.1.0.0',
+    'version': '13.0.1.1.0',
     'summary': """Print user defined product labels.""",
     'description': """The module enables user to print customized product labels.
                     """,

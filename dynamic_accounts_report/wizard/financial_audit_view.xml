@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ai_financial_audit_wizard_form" model="ir.ui.view">
+        <field name="name">ai.financial.audit.wizard.form</field>
+        <field name="model">ai.financial.audit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Auditoría Financiera">
+                <field name="report_type" invisible="1"/>
+                <field name="is_ai_configured" invisible="1"/>
+                
+                <group>
+                    <field name="audit_type" widget="radio" options="{'horizontal': true}"/>
+                </group>
+
+                <div class="alert alert-warning" role="alert" attrs="{'invisible': ['|', ('is_ai_configured', '=', True), ('audit_type', '=', 'static')]}">
+                    <strong>Atención:</strong> El Análisis Inteligente con IA requiere configurar los parámetros de sistema <code>lm_studio.api_url</code> y <code>lm_studio.api_key</code> en Odoo para conectarse al servidor local o remoto.
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12 col-md-12">
+                        <field name="result_html" readonly="1" widget="html" options="{'style-inline': true}"/>
+                    </div>
+                </div>
+                <footer>
+                    <button name="action_run_analysis" string="Ejecutar Análisis" type="object" class="btn-primary"/>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

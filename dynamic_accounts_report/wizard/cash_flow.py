@@ -102,6 +102,9 @@ class AccountCasgFlow(models.TransientModel):
         filters['company_name'] = data.get('company_name')
         filters['target_move'] = data.get('target_move').capitalize()
 
+        enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
+        enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
+        filters['enable_audit_button'] = enable_static or enable_ai
         return filters
 
     def get_filter_data(self, option):
@@ -121,7 +124,7 @@ class AccountCasgFlow(models.TransientModel):
             'levels': r.levels,
             'target_move': r.target_move,
             'journals_list': [(j.id, j.name, j.code) for j in journals],
-            'accounts_list': [(a.id, a.name) for a in accounts],
+            'accounts_list': [(a.id, '%s - %s' % (a.code, a.name)) for a in accounts],
             'company_name': ', '.join(self.env.companies.mapped('name')),
         }
         filter_dict.update(default_filters)
