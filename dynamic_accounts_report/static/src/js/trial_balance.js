@@ -21,7 +21,10 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
             'click #apply_filter': 'apply_filter',
             'click #pdf': 'print_pdf',
             'click #xlsx': 'print_xlsx',
+            'click #audit': 'audit_report',
             'click .show-gl': 'show_gl',
+            'click select.dropdown-menu': '_onDropdownSelectClick',
+            'change select.dropdown-menu': '_onDropdownSelectChange',
             'mousedown div.input-group.date[data-target-input="nearest"]': '_onCalendarIconClick',
         },
 
@@ -90,9 +93,12 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                         args: [[this.wizard_id]],
                     }).then(function(datas) {
                             _.each(datas['report_lines'], function(rep_lines) {
+                            rep_lines.initial = self.format_currency(datas['currency'],rep_lines.initial || 0);
                             rep_lines.debit = self.format_currency(datas['currency'],rep_lines.debit);
                             rep_lines.credit = self.format_currency(datas['currency'],rep_lines.credit);
                             rep_lines.balance = self.format_currency(datas['currency'],rep_lines.balance);
+                            rep_lines.final_debit = self.format_currency(datas['currency'],rep_lines.final_debit || 0);
+                            rep_lines.final_credit = self.format_currency(datas['currency'],rep_lines.final_credit || 0);
 
 
 
@@ -112,8 +118,11 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                                             report_lines : datas['report_lines'],
                                             filter : datas['filters'],
                                             currency : datas['currency'],
-                                            credit_total : self.format_currency(datas['currency'],datas['debit_total']),
                                             debit_total : self.format_currency(datas['currency'],datas['debit_total']),
+                                            credit_total : self.format_currency(datas['currency'],datas['credit_total']),
+                                            initial_total : self.format_currency(datas['currency'],datas['initial_total'] || 0),
+                                            final_debit_total : self.format_currency(datas['currency'],datas['final_debit_total'] || 0),
+                                            final_credit_total : self.format_currency(datas['currency'],datas['final_credit_total'] || 0),
                                         }));
                 });
 
@@ -122,6 +131,24 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                     window.location.href
                     }
             },
+
+            _onDropdownSelectClick: function (ev) {
+            // Los filtros "Target Move" y "Nivel PUC" usan un <select>
+            // nativo como .dropdown-menu. Bootstrap 4 cierra cualquier
+            // menú abierto ante un clic en el documento (salvo input /
+            // textarea), así que sin esto el desplegable se cierra antes
+            // de poder elegir opción.
+            ev.stopPropagation();
+        },
+
+            _onDropdownSelectChange: function (ev) {
+            ev.stopPropagation();
+            // Cierra el menú tras elegir (el select ES el .dropdown-menu)
+            var $select = $(ev.currentTarget);
+            $select.removeClass('show');
+            $select.closest('div').find('[data-toggle="dropdown"]').attr(
+                'aria-expanded', 'false');
+        },
 
             show_gl: function(e) {
             var self = this;
@@ -170,6 +197,23 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                     'display_name': 'Trial Balance',
                 };
                 return self.do_action(action);
+            });
+        },
+
+        audit_report: function() {
+            var self = this;
+            return self.do_action({
+                type: 'ir.actions.act_window',
+                name: _t('Auditoría de Reporte'),
+                res_model: 'ai.financial.audit.wizard',
+                view_mode: 'form',
+                views: [[false, 'form']],
+                target: 'new',
+                context: {
+                    'active_model': 'account.trial.balance',
+                    'active_id': self.wizard_id,
+                    'report_type': 'trial_balance'
+                }
             });
         },
 
@@ -283,6 +327,15 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
               post_res.innerHTML="posted";
 
               }
+            }
+            if ($(".puc_level").length) {
+                filter_data_selected.puc_level = $(".puc_level")[0].value || '0';
+            }
+            if (this.$el.find('input[name="account_from_code"]').length) {
+                filter_data_selected.account_from_code = this.$el.find('input[name="account_from_code"]').val() || '';
+            }
+            if (this.$el.find('input[name="account_to_code"]').length) {
+                filter_data_selected.account_to_code = this.$el.find('input[name="account_to_code"]').val() || '';
             }
             rpc.query({
                 model: 'account.trial.balance',

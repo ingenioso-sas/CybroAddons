@@ -145,12 +145,18 @@
                             style="position: relative;height:30px;color:white;background-color: #00A0AD;border-color: #00A0AD; padding:3px;">
                         Export (XLSX)
                     </button>
+<t t-if="filter_data.enable_audit_button">
+                    <button type="button" class="btn btn-primary" id="audit"
+                            style="position: relative;height:30px;color:white;background-color: #e0a800;border-color: #d39e00; padding:3px; margin-left: 5px;">
+                        Auditar Cifras
+                    </button>
+                    </t>
                 </div>
             </div>
             <br></br>
-            <div class="sub_container_right row" style="width:30%;height:3%;top:0px;position: relative;">
+            <div class="sub_container_right d-flex flex-wrap align-items-center" style="justify-content: flex-end;">
 
-                        <div class="time_range" style="">
+                        <div class="mr-3 mb-2 time_range" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown" >
                                 <span class="fa fa-calendar" title="Dates" role="img" aria-label="Dates"></span>
                                 Date Range
@@ -182,7 +188,7 @@
                             </div>
                         </div>
                         <t t-if="title == 'General Ledger'">
-                        <div class="journals_filter" style="">
+                        <div class="mr-3 mb-2 journals_filter" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Journals:
@@ -214,7 +220,7 @@
                         </div>
                         </t>
 
-                        <div class="accounts_filter">
+                        <div class="mr-3 mb-2 accounts_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Accounts:
@@ -244,7 +250,7 @@
                             <span id="acc_res"></span>
                         </div>
 
-                        <div class="analytics_filter">
+                        <div class="mr-3 mb-2 analytics_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Analytic Accounts:
@@ -259,7 +265,7 @@
                             <span id="analytic_res"></span>
                         </div>
 
-                        <div class="analytic_tags_filter">
+                        <div class="mr-3 mb-2 analytic_tags_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Analytic Tags:
@@ -318,6 +324,7 @@
                         <th>Date</th>
                         <th>JRNL</th>
                         <th>Partner</th>
+                        <th>Partner ID</th>
                         <th>Move</th>
                         <th>Entry Label</th>
                         <th class="mon_fld">Debit</th>
@@ -356,6 +363,9 @@
                             </td>
                             <td>
                                 <t t-esc="account_line.partner_name"/>
+                            </td>
+                            <td>
+                                <t t-esc="account_line.partner_vat"/>
                             </td>
                             <td t-att-style="style">
                                 <t t-esc="account_line.move_name"/>

@@ -1506,17 +1506,25 @@ class DashBoard(models.Model):
 
     @api.model
     def get_currency(self):
-        company_ids = self.get_current_company_value()
+        company_ids = self.get_current_company_value() or []
         if 0 in company_ids:
             company_ids.remove(0)
-        current_company_id = company_ids[0]
+        current_company_id = company_ids[0] if company_ids else self.env.company.id
         current_company = self.env['res.company'].browse(current_company_id)
-        default = current_company.currency_id or self.env.ref('base.main_company').currency_id
+        default = current_company.currency_id or self.env.company.currency_id
+        if not default:
+            default = self.env.ref('base.main_company').currency_id
         lang = self.env.user.lang
         if not lang:
             lang = 'en_US'
         lang = lang.replace("_", '-')
-        currency = {'position': default.position, 'symbol': default.symbol, 'language': lang}
+        # Nunca devolver valores vacíos que rompan format_currency en JS
+        # (TypeError: Cannot read properties of undefined reading 'language').
+        currency = {
+            'position': default.position if default else 'before',
+            'symbol': default.symbol if default else '',
+            'language': lang or 'en-US',
+        }
         return currency
 
     # function to get total expense

@@ -5,7 +5,7 @@
             <t t-set="data_report_margin_top" t-value="12"/>
             <t t-set="data_report_header_spacing" t-value="9"/>
             <t t-set="data_report_dpi" t-value="110"/>
-            <t t-call="web.internal_layout">
+            <!-- <t t-call="web.internal_layout"> Se comenta la linea por fallo en la genracion PDF--> 
                 <div class="page">
                     <div class="oe_structure"/>
                     <h3 style="text-align:centre;left:50%;"><span t-esc="Filters.get('company_name')"/>: <t t-esc="title"/>
@@ -81,6 +81,7 @@
                                 <th>Date</th>
                                 <th>JRNL</th>
                                 <th>Partner</th>
+                                <th>Partner ID</th>
                                 <th>Ref</th>
                                 <th>Move</th>
                                 <th>Entry Label</th>
@@ -113,6 +114,7 @@
                                     <td><span t-esc="line['ldate']"/></td>
                                     <td><span t-esc="line['lcode']"/></td>
                                     <td><span t-esc="line['partner_name']"/></td>
+                                    <td><span t-esc="line['partner_vat']"/></td>
                                     <td><span t-if="line['lref']" t-esc="line['lref']"/></td>
                                     <td><span t-esc="line['move_name']"/></td>
                                     <td><span t-esc="line['lname']"/></td>
@@ -138,7 +140,7 @@
                     </div>
                     <br></br>
                 </div>
-            </t>
+            <!-- </t> -->
         </t>
     </template>
 

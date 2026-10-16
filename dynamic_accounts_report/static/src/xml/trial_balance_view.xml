@@ -23,14 +23,12 @@
                 <table cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th colspan="6">Account</th>
-                            <t t-if="filter['date_from']">
-                                <th class="mon_fld">Initial Debit</th>
-                                <th class="mon_fld">Initial Credit</th>
-
-                            </t>
-                            <th class="mon_fld">Debit</th>
-                            <th class="mon_fld">Credit</th>
+                            <th colspan="6">Cuenta (PUC / NIIF)</th>
+                            <th class="mon_fld">Saldo Anterior</th>
+                            <th class="mon_fld">Débito</th>
+                            <th class="mon_fld">Crédito</th>
+                            <th class="mon_fld">Saldo Final Deudor</th>
+                            <th class="mon_fld">Saldo Final Acreedor</th>
                         </tr>
                     </thead>
 
@@ -49,6 +47,7 @@
                                         -
                                         <t t-esc="account['name']"/>
                                     </span>
+                                    <t t-if="account['id']">
                                     <div class="" style="display: inline-block;">
                                         <a type="button" class="dropdown-toggle" data-toggle="dropdown"
                                            aria-expanded="false">
@@ -69,55 +68,13 @@
                                             </div>
                                         </div>
                                     </div>
+                                    </t>
                                 </td>
-                                <t t-if="filter['date_from']">
-                                    <t t-if="account['Init_balance']">
-                                        <t t-if="currency[1] == 'before'">
-
-                                            <td class="mon_fld">
-                                                <t t-esc="currency[0]"/>
-                                                <t t-raw="account['Init_balance']['debit']"/>
-                                            </td>
-                                            <td class="mon_fld">
-                                                <t t-esc="currency[0]"/>
-                                                <t t-raw="account['Init_balance']['credit']"/>
-                                            </td>
-                                        </t>
-                                        <t t-else="">
-                                            <td class="mon_fld">
-                                                <t t-raw="account['Init_balance']['debit']"/>
-                                                <t t-esc="currency[0]"/>
-                                            </td>
-                                            <td class="mon_fld">
-                                                <t t-raw="account['Init_balance']['credit']"/>
-                                                <t t-esc="currency[0]"/>
-                                            </td>
-
-
-                                        </t>
-                                    </t>
-                                    <t t-else="">
-                                        <t t-if="currency[1] == 'before'">
-                                            <td class="mon_fld">
-                                                <t t-esc="currency[0]"/>0
-                                            </td>
-                                            <td class="mon_fld">
-                                                <t t-esc="currency[0]"/>0
-                                            </td>
-                                        </t>
-                                        <t t-else="">
-                                            <td class="mon_fld">
-                                                0
-                                                <t t-esc="currency[0]"/>
-                                            </td>
-                                            <td class="mon_fld">
-                                                0
-                                                <t t-esc="currency[0]"/>
-                                            </td>
-                                        </t>
-                                    </t>
-                                </t>
                                 <t t-if="currency[1] == 'before'">
+                                    <td class="mon_fld">
+                                        <t t-esc="currency[0]"/>
+                                        <t t-raw="account['initial']"/>
+                                    </td>
                                     <td class="mon_fld">
                                         <t t-esc="currency[0]"/>
                                         <t t-raw="account['debit']"/>
@@ -125,16 +82,36 @@
                                     <td class="mon_fld">
                                         <t t-esc="currency[0]"/>
                                         <t t-raw="account['credit']"/>
+                                    </td>
+                                    <td class="mon_fld">
+                                        <t t-esc="currency[0]"/>
+                                        <t t-raw="account['final_debit']"/>
+                                    </td>
+                                    <td class="mon_fld">
+                                        <t t-esc="currency[0]"/>
+                                        <t t-raw="account['final_credit']"/>
                                     </td>
 
                                 </t>
                                 <t t-else="">
                                     <td class="mon_fld">
+                                        <t t-raw="account['initial']"/>
+                                        <t t-esc="currency[0]"/>
+                                    </td>
+                                    <td class="mon_fld">
                                         <t t-raw="account['debit']"/>
                                         <t t-esc="currency[0]"/>
                                     </td>
                                     <td class="mon_fld">
                                         <t t-raw="account['credit']"/>
+                                        <t t-esc="currency[0]"/>
+                                    </td>
+                                    <td class="mon_fld">
+                                        <t t-raw="account['final_debit']"/>
+                                        <t t-esc="currency[0]"/>
+                                    </td>
+                                    <td class="mon_fld">
+                                        <t t-raw="account['final_credit']"/>
                                         <t t-esc="currency[0]"/>
                                     </td>
 
@@ -144,30 +121,37 @@
                             </tr>
                         </t>
                         <td colspan="6" style="" class="">
-                            <strong>Total</strong>
+                            <strong>TOTALES</strong>
                         </td>
-                        <t t-if="filter['date_from']">
-
-                            <td class="mon_fld" style="">
-                                <strong></strong>
-                            </td>
-                            <td class="mon_fld" style="">
-                                <strong></strong>
-                            </td>
-                        </t>
                         <t t-if="currency[1] == 'before'">
                             <td class="mon_fld" style="">
                                 <strong>
                                     <t t-esc="currency[0]"/>
-<!--                                    <t t-raw="Math.round(debit_total * Math.pow(10, 2)) / Math.pow(10, 2)"/>-->
+                                    <t t-esc="initial_total"/>
+                                </strong>
+                            </td>
+                            <td class="mon_fld" style="">
+                                <strong>
+                                    <t t-esc="currency[0]"/>
                                     <t t-esc="debit_total"/>
                                 </strong>
                             </td>
                             <td class="mon_fld" style="">
                                 <strong>
                                     <t t-esc="currency[0]"/>
-<!--                                    <t t-raw="Math.round(credit_total * Math.pow(10, 2)) / Math.pow(10, 2)"/>-->
                                     <t t-esc="credit_total"/>
+                                </strong>
+                            </td>
+                            <td class="mon_fld" style="">
+                                <strong>
+                                    <t t-esc="currency[0]"/>
+                                    <t t-esc="final_debit_total"/>
+                                </strong>
+                            </td>
+                            <td class="mon_fld" style="">
+                                <strong>
+                                    <t t-esc="currency[0]"/>
+                                    <t t-esc="final_credit_total"/>
                                 </strong>
                             </td>
                         </t>
@@ -175,13 +159,31 @@
 
                             <td class="mon_fld" style="">
                                 <strong>
-                                    <t t-raw="Math.round(debit_total * Math.pow(10, 2)) / Math.pow(10, 2)"/>
+                                    <t t-esc="initial_total"/>
                                     <t t-esc="currency[0]"/>
                                 </strong>
                             </td>
                             <td class="mon_fld" style="">
                                 <strong>
-                                    <t t-raw="Math.round(credit_total * Math.pow(10, 2)) / Math.pow(10, 2)"/>
+                                    <t t-esc="debit_total"/>
+                                    <t t-esc="currency[0]"/>
+                                </strong>
+                            </td>
+                            <td class="mon_fld" style="">
+                                <strong>
+                                    <t t-esc="credit_total"/>
+                                    <t t-esc="currency[0]"/>
+                                </strong>
+                            </td>
+                            <td class="mon_fld" style="">
+                                <strong>
+                                    <t t-esc="final_debit_total"/>
+                                    <t t-esc="currency[0]"/>
+                                </strong>
+                            </td>
+                            <td class="mon_fld" style="">
+                                <strong>
+                                    <t t-esc="final_credit_total"/>
                                     <t t-esc="currency[0]"/>
                                 </strong>
                             </td>
@@ -207,12 +209,18 @@
                             style="position: relative;height:30px;color:white;background-color: #00A0AD;border-color: #00A0AD; padding:3px;">
                         Export (XLSX)
                     </button>
+<t t-if="filter_data.enable_audit_button">
+                    <button type="button" class="btn btn-primary" id="audit"
+                            style="position: relative;height:30px;color:white;background-color: #e0a800;border-color: #d39e00; padding:3px; margin-left: 5px;">
+                        Auditar Cifras
+                    </button>
+                    </t>
                 </div>
             </div>
             <br></br>
-            <div class="sub_container_right row" style="width:30%;height:3%;top:0px;position: relative;">
+            <div class="sub_container_right d-flex flex-wrap align-items-center" style="justify-content: flex-end;">
 
-                        <div class="time_range" style="">
+                        <div class="mr-3 mb-2 time_range" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown" >
                                 <span class="fa fa-calendar" title="Dates" role="img" aria-label="Dates"></span>
                                 Date Range
@@ -246,7 +254,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="journals_filter" style="">
+                        <div class="mr-3 mb-2 journals_filter" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Journals:
@@ -287,6 +295,32 @@
                                 <option value="All">All Entries</option>
                             </select>
                             <span id="post_res"></span>
+                        </div>
+                        <div class="mr-3 mb-2 puc_filter" style="">
+                            <a type="button" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="fa fa-sitemap"></span>
+                                Nivel PUC:
+                            </a>
+                            <select class="dropdown-menu puc_level" name="puc_level">
+                                <div role="separator" class="dropdown-divider"></div>
+                                <option value="0">Detalle completo</option>
+                                <option value="1">Clase (1 dígito)</option>
+                                <option value="2">Grupo (2 dígitos)</option>
+                                <option value="4">Cuenta (4 dígitos)</option>
+                                <option value="6">Subcuenta (6 dígitos)</option>
+                            </select>
+                        </div>
+                        <div class="mr-3 mb-2 account_range" style="">
+                            <a type="button" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="fa fa-list-ol"></span>
+                                Rango PUC:
+                            </a>
+                            <div class="dropdown-menu" role="menu" style="padding:8px;">
+                                <label>Desde:</label>
+                                <input type="text" name="account_from_code" class="form-control" placeholder="ej. 11"/>
+                                <label>Hasta:</label>
+                                <input type="text" name="account_to_code" class="form-control" placeholder="ej. 23"/>
+                            </div>
                         </div>
                         <div style="">
                             <button type="button" id="apply_filter" class="btn btn-primary"

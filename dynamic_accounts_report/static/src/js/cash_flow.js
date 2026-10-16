@@ -21,6 +21,7 @@ odoo.define('dynamic_cash_flow_statements.cash_flow', function (require) {
             'click #apply_filter': 'apply_filter',
             'click #pdf': 'print_pdf',
             'click #xlsx': 'print_xlsx',
+            'click #audit': 'audit_report',
             'click .cf-line': 'get_move_lines',
             'mousedown div.input-group.date[data-target-input="nearest"]': '_onCalendarIconClick',
         },
@@ -256,6 +257,23 @@ odoo.define('dynamic_cash_flow_statements.cash_flow', function (require) {
                     'display_name': 'Cash Flow Statements',
                 };
                 return self.do_action(action);
+            });
+        },
+
+        audit_report: function() {
+            var self = this;
+            return self.do_action({
+                type: 'ir.actions.act_window',
+                name: _t('Auditoría de Reporte'),
+                res_model: 'ai.financial.audit.wizard',
+                view_mode: 'form',
+                views: [[false, 'form']],
+                target: 'new',
+                context: {
+                    'active_model': 'account.cash.flow',
+                    'active_id': self.wizard_id,
+                    'report_type': 'cash_flow'
+                }
             });
         },
 

@@ -140,6 +140,9 @@ class GeneralView(models.TransientModel):
         filters['company_name'] = data.get('company_name')
         filters['target_move'] = data.get('target_move').capitalize()
 
+        enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
+        enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
+        filters['enable_audit_button'] = enable_static or enable_ai
         return filters
 
     def get_filter_data(self, option):
@@ -173,7 +176,7 @@ class GeneralView(models.TransientModel):
             if j.company_id != o_company:
                 accounts.append(('divider', j.company_id.name))
                 o_company = j.company_id
-            accounts.append((j.id, j.name))
+            accounts.append((j.id, "%s - %s" % (j.code, j.name)))
 
 
 
@@ -189,7 +192,7 @@ class GeneralView(models.TransientModel):
             'target_move': r.target_move,
             # 'journals_list': [(j.id, j.name, j.code) for j in journals],
             'journals_list': journals,
-            # 'accounts_list': [(a.id, a.name) for a in accounts],
+            # 'accounts_list': [(a.id, '%s - %s' % (a.code, a.name)) for a in accounts],
             'accounts_list': accounts,
             'account_tag_list': [(a.id, a.name) for a in account_tags],
             'analytic_list': [(anl.id, anl.name) for anl in analytics],
@@ -354,7 +357,7 @@ class GeneralView(models.TransientModel):
 
         # Get move lines base on sql query and Calculate the total balance of move lines
         sql = ('''SELECT l.id AS lid,m.id AS move_id, l.account_id AS account_id, l.date AS ldate, j.code AS lcode, l.currency_id, l.amount_currency, l.ref AS lref, l.name AS lname, COALESCE(l.debit,0) AS debit, COALESCE(l.credit,0) AS credit, COALESCE(SUM(l.balance),0) AS balance,\
-                    m.name AS move_name, c.symbol AS currency_code, p.name AS partner_name\
+                    m.name AS move_name, c.symbol AS currency_code, p.name AS partner_name, p.vat AS partner_vat\
                     FROM account_move_line l\
                     JOIN account_move m ON (l.move_id=m.id)\
                     LEFT JOIN res_currency c ON (l.currency_id=c.id)\
@@ -364,7 +367,7 @@ class GeneralView(models.TransientModel):
                     LEFT JOIN account_analytic_tag_account_move_line_rel anltag ON (anltag.account_move_line_id=l.id)
                     JOIN account_journal j ON (l.journal_id=j.id)\
                     JOIN account_account a ON (l.account_id = a.id) '''
-                    + WHERE + new_final_filter + ''' GROUP BY l.id, m.id,  l.account_id, l.date, j.code, l.currency_id, l.amount_currency, l.ref, l.name, m.name, c.symbol, c.position, p.name''' )
+                    + WHERE + new_final_filter + ''' GROUP BY l.id, m.id,  l.account_id, l.date, j.code, l.currency_id, l.amount_currency, l.ref, l.name, m.name, c.symbol, c.position, p.name, p.vat''' )
         if data.get('accounts'):
             params = tuple(where_params)
         else:
@@ -454,17 +457,17 @@ class GeneralView(models.TransientModel):
              filters['analytics']]) + '  Target Moves : ' + filters.get('target_move'),
                           date_head)
 
-
         sheet.write('A8', 'Code', sub_heading)
         sheet.write('B8', 'Amount', sub_heading)
         sheet.write('C8', 'Date', sub_heading)
         sheet.write('D8', 'JRNL', sub_heading)
         sheet.write('E8', 'Partner', sub_heading)
-        sheet.write('F8', 'Move', sub_heading)
-        sheet.write('G8', 'Entry Label', sub_heading)
-        sheet.write('H8', 'Debit', sub_heading)
-        sheet.write('I8', 'Credit', sub_heading)
-        sheet.write('J8', 'Balance', sub_heading)
+        sheet.write('F8', 'Partner ID', sub_heading)
+        sheet.write('G8', 'Move', sub_heading)
+        sheet.write('H8', 'Entry Label', sub_heading)
+        sheet.write('I8', 'Debit', sub_heading)
+        sheet.write('J8', 'Credit', sub_heading)
+        sheet.write('K8', 'Balance', sub_heading)
 
         row = 6
         col = 0
@@ -474,10 +477,12 @@ class GeneralView(models.TransientModel):
         sheet.set_column(8, 3, 15)
         sheet.set_column(8, 4, 15)
         sheet.set_column(8, 5, 15)
-        sheet.set_column(8, 6, 50)
-        sheet.set_column(8, 7, 26)
-        sheet.set_column(8, 8, 15)
-        sheet.set_column(8, 9, 15)
+        sheet.set_column(8, 6, 15)
+        sheet.set_column(8, 7, 15)
+        sheet.set_column(8, 8, 50)
+        sheet.set_column(8, 9, 26)
+        sheet.set_column(8, 10, 15)
+        sheet.set_column(8, 11, 15)
 
         for rec_data in report_data_main:
 
@@ -500,11 +505,12 @@ class GeneralView(models.TransientModel):
                 sheet.write(row + 1, col + 2, line_data.get('ldate'), txt)
                 sheet.write(row + 1, col + 3, line_data.get('lcode'), txt)
                 sheet.write(row + 1, col + 4, line_data.get('partner_name'), txt)
-                sheet.write(row + 1, col + 5, line_data.get('move_name'), txt)
-                sheet.write(row + 1, col + 6, line_data.get('lname'), txt)
-                sheet.write(row + 1, col + 7, line_data.get('debit'), txt)
-                sheet.write(row + 1, col + 8, line_data.get('credit'), txt)
-                sheet.write(row + 1, col + 9, line_data.get('balance'), txt)
+                sheet.write(row + 1, col + 5, line_data.get('partner_vat'), txt)
+                sheet.write(row + 1, col + 6, line_data.get('move_name'), txt)
+                sheet.write(row + 1, col + 7, line_data.get('lname'), txt)
+                sheet.write(row + 1, col + 8, line_data.get('debit'), txt)
+                sheet.write(row + 1, col + 9, line_data.get('credit'), txt)
+                sheet.write(row + 1, col + 10, line_data.get('balance'), txt)
 
 
 

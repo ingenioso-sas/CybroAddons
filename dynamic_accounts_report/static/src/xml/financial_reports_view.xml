@@ -29,49 +29,36 @@
 						<t t-set="none_value" t-value="_"/>
 						<t t-foreach="bs_lines" t-as="a">
 							<t t-if="a['code']">
-								<t t-foreach="report_lines" t-as="account">
-
-
-									<t t-set="common_id" t-value="0"/>
-									<t t-if="account['id'] == a['account']">
-										<tr style="border: 1.5px solid black;" class="gl-line"
-											data-toggle="collapse"
-											t-att-data-account-id="account['id']"
-											t-attf-data-target=".a{{account['id']}}">
-											<td colspan="6" style="border: 0px solid black; padding-left: 50px;">
-												<span>
-													<t t-esc="account['code']"/>
-													-
-													<t t-esc="account['name']"/>
-												</span>
-												<div class="" style="display: inline-block;">
-												<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-												</a>
-													<div class="dropdown-menu " role="menu">
-														<div class="o_foldable_menu o_closed_menu " >
-															<div class="form-group ">
-																<div class="show-gl" aria-atomic="true" id="" data-target-input="">
-																	<li role="presentation">
-																		<a role="menuitem" style="background-color:aqua; font-weight:bold;" t-att-data-account-id="account['id']" class="show-gl" >View General Ledger</a>
-																	</li>
-																</div>
-															</div>
-
+								<tr style="border: 1.5px solid black;" class="gl-line"
+									data-toggle="collapse"
+									t-att-data-account-id="a['account']"
+									t-attf-data-target=".a{{a['account']}}">
+									<td colspan="6" style="border: 0px solid black; padding-left: 50px;">
+										<span>
+											<t t-esc="a['name']"/>
+										</span>
+										<div class="" style="display: inline-block;">
+										<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+										</a>
+											<div class="dropdown-menu " role="menu">
+												<div class="o_foldable_menu o_closed_menu " >
+													<div class="form-group ">
+														<div class="show-gl" aria-atomic="true" id="" data-target-input="">
+															<li role="presentation">
+																<a role="menuitem" style="background-color:aqua; font-weight:bold;" t-att-data-account-id="a['account']" class="show-gl" >View General Ledger</a>
+															</li>
 														</div>
 													</div>
+
 												</div>
-											</td>
-											<td t-att-style="fr_padding"><t t-esc="a['m_debit']" t-att-style="style"/></td>
-											<td t-att-style="fr_padding"><t t-esc="a['m_credit']" t-att-style="style"/></td>
-											<td t-att-style="fr_padding"><t t-esc="a['m_balance']" t-att-style="style"/></td>
-
-
-
-											<t t-set="common_id" t-value="'a'+account['id']"/>
-										</tr>
-									</t>
-								</t>
-
+											</div>
+										</div>
+									</td>
+									<td t-att-style="fr_padding"><t t-esc="a['m_debit']" t-att-style="style"/></td>
+									<td t-att-style="fr_padding"><t t-esc="a['m_credit']" t-att-style="style"/></td>
+									<td t-att-style="fr_padding"><t t-esc="a['m_balance']" t-att-style="style"/></td>
+									<t t-set="common_id" t-value="'a'+a['account']"/>
+								</tr>
 							</t>
 							<t t-else="">
 								<t t-set="style" t-value="'padding: 5px;padding-left: 25px;'"/>
@@ -128,12 +115,18 @@
                             style="position: relative;height:30px;color:white;background-color: #00A0AD;border-color: #00A0AD; padding:3px;">
                         Export (XLSX)
                     </button>
+<t t-if="filter_data.enable_audit_button">
+                    <button type="button" class="btn btn-primary" id="audit"
+                            style="position: relative;height:30px;color:white;background-color: #e0a800;border-color: #d39e00; padding:3px; margin-left: 5px;">
+                        Auditar Cifras
+                    </button>
+                    </t>
                 </div>
             </div>
             <br></br>
-            <div class="sub_container_right row" style="width:30%;height:3%;top:0px;position: relative;">
+            <div class="sub_container_right d-flex flex-wrap align-items-center" style="justify-content: flex-end;">
 
-                        <div class="time_range" style="">
+                        <div class="mr-3 mb-2 time_range" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown" >
                                 <span class="fa fa-calendar" title="Dates" role="img" aria-label="Dates"></span>
                                 Date Range
@@ -164,7 +157,7 @@
                                 </div>
                             </div>
                         </div>
-					<div class="journals_filter" style="">
+					<div class="mr-3 mb-2 journals_filter" style="">
 						<a type="button" class="dropdown-toggle" data-toggle="dropdown">
 							<span class="fa fa-book"></span>
 Journals:
@@ -192,7 +185,7 @@ Journals:
 						<span id="journal_res"></span>
 					</div>
 
-                        <div class="accounts_filter">
+                        <div class="mr-3 mb-2 accounts_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Accounts:
@@ -220,7 +213,7 @@ Journals:
                             <span id="acc_res"></span>
                         </div>
 
-						<div class="account_tags_filter">
+						<div class="mr-3 mb-2 account_tags_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Account Tags:
@@ -235,7 +228,7 @@ Journals:
                             <span id="acc_tag_res"></span>
                         </div>
 
-                        <div class="analytics_filter">
+                        <div class="mr-3 mb-2 analytics_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Analytic Accounts:
@@ -250,7 +243,7 @@ Journals:
                             <span id="analytic_res"></span>
                         </div>
 
-						<div class="analytic_tags_filter">
+						<div class="mr-3 mb-2 analytic_tags_filter">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-book"></span>
                                 Analytic Tags:

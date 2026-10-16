@@ -24,6 +24,23 @@ class TrialView(models.TransientModel):
         [('all', 'All'), ('movement', 'With movements'),
          ('not_zero', 'With balance is not equal to 0')],
         string='Display Accounts', required=True, default='movement')
+    puc_level = fields.Selection(
+        [('0', 'Detalle completo'),
+         ('1', 'Clase (1 dígito)'),
+         ('2', 'Grupo (2 dígitos)'),
+         ('4', 'Cuenta (4 dígitos)'),
+         ('6', 'Subcuenta (6 dígitos)')],
+        string='Nivel PUC', default='0', required=True,
+        help='Nivel de desagregación del PUC Colombia. Los saldos de las '
+             'subcuentas se consolidan por el prefijo del código.')
+    account_from_code = fields.Char(
+        string='Cuenta desde',
+        help='Código PUC inicial del rango (inclusivo). Vacío = desde la '
+             'primera.')
+    account_to_code = fields.Char(
+        string='Cuenta hasta',
+        help='Código PUC final del rango (inclusivo). Vacío = hasta la '
+             'última.')
 
     @api.model
     def view_report(self, option):
@@ -34,6 +51,9 @@ class TrialView(models.TransientModel):
             'model':self,
             'journals': r.journal_ids,
             'target_move': r.target_move,
+            'puc_level': r.puc_level or '0',
+            'account_from_code': (r.account_from_code or '').strip(),
+            'account_to_code': (r.account_to_code or '').strip(),
 
         }
         if r.date_from:
@@ -57,6 +77,9 @@ class TrialView(models.TransientModel):
             'report_lines': records['Accounts'],
             'debit_total': records['debit_total'],
             'credit_total': records['credit_total'],
+            'initial_total': records.get('initial_total', 0.0),
+            'final_debit_total': records.get('final_debit_total', 0.0),
+            'final_credit_total': records.get('final_credit_total', 0.0),
             'currency': currency,
         }
 
@@ -78,7 +101,18 @@ class TrialView(models.TransientModel):
         filters['journals_list'] = data.get('journals_list')
         filters['company_name'] = data.get('company_name')
         filters['target_move'] = data.get('target_move').capitalize()
+        filters['puc_level'] = data.get('puc_level', '0')
+        level_labels = {'0': 'Detalle completo', '1': 'Clase (1)',
+                        '2': 'Grupo (2)', '4': 'Cuenta (4)',
+                        '6': 'Subcuenta (6)'}
+        filters['puc_level_label'] = level_labels.get(
+            str(data.get('puc_level', '0')), '')
+        filters['account_from_code'] = data.get('account_from_code', '')
+        filters['account_to_code'] = data.get('account_to_code', '')
 
+        enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
+        enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
+        filters['enable_audit_button'] = enable_static or enable_ai
         return filters
 
     def get_current_company_value(self):
@@ -121,6 +155,9 @@ class TrialView(models.TransientModel):
             # 'journals_list': [(j.id, j.name, j.code) for j in journals],
 
             'company_name': ', '.join(self.env.companies.mapped('name')),
+            'puc_level': r.puc_level or '0',
+            'account_from_code': (r.account_from_code or '').strip(),
+            'account_to_code': (r.account_to_code or '').strip(),
         }
         filter_dict.update(default_filters)
         return filter_dict
@@ -133,13 +170,20 @@ class TrialView(models.TransientModel):
         if not accounts:
             raise UserError(_("No Accounts Found! Please Add One"))
         account_res = self._get_accounts(accounts, display_account, data)
-        debit_total = 0
         debit_total = sum(x['debit'] for x in account_res)
         credit_total = sum(x['credit'] for x in account_res)
+        initial_total = sum(x.get('initial', 0.0) for x in account_res)
+        final_debit_total = sum(
+            x.get('final_debit', 0.0) for x in account_res)
+        final_credit_total = sum(
+            x.get('final_credit', 0.0) for x in account_res)
         return {
             'doc_ids': self.ids,
             'debit_total': debit_total,
             'credit_total': credit_total,
+            'initial_total': initial_total,
+            'final_debit_total': final_debit_total,
+            'final_credit_total': final_credit_total,
             'docs': docs,
             'time': time,
             'Accounts': account_res,
@@ -161,62 +205,147 @@ class TrialView(models.TransientModel):
         res = super(TrialView, self).write(vals)
         return res
 
-    def _get_accounts(self, accounts, display_account, data):
+    def _get_sums(self, accounts, data, initial=False):
+        """Una sola query agrupada: {account_id: {debit, credit}}.
 
-        account_result = {}
-        # Prepare sql query base on selected parameters from wizard
-        tables, where_clause, where_params = self.env['account.move.line']._query_get()
-        tables = tables.replace('"', '')
-        if not tables:
-            tables = 'account_move_line'
+        Si initial=True, acumula lo anterior a date_from (saldo anterior).
+        Parametrizado (sin interpolación de fechas en el SQL).
+        """
+        if not accounts:
+            return {}
+        tables, where_clause, where_params = self.env[
+            'account.move.line']._query_get()
+        tables = (tables or 'account_move_line').replace('"', '')
         wheres = [""]
         if where_clause.strip():
             wheres.append(where_clause.strip())
-        filters = " AND ".join(wheres)
-        if data['target_move'] == 'posted':
-            filters += " AND account_move_line.parent_state = 'posted'"
+        base_filter = " AND ".join(wheres)
+        target = (data.get('target_move') or 'posted').lower()
+        extra = ""
+        params_extra = []
+        if target == 'posted':
+            extra += " AND account_move_line.parent_state = 'posted'"
         else:
-            filters += " AND account_move_line.parent_state in ('draft','posted')"
-        if data.get('date_from'):
-            filters += " AND account_move_line.date >= '%s'" % data.get('date_from')
-        if data.get('date_to'):
-            filters += " AND account_move_line.date <= '%s'" % data.get('date_to')
-
-        if data['journals']:
-            filters += ' AND jrnl.id IN %s' % str(tuple(data['journals'].ids) + tuple([0]))
-        tables += ' JOIN account_journal jrnl ON (account_move_line.journal_id=jrnl.id)'
-        # compute the balance, debit and credit for the provided accounts
+            extra += (" AND account_move_line.parent_state in "
+                      "('draft','posted')")
+        if initial:
+            if data.get('date_from'):
+                extra += " AND account_move_line.date < %s"
+                params_extra.append(data.get('date_from'))
+            else:
+                return {}
+        else:
+            if data.get('date_from'):
+                extra += " AND account_move_line.date >= %s"
+                params_extra.append(data.get('date_from'))
+            if data.get('date_to'):
+                extra += " AND account_move_line.date <= %s"
+                params_extra.append(data.get('date_to'))
+        journals = data.get('journals')
+        journal_ids = journals.ids if journals else []
+        if journal_ids:
+            extra += " AND account_move_line.journal_id IN %s"
+            params_extra.append(tuple(journal_ids))
         request = (
-                    "SELECT account_id AS id, SUM(debit) AS debit, SUM(credit) AS credit, (SUM(debit) - SUM(credit)) AS balance" + \
-                    " FROM " + tables + " WHERE account_id IN %s " + filters + " GROUP BY account_id")
-        params = (tuple(accounts.ids),) + tuple(where_params)
+            "SELECT account_id AS id, COALESCE(SUM(debit), 0.0) AS debit, "
+            "COALESCE(SUM(credit), 0.0) AS credit, "
+            "(COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0)) AS balance"
+            " FROM " + tables + " WHERE account_id IN %s " + base_filter +
+            extra + " GROUP BY account_id")
+        params = ((tuple(accounts.ids),) + tuple(where_params or ()) +
+                  tuple(params_extra))
         self.env.cr.execute(request, params)
-        for row in self.env.cr.dictfetchall():
-            account_result[row.pop('id')] = row
+        return {row.pop('id'): row for row in self.env.cr.dictfetchall()}
+
+    def _get_accounts(self, accounts, display_account, data):
+
+        # Filtro por rango de códigos PUC (antes de consultar)
+        code_from = (data.get('account_from_code') or '').strip()
+        code_to = (data.get('account_to_code') or '').strip()
+        if code_from or code_to:
+            def _in_range(acc):
+                code = (acc.code or '').strip()
+                if code_from and code < code_from:
+                    return False
+                if code_to and code > code_to:
+                    return False
+                return True
+            accounts = accounts.filtered(_in_range)
+        try:
+            level = int(data.get('puc_level') or 0)
+        except (TypeError, ValueError):
+            level = 0
+
+        # 2 queries masivas (periodo + saldo anterior), sin N+1
+        period_sums = self._get_sums(accounts, data, initial=False)
+        init_sums = self._get_sums(accounts, data, initial=True)
+
+        detail = []
+        for account in accounts.sorted(key=lambda a: (a.code or '', a.id)):
+            per = period_sums.get(
+                account.id, {'debit': 0.0, 'credit': 0.0, 'balance': 0.0})
+            ini = init_sums.get(
+                account.id, {'debit': 0.0, 'credit': 0.0, 'balance': 0.0})
+            initial = (ini.get('balance') if data.get('date_from')
+                       else 0.0) or 0.0
+            debit = per.get('debit', 0.0) or 0.0
+            credit = per.get('credit', 0.0) or 0.0
+            balance = initial + debit - credit
+            detail.append({
+                'code': (account.code or '').strip(),
+                'name': account.name,
+                'id': account.id,
+                'initial': initial,
+                'Init_balance': {'debit': ini.get('debit', 0.0) or 0.0,
+                                 'credit': ini.get('credit', 0.0) or 0.0,
+                                 'balance': initial},
+                'debit': debit,
+                'credit': credit,
+                'balance': balance,
+            })
+
+        # Consolidación por nivel PUC (las hijas se suman en el prefijo)
+        if level > 0:
+            by_code = {a.code: (a.name, a.id) for a in accounts}
+            grouped = {}
+            for line in detail:
+                prefix = line['code'][:level] or line['code']
+                if prefix not in grouped:
+                    pname, pid = by_code.get(prefix, (prefix + ' (grupo)',
+                                                      False))
+                    grouped[prefix] = {
+                        'code': prefix, 'name': pname, 'id': pid,
+                        'initial': 0.0,
+                        'Init_balance': {'debit': 0.0, 'credit': 0.0,
+                                         'balance': 0.0},
+                        'debit': 0.0, 'credit': 0.0, 'balance': 0.0,
+                    }
+                g = grouped[prefix]
+                g['initial'] += line['initial']
+                g['Init_balance']['debit'] += line['Init_balance']['debit']
+                g['Init_balance']['credit'] += line['Init_balance']['credit']
+                g['Init_balance']['balance'] += line['initial']
+                g['debit'] += line['debit']
+                g['credit'] += line['credit']
+                g['balance'] += line['balance']
+            detail = sorted(grouped.values(), key=lambda r: r['code'])
 
         account_res = []
-        for account in accounts:
-            res = dict((fn, 0.0) for fn in ['credit', 'debit', 'balance'])
-            currency = account.currency_id and account.currency_id or account.company_id.currency_id
-            res['code'] = account.code
-            res['name'] = account.name
-            res['id'] = account.id
-            if data.get('date_from'):
-
-                res['Init_balance'] = self.get_init_bal(account, display_account, data)
-
-            if account.id in account_result:
-                res['debit'] = account_result[account.id].get('debit')
-                res['credit'] = account_result[account.id].get('credit')
-                res['balance'] = account_result[account.id].get('balance')
+        for res in detail:
+            balance = res['balance']
+            currency = self.env.company.currency_id
+            res['final_debit'] = balance if balance > 0 else 0.0
+            res['final_credit'] = -balance if balance < 0 else 0.0
             if display_account == 'all':
                 account_res.append(res)
-            if display_account == 'not_zero' and not currency.is_zero(
-                    res['balance']):
+            elif display_account == 'not_zero' and not currency.is_zero(
+                    balance):
                 account_res.append(res)
-            if display_account == 'movement' and (
+            elif display_account == 'movement' and (
                     not currency.is_zero(res['debit']) or not currency.is_zero(
-                    res['credit'])):
+                        res['credit']) or
+                    (data.get('date_from') and not currency.is_zero(
+                        res['initial']))):
                 account_res.append(res)
         return account_res
 
@@ -282,67 +411,56 @@ class TrialView(models.TransientModel):
              'border_color': 'black'})
         txt = workbook.add_format({'font_size': '10px', 'border': 1})
         txt_l = workbook.add_format({'font_size': '10px', 'border': 1, 'bold': True})
-        sheet.merge_range('A2:D3', filters.get('company_name') + ':' + ' Trial Balance', head)
+        sheet.merge_range('A2:G3', filters.get('company_name') + ':' + ' Balance de Comprobación', head)
         date_head = workbook.add_format({'align': 'center', 'bold': True,
                                          'font_size': '10px'})
         date_style = workbook.add_format({'align': 'center',
                                           'font_size': '10px'})
         if filters.get('date_from'):
-            sheet.merge_range('A4:B4', 'From: '+filters.get('date_from') , date_head)
+            sheet.merge_range('A4:C4', 'Desde: '+filters.get('date_from') , date_head)
         if filters.get('date_to'):
-            sheet.merge_range('C4:D4', 'To: '+ filters.get('date_to'), date_head)
-        sheet.merge_range('A5:D6', 'Journals: ' + ', '.join([ lt or '' for lt in filters['journals'] ]) + '  Target Moves: '+ filters.get('target_move'), date_head)
-        sheet.write('A7', 'Code', sub_heading)
-        sheet.write('B7', 'Amount', sub_heading)
-        if filters.get('date_from'):
-            sheet.write('C7', 'Initial Debit', sub_heading)
-            sheet.write('D7', 'Initial Credit', sub_heading)
-            sheet.write('E7', 'Debit', sub_heading)
-            sheet.write('F7', 'Credit', sub_heading)
-        else:
-            sheet.write('C7', 'Debit', sub_heading)
-            sheet.write('D7', 'Credit', sub_heading)
+            sheet.merge_range('D4:G4', 'Hasta: '+ filters.get('date_to'), date_head)
+        level_labels = {'0': 'Detalle completo', '1': 'Clase (1)',
+                        '2': 'Grupo (2)', '4': 'Cuenta (4)',
+                        '6': 'Subcuenta (6)'}
+        sheet.merge_range(
+            'A5:G5', 'Nivel PUC: %s   Rango: %s a %s' % (
+                level_labels.get(str(filters.get('puc_level', '0')), ''),
+                filters.get('account_from_code') or '...',
+                filters.get('account_to_code') or '...'), date_head)
+        sheet.merge_range('A6:G6', 'Diarios: ' + ', '.join([ lt or '' for lt in filters['journals'] ]) + '  Asientos: '+ filters.get('target_move'), date_head)
+        sheet.write('A7', 'Código', sub_heading)
+        sheet.write('B7', 'Cuenta (PUC/NIIF)', sub_heading)
+        sheet.write('C7', 'Saldo Anterior', sub_heading)
+        sheet.write('D7', 'Débito', sub_heading)
+        sheet.write('E7', 'Crédito', sub_heading)
+        sheet.write('F7', 'Saldo Final Deudor', sub_heading)
+        sheet.write('G7', 'Saldo Final Acreedor', sub_heading)
 
         row = 6
         col = 0
-        sheet.set_column(5, 0, 15)
-        sheet.set_column(6, 1, 15)
-        sheet.set_column(7, 2, 26)
-        if filters.get('date_from'):
-            sheet.set_column(8, 3, 15)
-            sheet.set_column(9, 4, 15)
-            sheet.set_column(10, 5, 15)
-            sheet.set_column(11, 6, 15)
-        else:
-
-            sheet.set_column(8, 3, 15)
-            sheet.set_column(9, 4, 15)
+        sheet.set_column(0, 0, 15)
+        sheet.set_column(1, 1, 40)
+        sheet.set_column(2, 6, 18)
         for rec_data in report_data_main:
 
             row += 1
             sheet.write(row, col, rec_data['code'], txt)
             sheet.write(row, col + 1, rec_data['name'], txt)
-            if filters.get('date_from'):
-                if rec_data.get('Init_balance'):
-                    sheet.write(row, col + 2, rec_data['Init_balance']['debit'], txt)
-                    sheet.write(row, col + 3, rec_data['Init_balance']['credit'], txt)
-                else:
-                    sheet.write(row, col + 2, 0, txt)
-                    sheet.write(row, col + 3, 0, txt)
-
-                sheet.write(row, col + 4, rec_data['debit'], txt)
-                sheet.write(row, col + 5, rec_data['credit'], txt)
-
-            else:
-                sheet.write(row, col + 2, rec_data['debit'], txt)
-                sheet.write(row, col + 3, rec_data['credit'], txt)
-        sheet.write(row+1, col, 'Total', sub_heading)
-        if filters.get('date_from'):
-            sheet.write(row + 1, col + 4, total.get('debit_total'), txt_l)
-            sheet.write(row + 1, col + 5, total.get('credit_total'), txt_l)
-        else:
-            sheet.write(row + 1, col + 2, total.get('debit_total'), txt_l)
-            sheet.write(row + 1, col + 3, total.get('credit_total'), txt_l)
+            sheet.write(row, col + 2, rec_data.get('initial', 0.0), txt)
+            sheet.write(row, col + 3, rec_data['debit'], txt)
+            sheet.write(row, col + 4, rec_data['credit'], txt)
+            sheet.write(row, col + 5, rec_data.get('final_debit', 0.0), txt)
+            sheet.write(row, col + 6, rec_data.get('final_credit', 0.0), txt)
+        sheet.write(row+1, col, 'TOTALES', sub_heading)
+        sheet.write(row + 1, col + 1, '', sub_heading)
+        sheet.write(row + 1, col + 2, total.get('initial_total', 0.0), txt_l)
+        sheet.write(row + 1, col + 3, total.get('debit_total'), txt_l)
+        sheet.write(row + 1, col + 4, total.get('credit_total'), txt_l)
+        sheet.write(row + 1, col + 5, total.get('final_debit_total', 0.0),
+                    txt_l)
+        sheet.write(row + 1, col + 6, total.get('final_credit_total', 0.0),
+                    txt_l)
 
         workbook.close()
         output.seek(0)
