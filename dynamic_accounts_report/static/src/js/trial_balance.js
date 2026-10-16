@@ -23,6 +23,8 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
             'click #xlsx': 'print_xlsx',
             'click #audit': 'audit_report',
             'click .show-gl': 'show_gl',
+            'click select.dropdown-menu': '_onDropdownSelectClick',
+            'change select.dropdown-menu': '_onDropdownSelectChange',
             'mousedown div.input-group.date[data-target-input="nearest"]': '_onCalendarIconClick',
         },
 
@@ -129,6 +131,24 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                     window.location.href
                     }
             },
+
+            _onDropdownSelectClick: function (ev) {
+            // Los filtros "Target Move" y "Nivel PUC" usan un <select>
+            // nativo como .dropdown-menu. Bootstrap 4 cierra cualquier
+            // menú abierto ante un clic en el documento (salvo input /
+            // textarea), así que sin esto el desplegable se cierra antes
+            // de poder elegir opción.
+            ev.stopPropagation();
+        },
+
+            _onDropdownSelectChange: function (ev) {
+            ev.stopPropagation();
+            // Cierra el menú tras elegir (el select ES el .dropdown-menu)
+            var $select = $(ev.currentTarget);
+            $select.removeClass('show');
+            $select.closest('div').find('[data-toggle="dropdown"]').attr(
+                'aria-expanded', 'false');
+        },
 
             show_gl: function(e) {
             var self = this;
