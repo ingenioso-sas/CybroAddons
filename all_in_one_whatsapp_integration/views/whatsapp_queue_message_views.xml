@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_whatsapp_queue_message_tree" model="ir.ui.view">
+        <field name="name">whatsapp.queue.message.tree</field>
+        <field name="model">whatsapp.queue.message</field>
+        <field name="arch" type="xml">
+            <tree string="Cola de Mensajes WhatsApp">
+                <field name="partner_id"/>
+                <field name="phone"/>
+                <field name="message"/>
+                <field name="state"/>
+                <field name="retry_count"/>
+                <field name="create_date"/>
+                <field name="date_sent"/>
+                <field name="error_msg"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_queue_message_form" model="ir.ui.view">
+        <field name="name">whatsapp.queue.message.form</field>
+        <field name="model">whatsapp.queue.message</field>
+        <field name="arch" type="xml">
+            <form string="Mensaje en Cola WhatsApp">
+                <sheet>
+                    <group>
+                        <field name="partner_id"/>
+                        <field name="phone"/>
+                        <field name="message"/>
+                        <field name="state"/>
+                        <field name="retry_count"/>
+                        <field name="create_date"/>
+                        <field name="date_sent"/>
+                        <field name="error_msg"/>
+                    </group>
+                    <footer>
+                        <button name="action_send_message" 
+                                type="object" 
+                                string="Enviar Ahora"
+                                invisible="state not in ('pending','error')" 
+                                class="btn-primary"/>
+                        <button name="action_retry" type="object" string="Reintentar" 
+                                invisible="state not in ('error')"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_whatsapp_queue_message" model="ir.actions.act_window">
+        <field name="name">Cola de Mensajes WhatsApp</field>
+        <field name="res_model">whatsapp.queue.message</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>Gestione aquí los mensajes de WhatsApp pendientes, enviados o con error.</p>
+        </field>
+    </record>
+</odoo>

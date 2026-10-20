@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': "All in one Whatsapp",
-    'version': '17.0.1.0.0',
+    'version': '17.0.2.0.0',
     'category': 'Extra Tools',
     'summary': """Send whatsapp messages to the partner""",
     'description': """ This module helps you to send a whatsapp message to your 
@@ -39,6 +39,7 @@
         'data/purchase_order_data.xml',
         'data/sale_order_data.xml',
         'data/stock_picking_data.xml',
+        'data/cron.xml',
         'views/sale_order_views.xml',
         'views/purchase_order_views.xml',
         'views/stock_picking_views.xml',
@@ -47,6 +48,9 @@
         'views/res_config_settings_views.xml',
         'views/mail_channel_views.xml',
         'wizard/send_whatsapp_message_views.xml',
+        'views/whatsapp_message_views.xml',
+        'views/whatsapp_queue_message_views.xml',
+        'views/whatsapp_queue_message_menu.xml',
     ],
     'external_dependencies': {
         'python': ['twilio','html2text'],

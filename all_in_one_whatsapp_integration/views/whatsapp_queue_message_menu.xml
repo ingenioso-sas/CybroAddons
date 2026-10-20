@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_whatsapp_technical_root" name="WhatsApp" parent="base.menu_administration" sequence="100"/>
+    <menuitem id="menu_whatsapp_queue_message_technical" name="Mensajes en cola" parent="menu_whatsapp_technical_root" action="action_whatsapp_queue_message" sequence="10"/>
+</odoo>
