@@ -55,8 +55,8 @@ class ResConfigSettings(models.TransientModel):
                                                'whatsapp_no', )
     whatsapp_business = fields.Char(help="Business ID of Whatsapp Cloud API",
                                     string="Whatsapp Business Account ID",
-                                    config_parameter='whatsapp_integration_'
-                                                     'odoo.whatsapp_business', )
+                                    config_parameter='all_in_one_whatsapp_integration.'
+                                                     'whatsapp_business', )
     cloud_api_enabled = fields.Boolean(string="Cloud API whatsapp Enabled",
                                 config_parameter='all_in_one_whatsapp_integration'
                                                    '.cloud_api_enabled',
@@ -80,4 +80,9 @@ class ResConfigSettings(models.TransientModel):
     evolution_apikey = fields.Char(string="apiKey",
                               help="URL apikey for Evolution API",
                               config_parameter='all_in_one_whatsapp_integration.'
-                                               'evolution_apikey',)                                
+                                               'evolution_apikey',)
+    webhook_verify_token = fields.Char(
+        string="Webhook Verify Token",
+        config_parameter='all_in_one_whatsapp_integration.'
+                         'webhook_verify_token',
+        help="Token configured in Meta App to verify GET /whatsapp_message")                                

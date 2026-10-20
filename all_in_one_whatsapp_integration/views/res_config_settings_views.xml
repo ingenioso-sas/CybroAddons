@@ -65,7 +65,7 @@
                             </div>
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="auth_token"
+                                    <field name="auth_token" password="True"
                                            class="o_light_label"/>
                                 </div>
                             </div>
@@ -130,8 +130,22 @@
                             <div class="text-muted">Whatsapp Access Token</div>
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="bearer_token"
+                                    <field name="bearer_token" password="True"
                                            class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_right_pane">
+                            <label string="Webhook Verify Token"
+                                   for="webhook_verify_token"/>
+                            <div class="text-muted">Token to verify Meta webhook (hub.verify_token)
+                            </div>
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <field name="webhook_verify_token"
+                                           class="o_light_label" password="True"/>
                                 </div>
                             </div>
                         </div>
@@ -180,7 +194,7 @@
                             </div>
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="evolution_apikey"
+                                    <field name="evolution_apikey" password="True"
                                            class="o_light_label"/>
                                 </div>
                             </div>
