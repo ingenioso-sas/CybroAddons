@@ -19,10 +19,7 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import base64
-import html2text
-from odoo import models, _
-from odoo.exceptions import ValidationError
+from odoo import models
 
 
 class StockPicking(models.Model):
@@ -31,47 +28,19 @@ class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
     def action_send_by_whatsapp(self):
-        """When you click the send_by_whatsapp button, it will open a wizard
-        that contain the message to send to the whatsapp web page."""
-        if not self.partner_id.mobile:
-            raise ValidationError(_(
-                'Add whatsapp mobile number in sale order partner!'))
-        if not self.partner_id.mobile[0] == '+':
-            raise ValidationError(_(
-                'Please add a valid mobile number along with a valid '
-                'country code!'))
-        twilio_whatsapp = (self.env['ir.config_parameter']
-                           .sudo().get_param('all_in_one_whatsapp_integration.'
-                                             'twilio_whatsapp'))
-        if twilio_whatsapp[0] != '+':
-            raise ValidationError(_(
-                'Please add a valid twilio mobile number along with +'))
-        template_id = self.env.ref('all_in_one_whatsapp_integration.'
-                                   'stock_picking_whatsapp_template').id
-        mail_template_values = (self.env['mail.template']
-                                .with_context(tpl_partners_only=True).
-                                browse(template_id)._generate_template
-                                ([self.id], render_fields=['body_html']))
-        body_html = dict(mail_template_values)[self.id].pop('body_html', '')
-        whatsapp_message = html2text.html2text(body_html)
-        report = (self.env['ir.actions.report']._render_qweb_pdf
-                  ('stock.action_report_delivery', self.id))
-        report_attachment = self.env['ir.attachment'].sudo().create({
-            'name': 'Delivery Report',
-            'type': 'binary',
-            'datas': base64.b64encode(report[0]),
-            'store_fname': base64.b64encode(report[0]),
-            'mimetype': 'application/pdf',
-            'res_model': 'stock.picking',
-        })
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Whatsapp Message'),
-            'res_model': 'send.whatsapp.message',
-            'target': 'new',
-            'view_mode': 'form',
-            'view_type': 'form',
-            'context': {'default_whatsapp_message': whatsapp_message,
-                        'default_attachment_ids': [(4,
-                                                    report_attachment.id)]},
-        }
+        """Open wizard with rendered message + PDF."""
+        self.ensure_one()
+        service = self.env["whatsapp.document.service"]
+        service._whatsapp_validate_partner_mobile(self.partner_id)
+        service._whatsapp_validate_twilio_config()
+        message = service._whatsapp_render_text(
+            "all_in_one_whatsapp_integration.stock_picking_whatsapp_template",
+            self,
+        )
+        attachment = service._whatsapp_create_pdf_attachment(
+            self, "stock.action_report_delivery", "Delivery Report",
+            "stock.picking",
+        )
+        return service._whatsapp_build_wizard_action(
+            message, attachment.id if attachment else False
+        )

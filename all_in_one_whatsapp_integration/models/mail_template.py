@@ -34,7 +34,7 @@ class MailTemplate(models.Model):
                                                "to whatsapp")
     is_invoice_template = fields.Boolean(string='Invoice Template',
                                          help="To check the message template "
-                                              "for sending delivery "
+                                              "for sending invoice "
                                               "to whatsapp")
     is_purchase_template = fields.Boolean(string="Purchase Template",
                                           help="To check the message template "
