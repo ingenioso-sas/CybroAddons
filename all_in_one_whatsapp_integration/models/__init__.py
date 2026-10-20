@@ -19,6 +19,8 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+from . import whatsapp_tools
+from . import whatsapp_service
 from . import account_move
 from . import mail_channel
 from . import mail_message
@@ -27,3 +29,5 @@ from . import purchase_order
 from . import res_config_settings
 from . import sale_order
 from . import stock_picking
+from . import whatsapp_message
+from . import whatsapp_queue_message
