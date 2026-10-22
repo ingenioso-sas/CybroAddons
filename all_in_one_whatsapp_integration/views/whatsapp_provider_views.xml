@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_whatsapp_provider_tree" model="ir.ui.view">
+        <field name="name">whatsapp.provider.tree</field>
+        <field name="model">whatsapp.provider</field>
+        <field name="arch" type="xml">
+            <tree string="Proveedores WhatsApp" decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="last_test_state" widget="badge"/>
+                <field name="last_test_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_provider_form" model="ir.ui.view">
+        <field name="name">whatsapp.provider.form</field>
+        <field name="model">whatsapp.provider</field>
+        <field name="arch" type="xml">
+            <form string="Proveedor WhatsApp">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <field name="active" widget="boolean_toggle"/>
+                    </div>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="sequence"/>
+                    </group>
+                    <group string="Última prueba de conexión">
+                        <field name="last_test_state"/>
+                        <field name="last_test_date"/>
+                        <field name="last_test_info"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_whatsapp_provider" model="ir.actions.act_window">
+        <field name="name">Proveedores WhatsApp</field>
+        <field name="res_model">whatsapp.provider</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -35,6 +35,7 @@
                 'contacts', ],
     'data': [
         'security/ir.model.access.csv',
+        'data/whatsapp_provider_data.xml',
         'data/account_move_data.xml',
         'data/purchase_order_data.xml',
         'data/sale_order_data.xml',
@@ -49,6 +50,7 @@
         'views/mail_channel_views.xml',
         'wizard/send_whatsapp_message_views.xml',
         'views/whatsapp_message_views.xml',
+        'views/whatsapp_provider_views.xml',
         'views/whatsapp_queue_message_views.xml',
         'views/whatsapp_queue_message_menu.xml',
     ],
