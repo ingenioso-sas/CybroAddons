@@ -28,7 +28,8 @@ class ResConfigSettings(models.TransientModel):
 
     @api.model
     def _default_providers(self):
-        return self.env["whatsapp.provider"].search([])
+        return self.env["whatsapp.provider"].with_context(
+            active_test=False).search([])
 
     provider_ids = fields.Many2many(
         "whatsapp.provider", string="Proveedores",

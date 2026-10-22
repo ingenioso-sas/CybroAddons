@@ -22,3 +22,8 @@
 from . import controllers
 from . import models
 from . import wizard
+
+
+def post_init_hook(env):
+    from .models.whatsapp_provider import _sync_provider_flags
+    _sync_provider_flags(env)

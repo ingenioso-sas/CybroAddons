@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': "All in one Whatsapp",
-    'version': '17.0.2.0.0',
+    'version': '17.0.3.0.0',
     'category': 'Extra Tools',
     'summary': """Send whatsapp messages to the partner""",
     'description': """ This module helps you to send a whatsapp message to your 
@@ -35,6 +35,7 @@
                 'contacts', ],
     'data': [
         'security/ir.model.access.csv',
+        'data/cleanup_legacy.xml',
         'data/whatsapp_provider_data.xml',
         'data/account_move_data.xml',
         'data/purchase_order_data.xml',
@@ -49,7 +50,6 @@
         'views/res_config_settings_views.xml',
         'views/mail_channel_views.xml',
         'wizard/send_whatsapp_message_views.xml',
-        'views/whatsapp_message_views.xml',
         'views/whatsapp_provider_views.xml',
         'views/whatsapp_queue_message_views.xml',
         'views/whatsapp_queue_message_menu.xml',
@@ -59,6 +59,7 @@
     },
     'images': ['static/description/banner.png'],
     'license': "AGPL-3",
+    'post_init_hook': 'post_init_hook',
     'installable': True,
     'auto_install': False,
     'application': False,

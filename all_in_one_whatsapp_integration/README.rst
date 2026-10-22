@@ -47,3 +47,16 @@ For support and more information, please visit https://www.cybrosys.com
 Further information
 ===================
 HTML Description: `<static/description/index.html>`__
+
+Cola única de WhatsApp
+======================
+* `whatsapp.queue.message` es la ÚNICA cola del módulo (el antiguo
+  `whatsapp.message` fue eliminado). Guarda pendientes de Cloud API y
+  Evolution API, con causa de fallo (`error_msg`) y reintentos.
+* `whatsapp.provider` define los canales; solo los habilitados (`active`)
+  aparecen en el wizard y los procesa el cron (cada 5').
+* Entradas a la cola: wizard (opción *Encolar*), espejo de Discuss y
+  `whatsapp.queue.message.create_queue_message()`.
+* Reintento: botón *Reintentar* en los registros en estado *Error*
+  (Ajustes > Técnico > WhatsApp > Cola de mensajes).
+* Prueba de conexión: botones por proveedor en Ajustes > WhatsApp.

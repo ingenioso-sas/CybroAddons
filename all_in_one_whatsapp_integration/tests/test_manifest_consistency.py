@@ -42,15 +42,20 @@ class TestManifestConsistency(unittest.TestCase):
     def test_models_imported(self):
         with open(os.path.join(ROOT, "models", "__init__.py")) as f:
             init = f.read()
-        for mod in ["whatsapp_message", "whatsapp_queue_message",
+        for mod in ["whatsapp_provider", "whatsapp_queue_message",
                     "whatsapp_service", "whatsapp_tools"]:
             self.assertIn(mod, init)
+        # Modelo legacy eliminado: no debe importarse ni existir
+        self.assertNotIn("whatsapp_message", init.replace(
+            "whatsapp_queue_message", ""))
+        self.assertFalse(os.path.exists(
+            os.path.join(ROOT, "models", "whatsapp_message.py")))
 
     def test_access_rights_cover_models(self):
         with open(os.path.join(ROOT, "security", "ir.model.access.csv")) as f:
             rows = list(csv.DictReader(f))
         models = {r["model_id:id"] for r in rows}
-        for expected in ["model_whatsapp_message",
+        for expected in ["model_whatsapp_provider",
                          "model_whatsapp_queue_message",
                          "model_send_whatsapp_message"]:
             self.assertIn(expected, models)

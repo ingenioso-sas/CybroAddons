@@ -15,21 +15,17 @@
 #    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
 #
 #    You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
-#    (AGPL v3) along with this program.
+#    along with this program.
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import base64
 import logging
 import urllib.parse as parse
 
-import requests
 from twilio.rest import Client
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
-
-from .whatsapp_mode_message import WhatsappModeMessage, REQUEST_TIMEOUT
 
 _logger = logging.getLogger(__name__)
 
@@ -42,7 +38,12 @@ SEND_MODES = [
 
 
 class SendWhatsappMessage(models.TransientModel):
-    """Wizard to send a message via Web / Twilio / Cloud / Evolution."""
+    """Wizard: envío directo o entrada real a la cola única.
+
+    El proveedor se valida contra whatsapp.provider (solo habilitados).
+    Cloud/Evolution envían vía provider.send_message (mismo código que la
+    cola); Web/Twilio son de envío directo.
+    """
     _name = 'send.whatsapp.message'
     _description = "Helps to send messages using different way"
 
@@ -59,6 +60,13 @@ class SendWhatsappMessage(models.TransientModel):
         except Exception:
             return False
 
+    @api.model
+    def _default_delivery(self):
+        if self.env['ir.config_parameter'].sudo().get_param(
+                'all_in_one_whatsapp_integration.whatsapp_async_default'):
+            return 'queue'
+        return 'now'
+
     sale_user_id = fields.Many2one(
         'res.partner', string="Partner Name", default=_default_partner,
         help="Select the partner associated with the sale.")
@@ -71,6 +79,11 @@ class SendWhatsappMessage(models.TransientModel):
     send_mode = fields.Selection(
         SEND_MODES, string="Send Using", default='web', required=True,
         help="Select the mode to send the WhatsApp message.")
+    delivery = fields.Selection(
+        [('now', 'Enviar ahora'), ('queue', 'Encolar')],
+        string="Entrega", default=_default_delivery, required=True,
+        help="Encolar deja el mensaje en la cola única para que lo "
+             "procese el cron (con reintentos y causa de fallo visible).")
     attachment_ids = fields.Many2many(
         'ir.attachment', 'send_whatsapp_message_attachment_rel', 'wizard_id',
         'attachment_id', string='Attachments',
@@ -83,17 +96,17 @@ class SendWhatsappMessage(models.TransientModel):
     def _get_param(self, key, default=False):
         return self.env['ir.config_parameter'].sudo().get_param(key, default)
 
-    def _ensure_mode_enabled(self):
-        enabled_map = {
-            'twilio': 'all_in_one_whatsapp_integration.twilio_enabled',
-            'cloud': 'all_in_one_whatsapp_integration.cloud_api_enabled',
-            'evolution':
-                'all_in_one_whatsapp_integration.evolution_api_enabled',
-        }
-        key = enabled_map.get(self.send_mode)
-        if key and not self._get_param(key):
+    def _get_provider(self, code):
+        provider = self.env['whatsapp.provider'].sudo().with_context(
+            active_test=False).search([('code', '=', code)], limit=1)
+        if not provider:
             raise ValidationError(
-                _("Mode '%s' is disabled in Settings.") % self.send_mode)
+                _("Proveedor desconocido: %s") % code)
+        if not provider.active:
+            raise ValidationError(
+                _("El proveedor '%s' está deshabilitado en Ajustes.")
+                % provider.name)
+        return provider
 
     def _get_number_e164(self):
         number = (self.sale_user_id.mobile or "").strip()
@@ -107,39 +120,61 @@ class SendWhatsappMessage(models.TransientModel):
                   'country code!'))
         return compact
 
-    def _get_private_attachment_url(self, attachment):
-        base_url = (
-            self._get_param('web.base.url') or "").rstrip("/")
-        attachment = attachment.sudo().exists()
-        attachment.ensure_one()
-        # No marcamos public=True (exponía facturas). Usamos token firmado.
-        if not attachment.access_token:
-            attachment.generate_access_token()
-        token = attachment.access_token or ""
-        return ("%s/web/content/%s?download=true&access_token=%s"
-                % (base_url, attachment.id, token))
-
     def action_send_custom_message(self):
-        """Dispatch to the selected provider. Validates everything first."""
+        """Envío directo o entrada real a la cola única."""
         self.ensure_one()
-        self._ensure_mode_enabled()
         number = self._get_number_e164()
         if not (self.whatsapp_message or "").strip() \
                 and not self.attachment_ids:
             raise ValidationError(_("Write a message or attach a file."))
 
+        if self.delivery == 'queue':
+            return self._enqueue(number)
         if self.send_mode == 'twilio':
             return self._send_twilio(number)
         if self.send_mode == 'web':
             return self._send_web(number)
-        if self.send_mode == 'cloud':
-            return self._send_cloud(number)
-        if self.send_mode == 'evolution':
-            return self._send_evolution(number)
+        if self.send_mode in ('cloud', 'evolution'):
+            provider = self._get_provider(self.send_mode)
+            provider.send_message(
+                number, self.whatsapp_message or "", self.attachment_ids)
+            return self._notify_sent(provider.name)
         raise ValidationError(_("Unknown send mode."))
 
-    # -- providers -----------------------------------------------------
+    def _enqueue(self, number):
+        """Crea el registro en la cola única (solo cloud/evolution)."""
+        if self.send_mode not in ('cloud', 'evolution'):
+            raise ValidationError(
+                _("Solo Cloud API y Evolution API usan la cola. "
+                  "Web y Twilio son de envío directo."))
+        queue = self.env['whatsapp.queue.message'].sudo()
+        queue.create_queue_message(
+            phone=number, message=self.whatsapp_message or "",
+            provider_code=self.send_mode,
+            partner_id=self.sale_user_id.id or False,
+            attachment_ids=self.attachment_ids,
+            model=self._context.get('active_model'),
+            res_id=(self._context.get('active_ids') or [False])[0] or False)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {'title': _('Encolado'),
+                       'message': _('Mensaje en la cola de WhatsApp.'),
+                       'type': 'success', 'sticky': False},
+        }
+
+    def _notify_sent(self, provider_name):
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {'title': _('Enviado'),
+                       'message': _('Mensaje enviado por %s.') % provider_name,
+                       'type': 'success', 'sticky': False},
+        }
+
+    # -- envío directo (no encolables) -----------------------------------
     def _send_twilio(self, number):
+        self._get_provider('twilio')
         account_sid = (self._get_param(
             'all_in_one_whatsapp_integration.account_sid') or "").strip()
         auth_token = (self._get_param(
@@ -168,71 +203,3 @@ class SendWhatsappMessage(models.TransientModel):
             link += "&text=" + message_string
         return {'type': 'ir.actions.act_url', 'url': link,
                 'target': 'new', 'res_id': self.id}
-
-    def _send_cloud(self, number):
-        bearer_token = (self._get_param(
-            'all_in_one_whatsapp_integration.bearer_token') or "").strip()
-        whatsapp_no = (self._get_param(
-            'all_in_one_whatsapp_integration.whatsapp_no') or "").strip()
-        if not bearer_token or not whatsapp_no:
-            raise ValidationError(
-                _("Configure Cloud API token and phone number ID."))
-        if self.message_type == 'document':
-            if not self.attachment_ids:
-                raise ValidationError(
-                    _("Attach a file to send a document via Cloud API."))
-            attachment = self.attachment_ids[0]
-            file_link = self._get_private_attachment_url(attachment)
-            payload = {
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": number,
-                "type": "document",
-                "document": {
-                    "link": file_link,
-                    "caption": (self.whatsapp_message or "")[:1024],
-                    "filename": attachment.name or "document.pdf",
-                },
-            }
-        else:
-            payload = {
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": number,
-                "type": "text",
-                "text": {"preview_url": False,
-                         "body": self.whatsapp_message or ""},
-            }
-        headers = {'Content-Type': 'application/json',
-                   'Authorization': 'Bearer %s' % bearer_token}
-        try:
-            response = requests.post(
-                "https://graph.facebook.com/v17.0/%s/messages" % whatsapp_no,
-                json=payload, headers=headers, timeout=REQUEST_TIMEOUT)
-        except requests.RequestException as e:
-            _logger.exception("Cloud API connection error")
-            raise UserError(_("Could not reach Cloud API: %s") % e)
-        if response.status_code not in (200, 201):
-            _logger.error("Cloud API error %s: %s", response.status_code,
-                          response.text[:1000])
-            raise UserError(
-                _("Cloud API error %s: %s") % (
-                    response.status_code, response.text[:500]))
-        return response
-
-    def _send_evolution(self, number):
-        helper = WhatsappModeMessage(self.env)
-        text = self.whatsapp_message or ""
-        if not self.attachment_ids:
-            return helper.action_send_custom_message(number, text)
-        attachment = self.attachment_ids[0].sudo()
-        try:
-            raw = base64.b64decode(attachment.datas or b"")
-        except Exception as e:
-            raise ValidationError(_("Invalid attachment data: %s") % e)
-        b64_clean = base64.b64encode(raw).decode('utf-8')
-        fname = attachment.name or "document.pdf"
-        if not fname.lower().endswith(".pdf") and "." not in fname:
-            fname += ".pdf"
-        return helper.action_send_attachment_document_message(
-            number, fname, text, b64_clean)

@@ -20,8 +20,6 @@
 #    along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import http.client
-import json
 import logging
 
 import html2text
@@ -32,22 +30,22 @@ _logger = logging.getLogger(__name__)
 
 
 class MailMessage(models.Model):
-    """Mirror discuss.channel messages to WhatsApp via Facebook Graph API."""
+    """Encola (no envía) mensajes de discuss.channel a WhatsApp.
+
+    El envío real lo hace el cron de la cola única, donde el fallo
+    queda registrado con su causa y es reintentable.
+    """
     _inherit = 'mail.message'
 
     @api.model_create_multi
     def create(self, values_list):
-        ICP = self.env['ir.config_parameter'].sudo()
-        bearer_token = ICP.get_param(
-            'all_in_one_whatsapp_integration.bearer_token')
-        whatsapp_no = ICP.get_param(
-            'all_in_one_whatsapp_integration.whatsapp_no')
-        cloud_enabled = ICP.get_param(
-            'all_in_one_whatsapp_integration.cloud_api_enabled')
         records = super().create(values_list)
-        if not (bearer_token and whatsapp_no and cloud_enabled):
+        cloud = self.env['whatsapp.provider'].sudo().with_context(
+            active_test=False).search([('code', '=', 'cloud')], limit=1)
+        if not cloud or not cloud.active:
             return records
-        for values, record in zip(values_list, records):
+        Queue = self.env['whatsapp.queue.message'].sudo()
+        for values in values_list:
             try:
                 if values.get('model') != 'discuss.channel' \
                         or not values.get('res_id'):
@@ -56,41 +54,16 @@ class MailMessage(models.Model):
                     values['res_id']).exists()
                 if not channel or not channel.phone:
                     continue
-                body_html = values.get('body') or ""
                 try:
-                    body = html2text.html2text(body_html).strip()[:4000]
+                    body = html2text.html2text(
+                        values.get('body') or "").strip()[:4000]
                 except Exception:
-                    body = body_html[:4000]
+                    body = (values.get('body') or "")[:4000]
                 if not body:
                     continue
-                conn = http.client.HTTPSConnection(
-                    "graph.facebook.com", timeout=15)
-                try:
-                    payload = json.dumps({
-                        "messaging_product": "whatsapp",
-                        "recipient_type": "individual",
-                        "to": channel.phone,
-                        "type": "text",
-                        "text": {"preview_url": False, "body": body},
-                    })
-                    headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer %s' % bearer_token,
-                    }
-                    conn.request("POST",
-                                 "/v17.0/%s/messages" % whatsapp_no,
-                                 payload, headers)
-                    resp = conn.getresponse()
-                    resp.read()
-                    if resp.status not in (200, 201):
-                        _logger.warning(
-                            "WhatsApp mirror failed ch=%s status=%s",
-                            channel.id, resp.status)
-                finally:
-                    try:
-                        conn.close()
-                    except Exception:
-                        pass
-            except Exception as e:  # noqa: BLE001 - never break chatter
-                _logger.exception("WhatsApp mirror error: %s", e)
+                Queue.create_queue_message(
+                    phone=channel.phone, message=body,
+                    provider_code='cloud')
+            except Exception as e:  # noqa: BLE001 - nunca romper el chatter
+                _logger.exception("WhatsApp mirror enqueue error: %s", e)
         return records
