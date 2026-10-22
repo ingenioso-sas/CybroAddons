@@ -86,8 +86,6 @@ class WhatsappProvider(models.Model):
 
     def send_message(self, phone, body, attachment_ids=None):
         """Envía por este proveedor. Solo cloud/evolution (encolables).
-
-        Web y Twilio son de envío directo y no pasan por la cola.
         Devuelve el objeto response de la API. Lanza UserError/ValidationError
         con la causa para que la cola la guarde en error_msg.
         """
@@ -175,3 +173,62 @@ class WhatsappProvider(models.Model):
             fname += ".pdf"
         return helper.action_send_attachment_document_message(
             phone, fname, body, base64.b64encode(raw).decode("utf-8"))
+
+    # -- envío Twilio (directo) ------------------------------------------
+    def _send_twilio(self, phone, body):
+        from . import whatsapp_tools as tools
+        account_sid = (self._get_param(
+            "all_in_one_whatsapp_integration.account_sid") or "").strip()
+        auth_token = (self._get_param(
+            "all_in_one_whatsapp_integration.auth_token") or "").strip()
+        twilio_no = (self._get_param(
+            "all_in_one_whatsapp_integration.twilio_whatsapp") or "").strip()
+        if not account_sid or not auth_token or not twilio_no:
+            raise ValidationError(
+                _("Configure Twilio SID/token/number en Ajustes."))
+        number = tools.normalize_e164(phone)
+        try:
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
+            return client.messages.create(
+                from_="whatsapp:" + twilio_no,
+                body=body or "",
+                to="whatsapp:" + number.replace(" ", ""))
+        except Exception as e:
+            _logger.exception("Twilio send failed")
+            raise UserError(_("Twilio send failed: %s") % e)
+
+    # -- prueba de conexión ----------------------------------------------
+    def run_test(self, phone):
+        """Envía mensaje de prueba y audita el resultado en el proveedor.
+
+        Devuelve True si OK; si falla, guarda la causa en last_test_info
+        y relanza UserError/ValidationError con el detalle del proveedor.
+        """
+        self.ensure_one()
+        from . import whatsapp_tools as tools
+        try:
+            number = tools.validate_e164_or_raise(phone or "", "prueba")
+        except ValueError as e:
+            raise ValidationError(str(e))
+        body = "✅ Conexión WhatsApp OK (%s)" % self.name
+        try:
+            if self.code == "twilio":
+                if not self.active:
+                    raise ValidationError(
+                        _("El proveedor '%s' está deshabilitado.") % self.name)
+                self._send_twilio(number, body)
+            elif self.code in ("cloud", "evolution"):
+                self.send_message(number, body)
+            else:
+                raise ValidationError(
+                    _("Web no requiere prueba: abre WhatsApp Web."))
+        except (UserError, ValidationError) as e:
+            self.write({"last_test_state": "error",
+                        "last_test_date": fields.Datetime.now(),
+                        "last_test_info": str(e)[:2000]})
+            raise
+        self.write({"last_test_state": "ok",
+                    "last_test_date": fields.Datetime.now(),
+                    "last_test_info": _("Prueba enviada a %s.") % number})
+        return True

@@ -97,6 +97,15 @@
                         <setting string="Número de prueba" help="Número E.164 (ej. +573001234567) al que se envía el mensaje de prueba.">
                             <field name="whatsapp_test_phone" class="o_light_label" placeholder="+573001234567"/>
                         </setting>
+                        <setting string="Probar Twilio" help="Envía ✅ Conexión WhatsApp OK por Twilio.">
+                            <button name="action_test_twilio" type="object" string="Probar Twilio" class="btn-primary"/>
+                        </setting>
+                        <setting string="Probar Cloud API" help="Envía ✅ Conexión WhatsApp OK por Cloud API (Meta).">
+                            <button name="action_test_cloud" type="object" string="Probar Cloud API" class="btn-primary"/>
+                        </setting>
+                        <setting string="Probar Evolution API" help="Envía ✅ Conexión WhatsApp OK por Evolution API.">
+                            <button name="action_test_evolution" type="object" string="Probar Evolution" class="btn-primary"/>
+                        </setting>
                     </block>
                 </app>
             </xpath>

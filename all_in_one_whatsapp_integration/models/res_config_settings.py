@@ -31,6 +31,34 @@ class ResConfigSettings(models.TransientModel):
         return self.env["whatsapp.provider"].with_context(
             active_test=False).search([])
 
+    def _run_provider_test(self, code):
+        self.ensure_one()
+        provider = self.env["whatsapp.provider"].sudo().with_context(
+            active_test=False).search([("code", "=", code)], limit=1)
+        if not provider:
+            raise ValidationError(_("Proveedor desconocido: %s") % code)
+        provider.run_test((self.whatsapp_test_phone or "").strip())
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Prueba OK"),
+                "message": _("Mensaje de prueba enviado por %s.")
+                % provider.name,
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
+    def action_test_twilio(self):
+        return self._run_provider_test("twilio")
+
+    def action_test_cloud(self):
+        return self._run_provider_test("cloud")
+
+    def action_test_evolution(self):
+        return self._run_provider_test("evolution")
+
     provider_ids = fields.Many2many(
         "whatsapp.provider", string="Proveedores",
         default=_default_providers,

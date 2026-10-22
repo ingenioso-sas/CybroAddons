@@ -19,15 +19,10 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import logging
 import urllib.parse as parse
 
-from twilio.rest import Client
-
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
-
-_logger = logging.getLogger(__name__)
+from odoo.exceptions import ValidationError
 
 SEND_MODES = [
     ('web', 'WhatsApp Web'),
@@ -174,26 +169,8 @@ class SendWhatsappMessage(models.TransientModel):
 
     # -- envío directo (no encolables) -----------------------------------
     def _send_twilio(self, number):
-        self._get_provider('twilio')
-        account_sid = (self._get_param(
-            'all_in_one_whatsapp_integration.account_sid') or "").strip()
-        auth_token = (self._get_param(
-            'all_in_one_whatsapp_integration.auth_token') or "").strip()
-        twilio_whatsapp = (self._get_param(
-            'all_in_one_whatsapp_integration.twilio_whatsapp') or "").strip()
-        if not account_sid or not auth_token or not twilio_whatsapp:
-            raise ValidationError(
-                _("Configure Twilio SID/token/number in Settings."))
-        try:
-            client = Client(account_sid, auth_token)
-            return client.messages.create(
-                from_='whatsapp:' + twilio_whatsapp,
-                body=self.whatsapp_message or "",
-                to='whatsapp:' + number.replace(" ", ""),
-            )
-        except Exception as e:
-            _logger.exception("Twilio send failed")
-            raise UserError(_("Twilio send failed: %s") % e)
+        provider = self._get_provider('twilio')
+        return provider._send_twilio(number, self.whatsapp_message or "")
 
     def _send_web(self, number):
         digits = number.replace(" ", "").replace("+", "")
