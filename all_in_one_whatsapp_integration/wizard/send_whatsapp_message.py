@@ -24,18 +24,10 @@ import urllib.parse as parse
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
-SEND_MODES = [
-    ('web', 'WhatsApp Web'),
-    ('twilio', 'Twilio'),
-    ('cloud', 'Cloud WhatsApp'),
-    ('evolution', 'Evolution WhatsApp'),
-]
-
-
 class SendWhatsappMessage(models.TransientModel):
     """Wizard: envío directo o entrada real a la cola única.
 
-    El proveedor se valida contra whatsapp.provider (solo habilitados).
+    El proveedor es Many2one con dominio active: solo habilitados.
     Cloud/Evolution envían vía provider.send_message (mismo código que la
     cola); Web/Twilio son de envío directo.
     """
@@ -62,6 +54,15 @@ class SendWhatsappMessage(models.TransientModel):
             return 'queue'
         return 'now'
 
+    @api.model
+    def _default_provider(self):
+        Provider = self.env['whatsapp.provider'].sudo().with_context(
+            active_test=False)
+        return (Provider.search([('code', '=', 'web'), ('active', '=', True)],
+                                limit=1)
+                or Provider.search([('active', '=', True)], limit=1)
+                or Provider.search([], limit=1))
+
     sale_user_id = fields.Many2one(
         'res.partner', string="Partner Name", default=_default_partner,
         help="Select the partner associated with the sale.")
@@ -71,9 +72,10 @@ class SendWhatsappMessage(models.TransientModel):
     whatsapp_message = fields.Text(
         string="WhatsApp Message",
         help="Enter the message to be sent via WhatsApp.")
-    send_mode = fields.Selection(
-        SEND_MODES, string="Send Using", default='web', required=True,
-        help="Select the mode to send the WhatsApp message.")
+    provider_id = fields.Many2one(
+        'whatsapp.provider', string="Proveedor", required=True,
+        domain=[('active', '=', True)], default=_default_provider,
+        help="Solo se listan los proveedores habilitados en Ajustes.")
     delivery = fields.Selection(
         [('now', 'Enviar ahora'), ('queue', 'Encolar')],
         string="Entrega", default=_default_delivery, required=True,
@@ -91,12 +93,12 @@ class SendWhatsappMessage(models.TransientModel):
     def _get_param(self, key, default=False):
         return self.env['ir.config_parameter'].sudo().get_param(key, default)
 
-    def _get_provider(self, code):
-        provider = self.env['whatsapp.provider'].sudo().with_context(
-            active_test=False).search([('code', '=', code)], limit=1)
+    def _get_provider(self):
+        """Devuelve el proveedor elegido, garantizado habilitado."""
+        provider = self.provider_id.sudo().with_context(
+            active_test=False).exists()
         if not provider:
-            raise ValidationError(
-                _("Proveedor desconocido: %s") % code)
+            raise ValidationError(_("Seleccione un proveedor."))
         if not provider.active:
             raise ValidationError(
                 _("El proveedor '%s' está deshabilitado en Ajustes.")
@@ -122,30 +124,30 @@ class SendWhatsappMessage(models.TransientModel):
         if not (self.whatsapp_message or "").strip() \
                 and not self.attachment_ids:
             raise ValidationError(_("Write a message or attach a file."))
+        provider = self._get_provider()
 
         if self.delivery == 'queue':
-            return self._enqueue(number)
-        if self.send_mode == 'twilio':
-            return self._send_twilio(number)
-        if self.send_mode == 'web':
+            return self._enqueue(number, provider)
+        if provider.code == 'twilio':
+            return self._send_twilio(number, provider)
+        if provider.code == 'web':
             return self._send_web(number)
-        if self.send_mode in ('cloud', 'evolution'):
-            provider = self._get_provider(self.send_mode)
+        if provider.code in ('cloud', 'evolution'):
             provider.send_message(
                 number, self.whatsapp_message or "", self.attachment_ids)
             return self._notify_sent(provider.name)
-        raise ValidationError(_("Unknown send mode."))
+        raise ValidationError(_("Proveedor no soportado."))
 
-    def _enqueue(self, number):
+    def _enqueue(self, number, provider):
         """Crea el registro en la cola única (solo cloud/evolution)."""
-        if self.send_mode not in ('cloud', 'evolution'):
+        if provider.code not in ('cloud', 'evolution'):
             raise ValidationError(
                 _("Solo Cloud API y Evolution API usan la cola. "
                   "Web y Twilio son de envío directo."))
         queue = self.env['whatsapp.queue.message'].sudo()
         queue.create_queue_message(
             phone=number, message=self.whatsapp_message or "",
-            provider_code=self.send_mode,
+            provider_code=provider.code,
             partner_id=self.sale_user_id.id or False,
             attachment_ids=self.attachment_ids,
             model=self._context.get('active_model'),
@@ -168,8 +170,7 @@ class SendWhatsappMessage(models.TransientModel):
         }
 
     # -- envío directo (no encolables) -----------------------------------
-    def _send_twilio(self, number):
-        provider = self._get_provider('twilio')
+    def _send_twilio(self, number, provider):
         return provider._send_twilio(number, self.whatsapp_message or "")
 
     def _send_web(self, number):

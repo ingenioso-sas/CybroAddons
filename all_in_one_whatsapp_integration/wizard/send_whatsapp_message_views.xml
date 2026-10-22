@@ -14,11 +14,10 @@
                                string="Whatsapp Number"
                                style="margin-left:25px !important;width:120px !important"/>
                         <field name="whatsapp_mobile_number" nolabel="1"/>
-                        <field name="send_mode" widget="radio"/>
-                        <field name="delivery" widget="radio"
-                               invisible="send_mode not in ('cloud', 'evolution')"/>
+                        <field name="provider_id" options="{'no_create': True}"/>
+                        <field name="delivery" widget="radio"/>
                         <field name="message_type" widget="radio"
-                               invisible="send_mode != 'cloud' or delivery != 'now'"/>
+                               invisible="delivery != 'now'"/>
                         <field name="attachment_ids"
                                widget='many2many_binary'/>
                     </group>
