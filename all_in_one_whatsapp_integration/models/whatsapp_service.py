@@ -56,7 +56,11 @@ class WhatsappDocumentService(models.AbstractModel):
 
     @api.model
     def _whatsapp_render_text(self, template_xmlid, record):
-        """Renderiza mail.template -> texto plano. No revienta si falta."""
+        """Renderiza mail.template -> texto plano. No revienta si falta.
+
+        Usa el idioma del partner (no el del usuario) para que el mensaje
+        llegue en el idioma del cliente cuando haya traducción.
+        """
         try:
             template = self.env.ref(template_xmlid, raise_if_not_found=False)
         except Exception:
@@ -64,10 +68,12 @@ class WhatsappDocumentService(models.AbstractModel):
         if not template:
             _logger.warning("WhatsApp template %s not found", template_xmlid)
             return ""
+        partner_lang = getattr(record.partner_id, "lang", False) \
+            or self.env.lang
         try:
             values = (
                 self.env["mail.template"]
-                .with_context(tpl_partners_only=True)
+                .with_context(tpl_partners_only=True, lang=partner_lang)
                 .browse(template.id)
                 ._generate_template([record.id], render_fields=["body_html"])
             )

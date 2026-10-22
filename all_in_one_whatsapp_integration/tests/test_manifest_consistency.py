@@ -39,6 +39,14 @@ class TestManifestConsistency(unittest.TestCase):
         self.assertFalse(os.path.exists(
             os.path.join(ROOT, "data", "whatsapp_queue_cron.xml")))
 
+    def test_spanish_translation_exists(self):
+        po = os.path.join(ROOT, "i18n", "es.po")
+        self.assertTrue(os.path.isfile(po), "Falta i18n/es.po")
+        with open(po, encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Language: es", content)
+        self.assertIn("Enviar por Whatsapp", content)
+
     def test_models_imported(self):
         with open(os.path.join(ROOT, "models", "__init__.py")) as f:
             init = f.read()
