@@ -68,6 +68,11 @@ class WhatsappDocumentService(models.AbstractModel):
         if not template:
             _logger.warning("WhatsApp template %s not found", template_xmlid)
             return ""
+        if template.lang:
+            _logger.warning(
+                "WhatsApp template %s has fixed lang=%r: it overrides the "
+                "partner language. Leave Idioma empty for partner-language "
+                "rendering.", template_xmlid, template.lang)
         partner_lang = getattr(record.partner_id, "lang", False) \
             or self.env.lang
         try:
