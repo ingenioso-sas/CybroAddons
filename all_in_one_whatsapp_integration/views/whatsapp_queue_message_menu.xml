@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_whatsapp_technical_root" name="WhatsApp" parent="base.menu_administration" sequence="100"/>
-    <menuitem id="menu_whatsapp_queue_message_technical" name="Mensajes en cola" parent="menu_whatsapp_technical_root" action="action_whatsapp_queue_message" sequence="10"/>
+    <menuitem id="menu_whatsapp_technical_root" name="WhatsApp" parent="base.menu_custom" sequence="100"/>
+    <menuitem id="menu_whatsapp_settings_technical" name="Configuración" parent="menu_whatsapp_technical_root" action="action_whatsapp_settings" sequence="10" groups="base.group_system"/>
+    <menuitem id="menu_whatsapp_provider_technical" name="Proveedores" parent="menu_whatsapp_technical_root" action="action_whatsapp_provider" sequence="20" groups="base.group_system"/>
+    <menuitem id="menu_whatsapp_queue_message_technical" name="Cola de mensajes" parent="menu_whatsapp_technical_root" action="action_whatsapp_queue_message" sequence="30"/>
 </odoo>

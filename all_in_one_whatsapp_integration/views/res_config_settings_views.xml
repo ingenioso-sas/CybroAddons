@@ -1,220 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <!--Settings form view with whatsapp authentication fields-->
     <record id="res_config_settings_view_form" model="ir.ui.view">
-        <field name="name">
-            res.config.settings.view.form.inherit.all.in.one.whatsapp.integration
-        </field>
+        <field name="name">res.config.settings.view.form.whatsapp</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <div id="companies" position="after">
-                <h2>Twilio Credentials for Whatsapp</h2>
-                <div class="row mt16 o_settings_container">
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_left_pane">
+            <xpath expr="//form" position="inside">
+                <app string="WhatsApp" name="all_in_one_whatsapp_integration">
+                    <block title="Proveedores" name="whatsapp_providers">
+                        <setting string="Canales habilitados" help="Solo los proveedores habilitados aparecen en el asistente de envío y son procesados por la cola.">
+                            <field name="provider_ids" nolabel="1">
+                                <tree editable="top">
+                                    <field name="name" readonly="1"/>
+                                    <field name="code" readonly="1"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="last_test_state" widget="badge" readonly="1"/>
+                                    <field name="last_test_date" readonly="1"/>
+                                </tree>
+                            </field>
+                        </setting>
+                    </block>
+                    <block title="Credenciales Twilio" name="whatsapp_twilio">
+                        <setting string="Twilio" help="Cuenta Twilio para el canal Twilio.">
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="twilio_whatsapp_enabled"
-                                           class="o_light_label"/>
+                                    <label for="twilio_whatsapp" string="Twilio Whatsapp Number"/>
+                                    <field name="twilio_whatsapp" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="account_sid" string="Account SID"/>
+                                    <field name="account_sid" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="auth_token" string="Auth Token"/>
+                                    <field name="auth_token" password="True" class="o_light_label"/>
                                 </div>
                             </div>
-                        </div>
-                        <div class="o_setting_right_pane">
-                            <label string="Twilio Whatsapp Enabled"
-                                   for="twilio_whatsapp_enabled"/>
-                            <div class="text-muted">
-                                Twilio Whatsapp Enabled
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Twilio Whatsapp Number"
-                                   for="twilio_whatsapp"/>
-                            <div class="text-muted">
-                                Twilio Whatsapp Number
-                            </div>
+                        </setting>
+                    </block>
+                    <block title="Credenciales Cloud API" name="whatsapp_cloud">
+                        <setting string="Cloud API (Meta)" help="Token y Phone Number ID de WhatsApp Cloud API.">
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="twilio_whatsapp"
-                                           class="o_light_label"/>
+                                    <label for="whatsapp_no" string="Phone number ID"/>
+                                    <field name="whatsapp_no" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="whatsapp_business" string="Business Account ID"/>
+                                    <field name="whatsapp_business" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="bearer_token" string="Access Token"/>
+                                    <field name="bearer_token" password="True" class="o_light_label"/>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Account SID" for="account_sid"/>
-                            <div class="text-muted">
-                                Account SID
-                            </div>
+                        </setting>
+                    </block>
+                    <block title="Credenciales Evolution API" name="whatsapp_evolution">
+                        <setting string="Evolution API" help="Conexión con la instancia Evolution API.">
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="account_sid"
-                                           class="o_light_label"/>
+                                    <label for="evolution_base_url" string="URL base"/>
+                                    <field name="evolution_base_url" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="evolution_instance" string="Instance"/>
+                                    <field name="evolution_instance" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="evolution_apikey" string="apiKey"/>
+                                    <field name="evolution_apikey" password="True" class="o_light_label"/>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Auth Token" for="auth_token"/>
-                            <div class="text-muted">
-                                Auth Token
-                            </div>
+                        </setting>
+                    </block>
+                    <block title="Cola de mensajes" name="whatsapp_queue">
+                        <setting string="Envío asíncrono" help="Si está activo, el asistente propone encolar el mensaje en lugar de enviarlo al momento.">
+                            <field name="whatsapp_async_default" class="o_light_label"/>
+                        </setting>
+                        <setting string="Mensajes por ciclo" help="Cuántos mensajes pendientes procesa el cron en cada ciclo.">
+                            <field name="whatsapp_queue_limit" class="o_light_label"/>
+                        </setting>
+                        <setting string="Reintentos máximos" help="Tras este número de fallos el mensaje queda en Error y ya no se reintenta solo.">
+                            <field name="whatsapp_queue_max_retries" class="o_light_label"/>
+                        </setting>
+                        <setting string="Webhook" help="Token configurado en la app de Meta para verificar el webhook /whatsapp_message.">
                             <div class="content-group">
                                 <div class="mt16">
-                                    <field name="auth_token" password="True"
-                                           class="o_light_label"/>
+                                    <label for="webhook_verify_token" string="Verify Token"/>
+                                    <field name="webhook_verify_token" password="True" class="o_light_label"/>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="companies" position="after">
-                <h2>Whatsapp Cloud API Credentials</h2>
-                <div class="row mt16 o_settings_container">
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_left_pane">
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="cloud_api_enabled"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="o_setting_right_pane">
-                            <label string="Cloud Api Whatsapp Enabled"
-                                   for="cloud_api_enabled"/>
-                            <div class="text-muted">
-                                Cloud Api Whatsapp Enabled
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Your Registered Whatsapp Cloud API Phone number ID"
-                                   for="whatsapp_no"/>
-                            <div class="text-muted">Your Registered Whatsapp
-                                Cloud API Phone number ID
-                            </div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="whatsapp_no"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Whatsapp Business Account ID"
-                                   for="whatsapp_business"/>
-                            <div class="text-muted">Whatsapp Business Account
-                                ID
-                            </div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="whatsapp_business"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Whatsapp Access Token"
-                                   for="bearer_token"/>
-                            <div class="text-muted">Whatsapp Access Token</div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="bearer_token" password="True"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Webhook Verify Token"
-                                   for="webhook_verify_token"/>
-                            <div class="text-muted">Token to verify Meta webhook (hub.verify_token)
-                            </div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="webhook_verify_token"
-                                           class="o_light_label" password="True"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="companies" position="after">
-                <h2>Evolution API Credentials For Whatsapp</h2>
-                <div class="row mt16 o_settings_container">
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_left_pane">
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="evolution_api_enabled"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="o_setting_right_pane">
-                            <label string="Evolution Api Whatsapp Enabled"
-                                   for="evolution_api_enabled"/>
-                            <div class="text-muted">
-                               Evolution Api Whatsapp Enabled
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="URL base"
-                                   for="evolution_base_url"/>
-                            <div class="text-muted">URL base for Evolution API
-                            </div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="evolution_base_url"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Evolution URL apikey"
-                                   for="whatsapp_business"/>
-                            <div class="text-muted">URL apiKey                                
-                            </div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="evolution_apikey" password="True"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label string="Evolution Instance"
-                                   for="evolution_instance"/>
-                            <div class="text-muted">Evolution Instance</div>
-                            <div class="content-group">
-                                <div class="mt16">
-                                    <field name="evolution_instance"
-                                           class="o_light_label"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        </setting>
+                    </block>
+                    <block title="Prueba de conexión" name="whatsapp_test">
+                        <setting string="Número de prueba" help="Número E.164 (ej. +573001234567) al que se envía el mensaje de prueba.">
+                            <field name="whatsapp_test_phone" class="o_light_label" placeholder="+573001234567"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
         </field>
+    </record>
+
+    <record id="action_whatsapp_settings" model="ir.actions.act_window">
+        <field name="name">Configuración</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'all_in_one_whatsapp_integration', 'bin_size': False}</field>
     </record>
 </odoo>

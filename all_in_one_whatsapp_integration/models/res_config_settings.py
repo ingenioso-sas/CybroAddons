@@ -19,13 +19,43 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResConfigSettings(models.TransientModel):
-    """ Inherited this module is to add fields for WhatsApp's
-        message-sending authentication """
+    """Ajustes propios de WhatsApp: proveedores, credenciales, cola y pruebas."""
     _inherit = "res.config.settings"
+
+    @api.model
+    def _default_providers(self):
+        return self.env["whatsapp.provider"].search([])
+
+    provider_ids = fields.Many2many(
+        "whatsapp.provider", string="Proveedores",
+        default=_default_providers,
+        help="Canales de envío. Solo los habilitados aparecen en el "
+             "wizard y son procesados por la cola.")
+    whatsapp_async_default = fields.Boolean(
+        string="Encolar por defecto",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_async_default",
+        help="Si está activo, el wizard propone encolar el mensaje en "
+             "lugar de enviarlo al momento.")
+    whatsapp_queue_limit = fields.Integer(
+        string="Mensajes por ciclo",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_queue_limit",
+        default=20,
+        help="Cuántos mensajes pendientes procesa el cron en cada ciclo.")
+    whatsapp_queue_max_retries = fields.Integer(
+        string="Reintentos máximos",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_queue_max_retries",
+        default=5,
+        help="Tras este número de fallos el mensaje queda en Error y "
+             "ya no se reintenta solo.")
+    whatsapp_test_phone = fields.Char(
+        string="Teléfono de prueba",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_test_phone",
+        help="Número E.164 (ej. +573001234567) usado por los botones "
+             "de prueba de conexión.")
 
     account_sid = fields.Char(string="Account SID",
                               config_parameter='all_in_one_whatsapp_integration.'
