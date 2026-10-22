@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 
 import requests
 
@@ -10,21 +11,27 @@ from odoo.addons.all_in_one_whatsapp_integration.models import whatsapp_tools as
 _logger = logging.getLogger(__name__)
 REQUEST_TIMEOUT = 30
 
+# Verificado en vivo contra Evolution 2.3.7 (2026-10-22):
+#  sendText         -> {number, text, options, textMessage?}
+#  sendMedia        -> {number, mediatype, mimetype, caption, media, fileName}
+#  sendSticker      -> {number, sticker}
+#  sendWhatsAppAudio-> {number, audio}
+
 
 class WhatsappModeMessage:
-    """Helper (no es un modelo Odoo) para Evolution API."""
+    """Helper (no es un modelo Odoo) para Evolution API v2."""
 
     def __init__(self, env):
         self.env = env
-        get = self.env["ir.config_parameter"].sudo().get_param
+        get = self.env['ir.config_parameter'].sudo().get_param
         self.evolution_base_url = (
-            get("all_in_one_whatsapp_integration.evolution_base_url") or ""
+            get('all_in_one_whatsapp_integration.evolution_base_url') or ""
         ).strip().rstrip("/")
         self.evolution_instance = (
-            get("all_in_one_whatsapp_integration.evolution_instance") or ""
+            get('all_in_one_whatsapp_integration.evolution_instance') or ""
         ).strip()
         self.evolution_apikey = (
-            get("all_in_one_whatsapp_integration.evolution_apikey") or ""
+            get('all_in_one_whatsapp_integration.evolution_apikey') or ""
         ).strip()
 
     def clean_number(self, number):
@@ -35,8 +42,7 @@ class WhatsappModeMessage:
                 or not self.evolution_apikey:
             raise ValidationError(
                 _("Configure Evolution API (base URL, instance and apiKey) "
-                  "in Settings before sending.")
-            )
+                  "in Settings before sending."))
 
     def build_URL(self, type_msg):
         self._ensure_config()
@@ -51,15 +57,6 @@ class WhatsappModeMessage:
         payload = {"number": number, "options": base_options}
         if extra_sections:
             payload.update(extra_sections)
-        return payload
-
-    def _base_media_payload(self, number, mediatype, caption, media,
-                            extra_options=None, **extra_media):
-        payload = self.build_payload_whatsapp(number, extra_options)
-        media_msg = {"mediatype": mediatype, "caption": caption or "",
-                     "media": str(media or "")}
-        media_msg.update(extra_media)
-        payload["mediaMessage"] = media_msg
         return payload
 
     def send_request_whatsapp(self, url, payload):
@@ -81,58 +78,73 @@ class WhatsappModeMessage:
         _logger.info("Mensaje WhatsApp enviado correctamente")
         return response
 
+    @staticmethod
+    def _guess_mimetype(file_name):
+        guessed, _enc = mimetypes.guess_type(file_name or "")
+        return guessed or "application/octet-stream"
+
+    # -- texto -----------------------------------------------------------
     def action_send_custom_message(self, number, whatsapp_message):
         number = self.clean_number(number)
         url = self.build_URL("sendText")
+        text = whatsapp_message or ""
         payload = self.build_payload_whatsapp(
             number, {"linkPreview": False},
-            {"textMessage": {"text": whatsapp_message or ""}})
+            {"text": text, "textMessage": {"text": text}})
+        return self.send_request_whatsapp(url, payload)
+
+    # -- media (imagen / video / documento) ------------------------------
+    def _send_media(self, number, mediatype, mimetype, caption, media,
+                    file_name=None):
+        url = self.build_URL("sendMedia")
+        payload = {
+            "number": self.clean_number(number),
+            "mediatype": mediatype,
+            "mimetype": mimetype or "application/octet-stream",
+            "caption": caption or "",
+            "media": str(media or ""),
+        }
+        if file_name:
+            payload["fileName"] = file_name
+        else:
+            payload["delay"] = 1200
         return self.send_request_whatsapp(url, payload)
 
     def action_send_image_message(self, number, whatsapp_message,
                                   message_type_media):
-        """Send image (base64 or public URL). Formats: jpg/jpeg/png."""
-        number = self.clean_number(number)
-        url = self.build_URL("sendMedia")
-        payload = self._base_media_payload(
-            number, "image", whatsapp_message, message_type_media)
-        return self.send_request_whatsapp(url, payload)
+        """Imagen: base64 o URL pública (.jpg/.jpeg/.png)."""
+        return self._send_media(
+            number, "image", self._guess_mimetype("img.jpg"),
+            whatsapp_message, message_type_media)
 
     def action_send_video_message(self, number, whatsapp_message,
                                   message_type_media):
-        """Send video (base64 or public URL). Format: mp4."""
-        number = self.clean_number(number)
-        url = self.build_URL("sendMedia")
-        payload = self._base_media_payload(
-            number, "video", whatsapp_message, message_type_media)
-        return self.send_request_whatsapp(url, payload)
+        """Video: base64 o URL pública (.mp4)."""
+        return self._send_media(
+            number, "video", "video/mp4",
+            whatsapp_message, message_type_media)
 
     def action_send_attachment_document_message(self, number, file_name,
                                                 whatsapp_message,
                                                 message_type_media):
-        """Send document (base64 or public URL). e.g. invoice.pdf."""
-        number = self.clean_number(number)
-        url = self.build_URL("sendMedia")
-        payload = self._base_media_payload(
-            number, "document", whatsapp_message, message_type_media,
-            fileName=file_name or "document.pdf")
-        return self.send_request_whatsapp(url, payload)
+        """Documento: base64 o URL pública (ej. invoice.pdf)."""
+        return self._send_media(
+            number, "document", self._guess_mimetype(file_name or ""),
+            whatsapp_message, message_type_media, file_name or "document.pdf")
 
+    # -- sticker / audio (payload plano v2) -------------------------------
     def action_send_sticker_message(self, number, message_type_media):
-        """Send sticker: base64 .webp or public URL."""
-        number = self.clean_number(number)
+        """Sticker: base64 .webp o URL pública."""
         url = self.build_URL("sendSticker")
-        payload = self.build_payload_whatsapp(
-            number, None,
-            {"stickerMessage": {"image": str(message_type_media)}})
+        payload = {"number": self.clean_number(number),
+                   "sticker": str(message_type_media)}
         return self.send_request_whatsapp(url, payload)
 
     def action_send_audio_message(self, number, message_type_media):
-        """Send audio: base64 .mp3/.ogg or public URL."""
-        number = self.clean_number(number)
+        """Audio: base64 .mp3/.ogg o URL pública."""
         url = self.build_URL("sendWhatsAppAudio")
-        payload = self.build_payload_whatsapp(
-            number, {"delay": 1200, "presence": "recording",
-                     "encoding": True},
-            {"audioMessage": {"audio": str(message_type_media)}})
+        payload = {"number": self.clean_number(number),
+                   "audio": str(message_type_media),
+                   "delay": 1200,
+                   "encoding": True}
         return self.send_request_whatsapp(url, payload)
