@@ -68,16 +68,18 @@ class WhatsappModeMessage:
         try:
             response = requests.post(url, json=payload, headers=headers,
                                      timeout=REQUEST_TIMEOUT)
-            if response.status_code in (200, 201):
-                _logger.info("WhatsApp message sent via Evolution API")
-            else:
-                _logger.error("Evolution API error: %s %s",
-                              response.status_code, response.text[:500])
-            return response
         except requests.RequestException as e:
-            _logger.exception("Error connecting to Evolution API: %s", e)
+            _logger.exception("Error al conectar con Evolution API: %s", e)
             raise ValidationError(
-                _("Could not reach Evolution API: %s") % e)
+                _("No se pudo contactar Evolution API: %s") % e)
+        if response.status_code not in (200, 201):
+            _logger.error("Evolution API error: %s %s",
+                          response.status_code, response.text[:500])
+            raise ValidationError(
+                _("Evolution API error %s: %s") % (
+                    response.status_code, response.text[:500]))
+        _logger.info("Mensaje WhatsApp enviado correctamente")
+        return response
 
     def action_send_custom_message(self, number, whatsapp_message):
         number = self.clean_number(number)
