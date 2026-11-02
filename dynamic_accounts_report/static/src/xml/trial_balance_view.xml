@@ -284,6 +284,35 @@
                             <span id="journal_res"></span>
                         </div>
 
+                        <div class="mr-3 mb-2 analytic_filter" style="">
+                            <a type="button" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="fa fa-search-plus"></span>
+                                Cuenta analítica:
+                            </a>
+                            <select class="dropdown-menu analytics" name="analytic_ids" multiple="multiple">
+                                <div role="separator" class="dropdown-divider"></div>
+                                <t t-foreach="filter_data.analytic_list" t-as="analytic">
+                                    <option t-attf-value="{{analytic[0]}}">
+                                        <t t-esc="analytic[1]"/>
+                                    </option>
+                                </t>
+                            </select>
+                            <span id="analytic_res"></span>
+                        </div>
+
+                        <div class="mr-3 mb-2 analytic_mode_filter" style="">
+                            <a type="button" class="dropdown-toggle" data-toggle="dropdown">
+                                <span class="fa fa-filter"></span>
+                                Registros analíticos:
+                            </a>
+                            <select class="dropdown-menu analytic_filter_mode" name="analytic_filter_mode">
+                                <div role="separator" class="dropdown-divider"></div>
+                                <option value="all" t-att-selected="filter_data.analytic_filter_mode == 'all'">Todas las líneas</option>
+                                <option value="with" t-att-selected="filter_data.analytic_filter_mode == 'with'">Con cuenta analítica</option>
+                                <option value="without" t-att-selected="filter_data.analytic_filter_mode == 'without'">Sin cuenta analítica</option>
+                            </select>
+                        </div>
+
                         <div class="search-Target-move" style="">
                             <a type="button" class="dropdown-toggle" data-toggle="dropdown">
                                 <span class="fa fa-filter"></span>

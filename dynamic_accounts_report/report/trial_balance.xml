@@ -27,6 +27,11 @@
                     <strong>Rango:</strong>
                     <t t-esc="Filters.get('account_from_code') or '...'"/> a
                     <t t-esc="Filters.get('account_to_code') or '...'"/>
+                    <strong>Analítica:</strong>
+                    <t t-esc="Filters.get('analytics_label') or 'Todas'"/>
+                    <t t-if="Filters.get('analytic_filter_label')">
+                        (<t t-esc="Filters.get('analytic_filter_label')"/>)
+                    </t>
                     </span>
 
 

@@ -110,6 +110,9 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
                                     self.$el.find('.journals').select2({
                                         placeholder: 'Select Journals...',
                                     });
+                                    self.$el.find('.analytics').select2({
+                                        placeholder: 'Cuentas analíticas...',
+                                    });
                             }
                             var child=[];
 
@@ -300,6 +303,20 @@ odoo.define('dynamic_cash_flow_statements.trial', function (require) {
 
             }
             filter_data_selected.journal_ids = journal_ids
+
+            var analytic_ids = [];
+            var analytic_list = $(".analytics").select2('data') || [];
+            for (var k = 0; k < analytic_list.length; k++) {
+                if (analytic_list[k].element[0].selected === true) {
+                    analytic_ids.push(parseInt(analytic_list[k].id));
+                }
+            }
+            filter_data_selected.analytic_ids = analytic_ids;
+
+            if ($(".analytic_filter_mode").length) {
+                filter_data_selected.analytic_filter_mode =
+                    $(".analytic_filter_mode")[0].value || 'all';
+            }
 
 //            if ($("#date_from").val()) {
 //                var dateString = $("#date_from").val();

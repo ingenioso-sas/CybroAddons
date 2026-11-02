@@ -41,6 +41,17 @@ class TrialView(models.TransientModel):
         string='Cuenta hasta',
         help='Código PUC final del rango (inclusivo). Vacío = hasta la '
              'última.')
+    analytic_ids = fields.Many2many(
+        "account.analytic.account", string="Cuentas analíticas")
+    analytic_filter_mode = fields.Selection(
+        [('all', 'Todas las líneas'),
+         ('with', 'Con cuenta analítica'),
+         ('without', 'Sin cuenta analítica')],
+        string='Filtro analítico', default='all', required=True,
+        help='Todas: sin restricción. Con cuenta analítica: solo líneas '
+             'imputadas (a las cuentas seleccionadas o a cualquiera si no '
+             'hay selección). Sin cuenta analítica: solo líneas sin '
+             'imputación analítica.')
 
     @api.model
     def view_report(self, option):
@@ -54,6 +65,8 @@ class TrialView(models.TransientModel):
             'puc_level': r.puc_level or '0',
             'account_from_code': (r.account_from_code or '').strip(),
             'account_to_code': (r.account_to_code or '').strip(),
+            'analytics': r.analytic_ids,
+            'analytic_filter_mode': r.analytic_filter_mode or 'all',
 
         }
         if r.date_from:
@@ -110,6 +123,25 @@ class TrialView(models.TransientModel):
         filters['account_from_code'] = data.get('account_from_code', '')
         filters['account_to_code'] = data.get('account_to_code', '')
 
+        mode_labels = {'all': 'Todas las líneas',
+                       'with': 'Con cuenta analítica',
+                       'without': 'Sin cuenta analítica'}
+        mode = data.get('analytic_filter_mode') or 'all'
+        analytic_names = self.env['account.analytic.account'].browse(
+            data.get('analytic_ids', [])).mapped('name')
+        if mode == 'without':
+            analytic_label = 'Sin cuenta analítica'
+        elif mode == 'with':
+            analytic_label = (', '.join(analytic_names) if analytic_names
+                              else 'Todas con cuenta analítica')
+        else:
+            analytic_label = 'Todas'
+        filters['analytics'] = analytic_names
+        filters['analytic_filter_mode'] = mode
+        filters['analytic_filter_label'] = mode_labels.get(mode, '')
+        filters['analytics_label'] = analytic_label
+        filters['analytic_list'] = data.get('analytic_list')
+
         enable_static = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_static_audit', 'False') == 'True'
         enable_ai = self.env['ir.config_parameter'].sudo().get_param('dynamic_accounts_report.enable_ai_audit', 'False') == 'True'
         filters['enable_audit_button'] = enable_static or enable_ai
@@ -145,6 +177,9 @@ class TrialView(models.TransientModel):
                 o_company = j.company_id
             journals.append((j.id, j.name, j.code))
 
+        analytics = r.analytic_ids if r.analytic_ids else self.env[
+            'account.analytic.account'].search(company_domain, order='name')
+
         filter_dict = {
             'journal_ids': r.journal_ids.ids,
             'company_id': company_id,
@@ -158,6 +193,9 @@ class TrialView(models.TransientModel):
             'puc_level': r.puc_level or '0',
             'account_from_code': (r.account_from_code or '').strip(),
             'account_to_code': (r.account_to_code or '').strip(),
+            'analytic_ids': r.analytic_ids.ids,
+            'analytic_filter_mode': r.analytic_filter_mode or 'all',
+            'analytic_list': [(a.id, a.name) for a in analytics],
         }
         filter_dict.update(default_filters)
         return filter_dict
@@ -202,6 +240,10 @@ class TrialView(models.TransientModel):
             vals.update({'journal_ids': [(6, 0, vals.get('journal_ids'))]})
         if vals.get('journal_ids') == []:
             vals.update({'journal_ids': [(5,)]})
+        if 'analytic_ids' in vals:
+            # Reemplaza la selección para permitir desmarcar cuentas.
+            vals.update({
+                'analytic_ids': [(6, 0, vals.get('analytic_ids') or [])]})
         res = super(TrialView, self).write(vals)
         return res
 
@@ -246,6 +288,21 @@ class TrialView(models.TransientModel):
         if journal_ids:
             extra += " AND account_move_line.journal_id IN %s"
             params_extra.append(tuple(journal_ids))
+
+        # Filtro analítico. La cuenta analítica es una FK directa en la línea,
+        # por lo que no duplica filas al agrupar por cuenta contable.
+        analytic_mode = data.get('analytic_filter_mode') or 'all'
+        analytics = data.get('analytics')
+        analytic_ids = analytics.ids if analytics else []
+        if analytic_mode == 'without':
+            extra += " AND account_move_line.analytic_account_id IS NULL"
+        elif analytic_mode == 'with':
+            if analytic_ids:
+                extra += " AND account_move_line.analytic_account_id IN %s"
+                params_extra.append(tuple(analytic_ids))
+            else:
+                extra += (" AND account_move_line.analytic_account_id "
+                          "IS NOT NULL")
         request = (
             "SELECT account_id AS id, COALESCE(SUM(debit), 0.0) AS debit, "
             "COALESCE(SUM(credit), 0.0) AS credit, "
@@ -424,10 +481,13 @@ class TrialView(models.TransientModel):
                         '2': 'Grupo (2)', '4': 'Cuenta (4)',
                         '6': 'Subcuenta (6)'}
         sheet.merge_range(
-            'A5:G5', 'Nivel PUC: %s   Rango: %s a %s' % (
+            'A5:G5', 'Nivel PUC: %s   Rango: %s a %s   Analítica: %s (%s)' % (
                 level_labels.get(str(filters.get('puc_level', '0')), ''),
                 filters.get('account_from_code') or '...',
-                filters.get('account_to_code') or '...'), date_head)
+                filters.get('account_to_code') or '...',
+                filters.get('analytics_label') or 'Todas',
+                filters.get('analytic_filter_label') or 'Todas las líneas'),
+            date_head)
         sheet.merge_range('A6:G6', 'Diarios: ' + ', '.join([ lt or '' for lt in filters['journals'] ]) + '  Asientos: '+ filters.get('target_move'), date_head)
         sheet.write('A7', 'Código', sub_heading)
         sheet.write('B7', 'Cuenta (PUC/NIIF)', sub_heading)
