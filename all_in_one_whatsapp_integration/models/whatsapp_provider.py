@@ -91,7 +91,9 @@ class WhatsappProvider(models.Model):
         self.ensure_one()
         if not self.active:
             raise ValidationError(
-                _("El proveedor '%s' está deshabilitado.") % self.name)
+                _("El proveedor '%s' está deshabilitado. Actívelo en "
+                  "WhatsApp → Proveedores (o en Ajustes → WhatsApp → "
+                  "Canales habilitados).") % self.name)
         attachments = attachment_ids or self.env["ir.attachment"]
         if self.code == "cloud":
             return self._send_cloud(phone, body or "", attachments)
@@ -215,7 +217,9 @@ class WhatsappProvider(models.Model):
             if self.code == "twilio":
                 if not self.active:
                     raise ValidationError(
-                        _("El proveedor '%s' está deshabilitado.") % self.name)
+                        _("El proveedor '%s' está deshabilitado. Actívelo en "
+                          "WhatsApp → Proveedores (o en Ajustes → WhatsApp → "
+                          "Canales habilitados).") % self.name)
                 self._send_twilio(number, body)
             elif self.code in ("cloud", "evolution"):
                 self.send_message(number, body)

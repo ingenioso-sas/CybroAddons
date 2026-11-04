@@ -70,7 +70,9 @@ class WhatsappQueueMessage(models.Model):
                 _("Proveedor desconocido: %s") % provider_code)
         if not provider.active:
             raise ValidationError(
-                _("El proveedor '%s' está deshabilitado.") % provider.name)
+                _("El proveedor '%s' está deshabilitado. Actívelo en "
+                  "WhatsApp → Proveedores (o en Ajustes → WhatsApp → "
+                  "Canales habilitados).") % provider.name)
         if provider_code not in ('cloud', 'evolution'):
             raise ValidationError(
                 _("El proveedor '%s' es de envío directo y no usa la cola.")

@@ -4,7 +4,7 @@
         <field name="name">whatsapp.provider.tree</field>
         <field name="model">whatsapp.provider</field>
         <field name="arch" type="xml">
-            <list string="Proveedores WhatsApp" decoration-muted="not active">
+            <list string="Proveedores WhatsApp" decoration-muted="not active" create="false">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="code"/>
@@ -26,7 +26,8 @@
                     </div>
                     <group>
                         <field name="name"/>
-                        <field name="code"/>
+                        <field name="code" readonly="1"
+                               help="Canal de envío. No se puede cambiar."/>
                         <field name="sequence"/>
                     </group>
                     <group string="Última prueba de conexión">
@@ -43,5 +44,7 @@
         <field name="name">Proveedores WhatsApp</field>
         <field name="res_model">whatsapp.provider</field>
         <field name="view_mode">list,form</field>
+        <!-- Mostrar también los deshabilitados para poder activarlos -->
+        <field name="context">{'active_test': False}</field>
     </record>
 </odoo>

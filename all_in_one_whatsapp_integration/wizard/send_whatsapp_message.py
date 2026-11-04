@@ -101,8 +101,9 @@ class SendWhatsappMessage(models.TransientModel):
             raise ValidationError(_("Seleccione un proveedor."))
         if not provider.active:
             raise ValidationError(
-                _("El proveedor '%s' está deshabilitado en Ajustes.")
-                % provider.name)
+                _("El proveedor '%s' está deshabilitado. Actívelo en "
+                  "WhatsApp → Proveedores (o en Ajustes → WhatsApp → "
+                  "Canales habilitados).") % provider.name)
         return provider
 
     def _get_number_e164(self):
