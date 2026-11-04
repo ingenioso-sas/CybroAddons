@@ -1,0 +1,1291 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* all_in_one_whatsapp_integration
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 17.0-20260913\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-22 06:09+0000\n"
+"PO-Revision-Date: 2026-10-22 06:09+0000\n"
+"Language: es\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,body_html:all_in_one_whatsapp_integration.purchase_order_whatsapp_template
+msgid ""
+"\n"
+"                <div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 12px;\">\n"
+"                 <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"                 <div>\n"
+"                    Hello *<t t-out=\"object.partner_id.name or ''\"></t>*,\n"
+"                    Greetings from *<t t-out=\"object.company_id.name or ' '\"></t>*\n"
+"                 </div>\n"
+"                 <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"                    Your Request For Quotation (RFQ) *<t t-out=\"object.name\"></t>* with amount *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* is ready.\n"
+"                    <div>\n"
+"                        As per the planned date for receipt of products on <t t-out=\"object.date_planned\"></t>\n"
+"                    </div>\n"
+"                    <div>\n"
+"                        Quotation details are mentioned below: <br>\n"
+"                        <t t-foreach=\"object\" t-as=\"each\">\n"
+"                            <t t-foreach=\"each.order_line\" t-as=\"id\">\n"
+"                                *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                                 *Qty: <t t-out=\"id.product_qty\"></t>*<br>\n"
+"                                 *Price:<t t-out=\"id.price_subtotal\"></t>*<br>\n"
+"                            </t>\n"
+"                        </t>\n"
+"                    </div>\n"
+"                 </t>\n"
+"                 <t t-else=\"\">\n"
+"                    <div>\n"
+"                        Your Purchase Order Number *<t t-out=\"object.name\"></t>* with amount *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* is Confirmed.\n"
+"                    </div>\n"
+"                    <div>\n"
+"                        As per you RFQ Order confirmation date and time is <t t-out=\"object.date_approve\"></t>\n"
+"                    </div>\n"
+"                    <div>\n"
+"                        Order details are mentioned below: <br>\n"
+"                        <t t-foreach=\"object\" t-as=\"each\">\n"
+"                            <t t-foreach=\"each.order_line\" t-as=\"id\">\n"
+"                                *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                                 *Qty: <t t-out=\"id.product_qty\"></t>*<br>\n"
+"                                 *Price:<t t-out=\"id.price_subtotal\"></t>*<br>\n"
+"                            </t>\n"
+"                        </t>\n"
+"                    </div>\n"
+"                 </t>\n"
+"                 <div>\n"
+"                If you require any further information, feel free to contact me.\n"
+"            </div>\n"
+"        \n"
+"            "
+msgstr ""
+"\n"
+"                <div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 12px;\">\n"
+"                 <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"                 <div>\n"
+"                    Hola *<t t-out=\"object.partner_id.name or ''\"></t>*,\n"
+"                    Saludos de *<t t-out=\"object.company_id.name or ' '\"></t>*\n"
+"                 </div>\n"
+"                 <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"                    Su Solicitud de Cotización (RFQ) *<t t-out=\"object.name\"></t>* por valor de *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* está lista.\n"
+"                    <div>\n"
+"                        Según la fecha prevista de recepción de productos: <t t-out=\"object.date_planned\"></t>\n"
+"                    </div>\n"
+"                    <div>\n"
+"                        Detalle de la cotización: <br>\n"
+"                        <t t-foreach=\"object\" t-as=\"each\">\n"
+"                            <t t-foreach=\"each.order_line\" t-as=\"id\">\n"
+"                                *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                                 *Cant.: <t t-out=\"id.product_qty\"></t>*<br>\n"
+"                                 *Precio:<t t-out=\"id.price_subtotal\"></t>*<br>\n"
+"                            </t>\n"
+"                        </t>\n"
+"                    </div>\n"
+"                 </t>\n"
+"                 <t t-else=\"\">\n"
+"                    <div>\n"
+"                        Su Orden de Compra Número *<t t-out=\"object.name\"></t>* por valor de *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* está Confirmada.\n"
+"                    </div>\n"
+"                    <div>\n"
+"                        Fecha y hora de confirmación de su pedido: <t t-out=\"object.date_approve\"></t>\n"
+"                    </div>\n"
+"                    <div>\n"
+"                        Detalle del pedido: <br>\n"
+"                        <t t-foreach=\"object\" t-as=\"each\">\n"
+"                            <t t-foreach=\"each.order_line\" t-as=\"id\">\n"
+"                                *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                                 *Cant.: <t t-out=\"id.product_qty\"></t>*<br>\n"
+"                                 *Precio:<t t-out=\"id.price_subtotal\"></t>*<br>\n"
+"                            </t>\n"
+"                        </t>\n"
+"                    </div>\n"
+"                 </t>\n"
+"                 <div>\n"
+"                Si requiere más información, no dude en contactarnos.\n"
+"            </div>\n"
+"        \n"
+"            "
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,body_html:all_in_one_whatsapp_integration.account_move_whatsapp_template
+msgid ""
+"\n"
+"                <div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 12px;\">\n"
+"        <p style=\"box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"                </p><div>\n"
+"                    Hello *<t t-out=\"object.partner_id.name or ''\"></t>*\n"
+"                    Greetings from *<t t-out=\"object.company_id.name or ' '\"></t>*\n"
+"                </div>\n"
+"                <div>\n"
+"                    Your invoice number *<t t-out=\"object.name\"></t>* with amount *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>*\n"
+"                    from <t t-out=\"object.company_id.name\"></t>.\n"
+"                </div>\n"
+"                <div>\n"
+"                    <t t-if=\"object.payment_state in ('paid')\">\n"
+"                        This invoice is already paid and Amount due is *<t t-out=\"format_amount(object.amount_residual, object.currency_id)\"></t>*\n"
+"                    </t>\n"
+"                    <t t-else=\"\">\n"
+"                        Please remit payment at your earliest convenience. Amount due is *<t t-out=\"format_amount(object.amount_residual, object.currency_id)\"></t>*\n"
+"                    </t>\n"
+"                </div>\n"
+"                The invoice date is <t t-out=\"object.invoice_date\"></t>\n"
+"                <div>\n"
+"                    Your order details are as follows:\n"
+"                    <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.invoice_line_ids\" t-as=\"id\">\n"
+"                            *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Qty: <t t-out=\"id.quantity\"></t>*<br>\n"
+"                             *Price:<t t-out=\"id.price_unit\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"                If you have any questions, please feel free to contact us.\n"
+"        \n"
+"            </div>"
+msgstr ""
+"\n"
+"                <div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 12px;\">\n"
+"        <p style=\"box-sizing:border-box;margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"                </p><div>\n"
+"                    Hola *<t t-out=\"object.partner_id.name or ''\"></t>*\n"
+"                    Saludos de *<t t-out=\"object.company_id.name or ' '\"></t>*\n"
+"                </div>\n"
+"                <div>\n"
+"                    Su factura número *<t t-out=\"object.name\"></t>* por valor de *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>*\n"
+"                    de <t t-out=\"object.company_id.name\"></t>.\n"
+"                </div>\n"
+"                <div>\n"
+"                    <t t-if=\"object.payment_state in ('paid')\">\n"
+"                        Esta factura ya está pagada. Saldo pendiente: *<t t-out=\"format_amount(object.amount_residual, object.currency_id)\"></t>*\n"
+"                    </t>\n"
+"                    <t t-else=\"\">\n"
+"                        Por favor realice el pago lo antes posible. Saldo pendiente: *<t t-out=\"format_amount(object.amount_residual, object.currency_id)\"></t>*\n"
+"                    </t>\n"
+"                </div>\n"
+"                Fecha de la factura: <t t-out=\"object.invoice_date\"></t>\n"
+"                <div>\n"
+"                    Detalle de su pedido:\n"
+"                    <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.invoice_line_ids\" t-as=\"id\">\n"
+"                            *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Cant.: <t t-out=\"id.quantity\"></t>*<br>\n"
+"                             *Precio:<t t-out=\"id.price_unit\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"                Si tiene preguntas, no dude en contactarnos.\n"
+"        \n"
+"            </div>"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,body_html:all_in_one_whatsapp_integration.stock_picking_whatsapp_template
+msgid ""
+"<div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 12px;\">\n"
+"         <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"         <div>\n"
+"            Hello *<t t-out=\"object.partner_id.name or ''\"></t>*,\n"
+"         </div>\n"
+"         <div>\n"
+"             <t t-if=\"object.state in ('draft')\">\n"
+"                We have received your order *<t t-out=\"object.name\"></t>*. It will be shipped soon\n"
+"                <div>\n"
+"                    Order details are as follows: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Qty: <t t-out=\"id.product_uom_qty\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"             <t t-if=\"object.state in ('assigned')\">\n"
+"                Your order *<t t-out=\"object.name\"></t>* is ready. It will be shipped soon\n"
+"                <div>\n"
+"                    Order details are as follows: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Qty: <t t-out=\"id.product_uom_qty\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"             <t t-if=\"object.state in ('confirmed')\">\n"
+"                Your order *<t t-out=\"object.name\"></t>* is ready. It will be shipped soon\n"
+"                <div>\n"
+"                    Order details are as follows: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Qty: <t t-out=\"id.product_uom_qty\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"             <t t-if=\"object.state in ('done')\">\n"
+"                Your order *<t t-out=\"object.name\"></t>* is shipped.\n"
+"                <div>\n"
+"                    Order details are as follows: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Product: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Qty: <t t-out=\"id.quantity_done\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"         </div>\n"
+"         <div>\n"
+"            If you have any questions, please feel free to contact us.\n"
+"         </div>\n"
+"            </p>\n"
+"        \n"
+"            "
+msgstr ""
+"<div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 12px;\">\n"
+"         <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"         <div>\n"
+"            Hola *<t t-out=\"object.partner_id.name or ''\"></t>*,\n"
+"         </div>\n"
+"         <div>\n"
+"             <t t-if=\"object.state in ('draft')\">\n"
+"                Hemos recibido su pedido *<t t-out=\"object.name\"></t>*. Será despachado pronto\n"
+"                <div>\n"
+"                    Detalle del pedido: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Cant.: <t t-out=\"id.product_uom_qty\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"             <t t-if=\"object.state in ('assigned')\">\n"
+"                Su pedido *<t t-out=\"object.name\"></t>* está listo. Será despachado pronto\n"
+"                <div>\n"
+"                    Detalle del pedido: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Cant.: <t t-out=\"id.product_uom_qty\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"             <t t-if=\"object.state in ('confirmed')\">\n"
+"                Su pedido *<t t-out=\"object.name\"></t>* está listo. Será despachado pronto\n"
+"                <div>\n"
+"                    Detalle del pedido: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Cant.: <t t-out=\"id.product_uom_qty\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"             <t t-if=\"object.state in ('done')\">\n"
+"                Su pedido *<t t-out=\"object.name\"></t>* fue despachado.\n"
+"                <div>\n"
+"                    Detalle del pedido: <br>\n"
+"                    <t t-foreach=\"object\" t-as=\"each\">\n"
+"                        <t t-foreach=\"each.move_ids_without_package\" t-as=\"id\">\n"
+"                            *Producto: <t t-out=\"id.product_id.name\"></t>* <br>\n"
+"                             *Cant.: <t t-out=\"id.quantity_done\"></t>*<br>\n"
+"                        </t>\n"
+"                    </t>\n"
+"                </div>\n"
+"             </t>\n"
+"         </div>\n"
+"         <div>\n"
+"            Si tiene preguntas, no dude en contactarnos.\n"
+"         </div>\n"
+"            </p>\n"
+"        \n"
+"            "
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,body_html:all_in_one_whatsapp_integration.sale_order_whatsapp_template
+msgid ""
+"<div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 14px;\">\n"
+"         <div>\n"
+"            Hello *<t t-out=\"object.partner_id.name or ' '\"></t>*, <br>\n"
+"            Greetings from *<t t-out=\"object.company_id.name or ' '\"></t>*\n"
+"         </div>\n"
+"         <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"            Your Sale Order Quotation *<t t-out=\"object.name or ' '\"></t>* with amount *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* is ready.\n"
+"            <div>\n"
+"                As per your quotation the date and time of the order is \"<t t-out=\"object.date_order\"></t>\"\n"
+"            </div>\n"
+"            <div>\n"
+"                Quotation details are mentioned below: <br>\n"
+"                <t t-foreach=\"object\" t-as=\"orders\">\n"
+"                    <t t-foreach=\"orders.order_line\" t-as=\"order_id\">\n"
+"                       *Product: <t t-out=\"order_id.product_id.name\"></t>* <br>\n"
+"                         *Quantity: <t t-out=\"order_id.product_uom_qty\"></t>*<br>\n"
+"                         *Price:<t t-out=\"order_id.price_subtotal\"></t>*<br>\n"
+"                    </t>\n"
+"                </t>\n"
+"            </div>\n"
+"         </t>\n"
+"         <t t-else=\"\">\n"
+"            <div>\n"
+"                Your Sale Order Number *<t t-out=\"object.name or ''\"></t>* with amount *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* is Confirmed.\n"
+"            </div>\n"
+"            <div>\n"
+"                As per your quotation your order date and time of the order is \"<t t-out=\"object.date_order\"></t>\"\n"
+"            </div>\n"
+"            <div>\n"
+"                Your order details are mentioned below: <br>\n"
+"                <t t-foreach=\"object\" t-as=\"orders\">\n"
+"                    <t t-foreach=\"orders.order_line\" t-as=\"order_id\">\n"
+"                        *Product: <t t-out=\"order_id.product_id.name\"></t>* <br>\n"
+"                        *Quantity: <t t-out=\"order_id.product_uom_qty\"></t>*<br>\n"
+"                        *Price:<t t-out=\"order_id.price_subtotal\"></t>*<br>\n"
+"                    </t>\n"
+"                </t>\n"
+"            </div>\n"
+"            <div>\n"
+"            If you require any further information, feel free to contact me.\n"
+"            </div>\n"
+"         </t>\n"
+"        \n"
+"            "
+msgstr ""
+"<div style=\"font-family: Ubuntu, Arial, Verdana, sans-serif; font-size: 14px;\">\n"
+"         <div>\n"
+"            Hola *<t t-out=\"object.partner_id.name or ' '\"></t>*, <br>\n"
+"            Saludos de *<t t-out=\"object.company_id.name or ' '\"></t>*\n"
+"         </div>\n"
+"         <t t-if=\"object.state in ('draft', 'sent')\">\n"
+"            Su Cotización *<t t-out=\"object.name or ' '\"></t>* por valor de *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* está lista.\n"
+"            <div>\n"
+"                Según su cotización, fecha y hora del pedido: \"<t t-out=\"object.date_order\"></t>\"\n"
+"            </div>\n"
+"            <div>\n"
+"                Detalle de la cotización: <br>\n"
+"                <t t-foreach=\"object\" t-as=\"orders\">\n"
+"                    <t t-foreach=\"orders.order_line\" t-as=\"order_id\">\n"
+"                       *Producto: <t t-out=\"order_id.product_id.name\"></t>* <br>\n"
+"                         *Cantidad: <t t-out=\"order_id.product_uom_qty\"></t>*<br>\n"
+"                         *Precio:<t t-out=\"order_id.price_subtotal\"></t>*<br>\n"
+"                    </t>\n"
+"                </t>\n"
+"            </div>\n"
+"         </t>\n"
+"         <t t-else=\"\">\n"
+"            <div>\n"
+"                Su Pedido de Venta Número *<t t-out=\"object.name or ''\"></t>* por valor de *<t t-out=\"format_amount(object.amount_total, object.currency_id)\"></t>* está Confirmado.\n"
+"            </div>\n"
+"            <div>\n"
+"                Según su cotización, fecha y hora de su pedido: \"<t t-out=\"object.date_order\"></t>\"\n"
+"            </div>\n"
+"            <div>\n"
+"                Detalle de su pedido: <br>\n"
+"                <t t-foreach=\"object\" t-as=\"orders\">\n"
+"                    <t t-foreach=\"orders.order_line\" t-as=\"order_id\">\n"
+"                        *Producto: <t t-out=\"order_id.product_id.name\"></t>* <br>\n"
+"                        *Cantidad: <t t-out=\"order_id.product_uom_qty\"></t>*<br>\n"
+"                        *Precio:<t t-out=\"order_id.price_subtotal\"></t>*<br>\n"
+"                    </t>\n"
+"                </t>\n"
+"            </div>\n"
+"            <div>\n"
+"            Si requiere más información, no dude en contactarnos.\n"
+"            </div>\n"
+"         </t>\n"
+"        \n"
+"            "
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Access Token"
+msgstr "Token de acceso"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__account_sid
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Account SID"
+msgstr "SID de cuenta"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__account_sid
+msgid "Account SID of twilio account"
+msgstr "SID de la cuenta de Twilio"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__attachment_ids
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_queue_message_form
+msgid "Adjuntos"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__attachment_ids
+msgid "Attachments"
+msgstr "Adjuntos"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_send_whatsapp_message__attachment_ids
+msgid "Attachments to include in the WhatsApp message."
+msgstr "Adjuntos para incluir en el mensaje de WhatsApp."
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__auth_token
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Auth Token"
+msgstr "Token de autenticación"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__auth_token
+msgid "Auth Token of twilio account"
+msgstr "Token de autenticación de la cuenta de Twilio"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__bearer_token
+msgid "Authorization Token of Whatsapp Cloud API"
+msgstr "Token de autorización de WhatsApp Cloud API"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Business Account ID"
+msgstr "ID de cuenta de negocio"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_business
+msgid "Business ID of Whatsapp Cloud API"
+msgstr "ID de negocio de WhatsApp Cloud API"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_whatsapp_provider__code
+msgid "Canal de envío. No cambiar una vez creado."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_whatsapp_queue_message__provider_id
+msgid "Canal de envío. Solo proveedores habilitados."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__provider_ids
+msgid ""
+"Canales de envío. Solo los habilitados aparecen en el wizard y son "
+"procesados por la cola."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Canales habilitados"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.send_whatsapp_message_view_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__error_msg
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_queue_message_form
+msgid "Causa del fallo"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_res_config_settings
+msgid "Class for managing global SaaS settings."
+msgstr "Clase para gestionar ajustes globales SaaS."
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_provider__code__cloud
+#: model:whatsapp.provider,name:all_in_one_whatsapp_integration.provider_cloud
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Cloud API (Meta)"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__cloud_api_enabled
+msgid "Cloud API whatsapp Enabled"
+msgstr "Cloud API de WhatsApp habilitado"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.action_whatsapp_queue_message
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_queue_message_tree
+msgid "Cola de Mensajes WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.menu_whatsapp_queue_message_technical
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Cola de mensajes"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_whatsapp_queue_message
+msgid "Cola Única de Mensajes de WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Conexión con la instancia Evolution API."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.action_whatsapp_settings
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.menu_whatsapp_settings_technical
+msgid "Configuración"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__partner_id
+msgid "Contacto"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__create_uid
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__create_uid
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__create_date
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__create_date
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Credenciales Cloud API"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Credenciales Evolution API"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Credenciales Twilio"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Cuenta Twilio para el canal Twilio."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_queue_limit
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Cuántos mensajes pendientes procesa el cron en cada ciclo."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__code
+msgid "Código"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_mail_template__is_delivery_template
+msgid "Delivery Template"
+msgstr "Plantilla de entrega"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__last_test_info
+msgid "Detalle última prueba"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_discuss_channel
+msgid "Discussion Channel"
+msgstr "Canal de discusión"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__display_name
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__display_name
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__send_whatsapp_message__message_type__document
+msgid "Document"
+msgstr "Documento"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_mail_template
+msgid "Email Templates"
+msgstr "Plantillas de correo"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__evolution_api_enabled
+msgid "Enabled API Evoution For Whatsapp"
+msgstr "Habilitar API Evolution para WhatsApp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__cloud_api_enabled
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__twilio_whatsapp_enabled
+msgid "Enabled Whatsapp twilio account"
+msgstr "Cuenta Twilio de WhatsApp habilitada"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__send_whatsapp_message__delivery__queue
+msgid "Encolar"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_send_whatsapp_message__delivery
+msgid ""
+"Encolar deja el mensaje en la cola única para que lo procese el cron (con "
+"reintentos y causa de fallo visible)."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_async_default
+msgid "Encolar por defecto"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_send_whatsapp_message__whatsapp_message
+msgid "Enter the message to be sent via WhatsApp."
+msgstr "Ingrese el mensaje a enviar por WhatsApp."
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__delivery
+msgid "Entrega"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_queue_message__state__sent
+msgid "Enviado"
+msgstr "Enviado"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_queue_message_form
+msgid "Enviar Ahora"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__send_whatsapp_message__delivery__now
+msgid "Enviar ahora"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Envía ✅ Conexión WhatsApp OK por Cloud API (Meta)."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Envía ✅ Conexión WhatsApp OK por Evolution API."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Envía ✅ Conexión WhatsApp OK por Twilio."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Envío asíncrono"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_provider__last_test_state__error
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_queue_message__state__error
+msgid "Error"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__state
+msgid "Estado"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_provider__code__evolution
+#: model:whatsapp.provider,name:all_in_one_whatsapp_integration.provider_evolution
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Evolution API"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__evolution_api_enabled
+msgid "Evolution API whatsapp Enabled"
+msgstr "API Evolution de WhatsApp habilitada"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__date_sent
+msgid "Fecha de envío"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__last_test_date
+msgid "Fecha última prueba"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.actions.act_window,help:all_in_one_whatsapp_integration.action_whatsapp_queue_message
+msgid ""
+"Gestione aquí los mensajes de WhatsApp pendientes, enviados o con error.\n"
+"            Si un mensaje falla, verá la causa y podrá reintentarlo."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__active
+msgid "Habilitado"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_send_whatsapp_message
+msgid "Helps to send messages using different way"
+msgstr "Ayuda a enviar mensajes por diferentes medios"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__id
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__id
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__id
+msgid "ID"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__res_id
+msgid "ID Relacionado"
+msgstr "ID relacionado"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__evolution_instance
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Instance"
+msgstr "Instancia"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__evolution_instance
+msgid "Instance for Evolution API"
+msgstr "Instancia de Evolution API"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,subject:all_in_one_whatsapp_integration.stock_picking_whatsapp_template
+msgid "Inventory Template"
+msgstr "Plantilla de inventario"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_mail_template__is_invoice_template
+#: model:mail.template,subject:all_in_one_whatsapp_integration.account_move_whatsapp_template
+msgid "Invoice Template"
+msgstr "Plantilla de factura"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__write_uid
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__write_uid
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__write_date
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__write_date
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__message
+msgid "Mensaje"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_queue_message_form
+msgid "Mensaje en Cola WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_queue_limit
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Mensajes por ciclo"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_mail_message
+msgid "Message"
+msgstr "Mensaje"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__message_type
+msgid "Message Type"
+msgstr "Tipo de mensaje"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__whatsapp_mobile_number
+msgid "Mobile"
+msgstr "Móvil"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__model
+msgid "Modelo Relacionado"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__name
+msgid "Nombre"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Número E.164 (ej. +573001234567) al que se envía el mensaje de prueba."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_test_phone
+msgid ""
+"Número E.164 (ej. +573001234567) usado por los botones de prueba de "
+"conexión."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Número de prueba"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_provider__last_test_state__ok
+msgid "OK"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__sale_user_id
+msgid "Partner Name"
+msgstr "Nombre del contacto"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_queue_message__state__pending
+msgid "Pendiente"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_discuss_channel__phone
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_discuss_channel__phone
+msgid "Phone"
+msgstr "Teléfono"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_no
+msgid "Phone Number ID of Whatsapp Cloud API"
+msgstr "ID de número de teléfono de WhatsApp Cloud API"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_no
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Phone number ID"
+msgstr "ID de número de teléfono"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Probar Cloud API"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Probar Evolution"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Probar Evolution API"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Probar Twilio"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.server,name:all_in_one_whatsapp_integration.ir_cron_whatsapp_queue_process_ir_actions_server
+msgid "Procesar Cola de WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__provider_id
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__provider_id
+msgid "Proveedor"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_provider_form
+msgid "Proveedor WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_whatsapp_provider
+msgid "Proveedor de envío WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__provider_ids
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.menu_whatsapp_provider_technical
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Proveedores"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.action_whatsapp_provider
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_provider_tree
+msgid "Proveedores WhatsApp"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Prueba de conexión"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_purchase_order
+msgid "Purchase Order"
+msgstr "Orden de compra"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,subject:all_in_one_whatsapp_integration.purchase_order_whatsapp_template
+msgid "Purchase Order Template"
+msgstr "Plantilla de orden de compra"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_mail_template__is_purchase_template
+msgid "Purchase Template"
+msgstr "Plantilla de compra"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_queue_message_form
+msgid "Reintentar"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__retry_count
+msgid "Reintentos"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_queue_max_retries
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Reintentos máximos"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_mail_template__is_sale_template
+msgid "Sale Template"
+msgstr "Plantilla de venta"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_sale_order
+msgid "Sales Order"
+msgstr "Pedido de venta"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,subject:all_in_one_whatsapp_integration.sale_order_whatsapp_template
+msgid "Sales Order Template"
+msgstr "Plantilla de pedido de venta"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__sequence
+msgid "Secuencia"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_send_whatsapp_message__sale_user_id
+msgid "Select the partner associated with the sale."
+msgstr "Seleccione el contacto asociado a la venta."
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.send_whatsapp_message_view_form
+msgid "Send"
+msgstr "Enviar"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.purchase_order_form
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_move_form
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_order_form
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_picking_form
+msgid "Send By Whatsapp"
+msgstr "Enviar por Whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.send_whatsapp_message_view_form
+msgid "Send Whatsapp Message"
+msgstr "Enviar mensaje de Whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_whatsapp_document_service
+msgid "Shared WhatsApp document helpers"
+msgstr "Ayudantes compartidos de documentos WhatsApp"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid ""
+"Si está activo, el asistente propone encolar el mensaje en lugar de enviarlo"
+" al momento."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_async_default
+msgid ""
+"Si está activo, el wizard propone encolar el mensaje en lugar de enviarlo al"
+" momento."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid ""
+"Solo los proveedores habilitados aparecen en el asistente de envío y son "
+"procesados por la cola."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_whatsapp_provider__active
+msgid ""
+"Solo los proveedores habilitados aparecen en el wizard y son procesados por "
+"la cola."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_send_whatsapp_message__provider_id
+msgid "Solo se listan los proveedores habilitados en Ajustes."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_queue_message__phone
+msgid "Teléfono"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_test_phone
+msgid "Teléfono de prueba"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__send_whatsapp_message__message_type__text
+msgid "Text"
+msgstr "Texto"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_send_whatsapp_message__whatsapp_mobile_number
+msgid "The mobile number associated with the selected partner."
+msgstr "El número móvil asociado al contacto seleccionado."
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_mail_template__is_delivery_template
+msgid "To check the message template for sending delivery to whatsapp"
+msgstr "Para marcar la plantilla de mensaje de entrega para whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_mail_template__is_invoice_template
+msgid "To check the message template for sending invoice to whatsapp"
+msgstr "Para marcar la plantilla de mensaje de factura para whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_mail_template__is_sale_template
+msgid "To check the message template forsending sale order to whatsapp"
+msgstr "Para marcar la plantilla de mensaje de pedido de venta para whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_mail_template__is_purchase_template
+msgid "To check the message template sending purchase order to whatsapp"
+msgstr "Para marcar la plantilla de mensaje de orden de compra para whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid ""
+"Token configurado en la app de Meta para verificar el webhook "
+"/whatsapp_message."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__webhook_verify_token
+msgid "Token configured in Meta App to verify GET /whatsapp_message"
+msgstr "Token configurado en la App de Meta para verificar GET /whatsapp_message"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Token y Phone Number ID de WhatsApp Cloud API."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model,name:all_in_one_whatsapp_integration.model_stock_picking
+msgid "Transfer"
+msgstr "Transferencia"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_queue_max_retries
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid ""
+"Tras este número de fallos el mensaje queda en Error y ya no se reintenta "
+"solo."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_provider__code__twilio
+#: model:whatsapp.provider,name:all_in_one_whatsapp_integration.provider_twilio
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Twilio"
+msgstr "Twilio"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__twilio_whatsapp
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Twilio Whatsapp Number"
+msgstr "Número de Whatsapp de Twilio"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__twilio_whatsapp_enabled
+msgid "Twilio whatsapp Enabled"
+msgstr "Twilio Whatsapp habilitado"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__evolution_apikey
+msgid "URL apikey for Evolution API"
+msgstr "apiKey de Evolution API"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "URL base"
+msgstr "URL base"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__evolution_base_url
+msgid "Url base"
+msgstr "URL base"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__evolution_base_url
+msgid "Url base for Evolution API"
+msgstr "URL base de Evolution API"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Verify Token"
+msgstr "Token de verificación"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "Webhook"
+msgstr "Webhook"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__webhook_verify_token
+msgid "Webhook Verify Token"
+msgstr "Token de verificación del webhook"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.menu_whatsapp_technical_root
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_send_whatsapp_message__whatsapp_message
+msgid "WhatsApp Message"
+msgstr "Mensaje de WhatsApp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields.selection,name:all_in_one_whatsapp_integration.selection__whatsapp_provider__code__web
+#: model:whatsapp.provider,name:all_in_one_whatsapp_integration.provider_web
+msgid "WhatsApp Web"
+msgstr "WhatsApp Web"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__bearer_token
+msgid "Whatsapp Access Token"
+msgstr "Token de acceso de Whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__whatsapp_business
+msgid "Whatsapp Business Account ID"
+msgstr "ID de cuenta de negocio de Whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.send_whatsapp_message_view_form
+msgid "Whatsapp Number"
+msgstr "Número de Whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,name:all_in_one_whatsapp_integration.stock_picking_whatsapp_template
+msgid "Whatsapp Template for Delivery"
+msgstr "Plantilla de Whatsapp para entrega"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,name:all_in_one_whatsapp_integration.account_move_whatsapp_template
+msgid "Whatsapp Template for Invoice"
+msgstr "Plantilla de Whatsapp para factura"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,name:all_in_one_whatsapp_integration.purchase_order_whatsapp_template
+msgid "Whatsapp Template for Purchase Order"
+msgstr "Plantilla de Whatsapp para orden de compra"
+
+#. module: all_in_one_whatsapp_integration
+#: model:mail.template,name:all_in_one_whatsapp_integration.sale_order_whatsapp_template
+msgid "Whatsapp Template for Sale Order"
+msgstr "Plantilla de Whatsapp para pedido de venta"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.account_move_menu
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.purchase_order_menu
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.sale_order_menu
+#: model:ir.ui.menu,name:all_in_one_whatsapp_integration.stock_picking_menu
+msgid "Whatsapp Templates"
+msgstr "Plantillas de Whatsapp"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.mail_template_delivery_action
+msgid "Whatsapp Templates for Delivery"
+msgstr "Plantillas de Whatsapp para entregas"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.mail_template_invoice_action
+msgid "Whatsapp Templates for Invoice"
+msgstr "Plantillas de Whatsapp para facturas"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.mail_template_purchase_action
+msgid "Whatsapp Templates for Purchase"
+msgstr "Plantillas de Whatsapp para compras"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.actions.act_window,name:all_in_one_whatsapp_integration.mail_template_sale_action
+msgid "Whatsapp Templates for Sale"
+msgstr "Plantillas de Whatsapp para ventas"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,help:all_in_one_whatsapp_integration.field_res_config_settings__twilio_whatsapp
+msgid "Whatsapp number of twilio account"
+msgstr "Número de Whatsapp de la cuenta de Twilio"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.constraint,message:all_in_one_whatsapp_integration.constraint_whatsapp_provider_code_uniq
+msgid "Ya existe un proveedor con ese código."
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_res_config_settings__evolution_apikey
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.res_config_settings_view_form
+msgid "apiKey"
+msgstr "apiKey"
+
+#. module: all_in_one_whatsapp_integration
+#: model:ir.model.fields,field_description:all_in_one_whatsapp_integration.field_whatsapp_provider__last_test_state
+msgid "Última prueba"
+msgstr ""
+
+#. module: all_in_one_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:all_in_one_whatsapp_integration.view_whatsapp_provider_form
+msgid "Última prueba de conexión"
+msgstr ""

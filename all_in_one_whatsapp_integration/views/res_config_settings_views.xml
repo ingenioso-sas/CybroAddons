@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.whatsapp</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="WhatsApp" string="WhatsApp" name="all_in_one_whatsapp_integration">
+                    <block title="Proveedores" name="whatsapp_providers">
+                        <setting string="Canales habilitados" help="Solo los proveedores habilitados aparecen en el asistente de envío y son procesados por la cola.">
+                            <field name="provider_ids" nolabel="1">
+                                <list editable="top">
+                                    <field name="name" readonly="1"/>
+                                    <field name="code" readonly="1"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="last_test_state" widget="badge" readonly="1"/>
+                                    <field name="last_test_date" readonly="1"/>
+                                </list>
+                            </field>
+                        </setting>
+                    </block>
+                    <block title="Credenciales Twilio" name="whatsapp_twilio">
+                        <setting string="Twilio" help="Cuenta Twilio para el canal Twilio.">
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <label for="twilio_whatsapp" string="Twilio Whatsapp Number"/>
+                                    <field name="twilio_whatsapp" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="account_sid" string="Account SID"/>
+                                    <field name="account_sid" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="auth_token" string="Auth Token"/>
+                                    <field name="auth_token" password="True" class="o_light_label"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Credenciales Cloud API" name="whatsapp_cloud">
+                        <setting string="Cloud API (Meta)" help="Token y Phone Number ID de WhatsApp Cloud API.">
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <label for="whatsapp_no" string="Phone number ID"/>
+                                    <field name="whatsapp_no" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="whatsapp_business" string="Business Account ID"/>
+                                    <field name="whatsapp_business" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="bearer_token" string="Access Token"/>
+                                    <field name="bearer_token" password="True" class="o_light_label"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Credenciales Evolution API" name="whatsapp_evolution">
+                        <setting string="Evolution API" help="Conexión con la instancia Evolution API.">
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <label for="evolution_base_url" string="URL base"/>
+                                    <field name="evolution_base_url" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="evolution_instance" string="Instance"/>
+                                    <field name="evolution_instance" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="evolution_apikey" string="apiKey"/>
+                                    <field name="evolution_apikey" password="True" class="o_light_label"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Cola de mensajes" name="whatsapp_queue">
+                        <setting string="Envío asíncrono" help="Si está activo, el asistente propone encolar el mensaje en lugar de enviarlo al momento.">
+                            <field name="whatsapp_async_default" class="o_light_label"/>
+                        </setting>
+                        <setting string="Mensajes por ciclo" help="Cuántos mensajes pendientes procesa el cron en cada ciclo.">
+                            <field name="whatsapp_queue_limit" class="o_light_label"/>
+                        </setting>
+                        <setting string="Reintentos máximos" help="Tras este número de fallos el mensaje queda en Error y ya no se reintenta solo.">
+                            <field name="whatsapp_queue_max_retries" class="o_light_label"/>
+                        </setting>
+                        <setting string="Webhook" help="Token configurado en la app de Meta para verificar el webhook /whatsapp_message.">
+                            <div class="content-group">
+                                <div class="mt16">
+                                    <label for="webhook_verify_token" string="Verify Token"/>
+                                    <field name="webhook_verify_token" password="True" class="o_light_label"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Prueba de conexión" name="whatsapp_test">
+                        <setting string="Número de prueba" help="Número E.164 (ej. +573001234567) al que se envía el mensaje de prueba.">
+                            <field name="whatsapp_test_phone" class="o_light_label" placeholder="+573001234567"/>
+                        </setting>
+                        <setting string="Probar Twilio" help="Envía ✅ Conexión WhatsApp OK por Twilio.">
+                            <button name="action_test_twilio" type="object" string="Probar Twilio" class="btn-primary"/>
+                        </setting>
+                        <setting string="Probar Cloud API" help="Envía ✅ Conexión WhatsApp OK por Cloud API (Meta).">
+                            <button name="action_test_cloud" type="object" string="Probar Cloud API" class="btn-primary"/>
+                        </setting>
+                        <setting string="Probar Evolution API" help="Envía ✅ Conexión WhatsApp OK por Evolution API.">
+                            <button name="action_test_evolution" type="object" string="Probar Evolution" class="btn-primary"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_whatsapp_settings" model="ir.actions.act_window">
+        <field name="name">Configuración</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module' : 'all_in_one_whatsapp_integration', 'bin_size': False}</field>
+    </record>
+</odoo>

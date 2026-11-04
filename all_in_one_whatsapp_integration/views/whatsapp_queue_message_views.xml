@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_whatsapp_queue_message_tree" model="ir.ui.view">
+        <field name="name">whatsapp.queue.message.tree</field>
+        <field name="model">whatsapp.queue.message</field>
+        <field name="arch" type="xml">
+            <list string="Cola de Mensajes WhatsApp" decoration-danger="state == 'error'" decoration-success="state == 'sent'">
+                <field name="provider_id"/>
+                <field name="partner_id"/>
+                <field name="phone"/>
+                <field name="message"/>
+                <field name="state" widget="badge"/>
+                <field name="retry_count"/>
+                <field name="create_date"/>
+                <field name="date_sent"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_whatsapp_queue_message_form" model="ir.ui.view">
+        <field name="name">whatsapp.queue.message.form</field>
+        <field name="model">whatsapp.queue.message</field>
+        <field name="arch" type="xml">
+            <form string="Mensaje en Cola WhatsApp">
+                <header>
+                    <button name="action_send_message" type="object" string="Enviar Ahora"
+                            invisible="state not in ('pending', 'error')" class="oe_highlight"/>
+                    <button name="action_retry" type="object" string="Reintentar"
+                            invisible="state != 'error'" class="btn-primary"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="provider_id" required="1"/>
+                        <field name="partner_id"/>
+                        <field name="phone"/>
+                        <field name="message"/>
+                        <field name="retry_count" readonly="1"/>
+                        <field name="create_date" readonly="1"/>
+                        <field name="date_sent" readonly="1"/>
+                    </group>
+                    <group string="Causa del fallo" invisible="state != 'error'">
+                        <field name="error_msg" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Adjuntos">
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_whatsapp_queue_message" model="ir.actions.act_window">
+        <field name="name">Cola de Mensajes WhatsApp</field>
+        <field name="res_model">whatsapp.queue.message</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p>Gestione aquí los mensajes de WhatsApp pendientes, enviados o con error.
+            Si un mensaje falla, verá la causa y podrá reintentarlo.</p>
+        </field>
+    </record>
+</odoo>

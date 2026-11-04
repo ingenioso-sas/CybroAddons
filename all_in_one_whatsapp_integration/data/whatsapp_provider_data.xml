@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="provider_web" model="whatsapp.provider">
+            <field name="code">web</field>
+            <field name="name">WhatsApp Web</field>
+            <field name="active">True</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="provider_twilio" model="whatsapp.provider">
+            <field name="code">twilio</field>
+            <field name="name">Twilio</field>
+            <field name="active">False</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="provider_cloud" model="whatsapp.provider">
+            <field name="code">cloud</field>
+            <field name="name">Cloud API (Meta)</field>
+            <field name="active">False</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="provider_evolution" model="whatsapp.provider">
+            <field name="code">evolution</field>
+            <field name="name">Evolution API</field>
+            <field name="active">False</field>
+            <field name="sequence">40</field>
+        </record>
+    </data>
+</odoo>

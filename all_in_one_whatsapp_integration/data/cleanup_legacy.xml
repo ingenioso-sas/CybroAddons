@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Elimina artefactos del modelo legacy whatsapp.message.
+         La cola única es whatsapp.queue.message. -->
+    <delete model="ir.cron" id="ir_cron_whatsapp_message_process"/>
+    <delete model="ir.ui.menu" id="whatsapp_messages_menu"/>
+    <delete model="ir.ui.menu" id="whatsapp_messages_technical_menu"/>
+    <delete model="ir.actions.act_window" id="whatsapp_message_action"/>
+    <delete model="ir.ui.view" id="whatsapp_message_tree_view"/>
+    <delete model="ir.ui.view" id="whatsapp_message_form_view"/>
+    <delete model="ir.model.access" id="access_whatsapp_message"/>
+    <!-- Nota: ir.model/ir.model.fields de whatsapp.message quedan huerfanos
+         a proposito (Odoo impide borrar columnas con datos del modulo).
+         La tabla whatsapp_message puede eliminarse manual con SQL si se desea. -->
+</odoo>
