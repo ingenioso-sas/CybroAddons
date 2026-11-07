@@ -7,8 +7,10 @@ Contrato del módulo:
 - Entradas: wizard (opción Encolar), espejo de Discuss y
   `create_queue_message()` como punto único de API.
 - Solo se procesan proveedores ACTIVOS (`provider_id.active`).
-- Cada fallo guarda su causa en `error_msg`; `action_retry` devuelve
-  a pendiente (con tope de reintentos configurable).
+- Cada fallo guarda su causa en `error_msg`. Si aún no se alcanzó el tope
+  de reintentos el mensaje SIGUE en `pending` y el cron lo reintenta solo
+  cuando el proveedor vuelve a estar disponible; al agotar el tope pasa a
+  `error`. `action_retry` lo devuelve a pendiente y reinicia el contador.
 """
 import logging
 
@@ -92,14 +94,18 @@ class WhatsappQueueMessage(models.Model):
         })
 
     @api.model
+    def _get_max_retries(self):
+        return self._get_param(
+            'all_in_one_whatsapp_integration.whatsapp_queue_max_retries', 5,
+            cast=int)
+
+    @api.model
     def _process_queue(self, limit=None):
         """Procesa pendientes de proveedores activos. Nunca revienta."""
         limit = limit or self._get_param(
             'all_in_one_whatsapp_integration.whatsapp_queue_limit', 20,
             cast=int)
-        max_retries = self._get_param(
-            'all_in_one_whatsapp_integration.whatsapp_queue_max_retries', 5,
-            cast=int)
+        max_retries = self._get_max_retries()
         pending = self.search(
             [('state', '=', 'pending'),
              ('retry_count', '<', max_retries),
@@ -110,17 +116,32 @@ class WhatsappQueueMessage(models.Model):
                 msg.action_send_message()
             except Exception as e:  # noqa: BLE001 - el cron debe continuar
                 _logger.exception("Queue _process_queue error id=%s", msg.id)
-                msg.write({'state': 'error', 'error_msg': str(e)[:2000],
-                           'retry_count': msg.retry_count + 1})
+                msg._register_failure(e)
         return True
+
+    def _register_failure(self, error):
+        """Guarda la causa y decide si el mensaje sigue reintentándose.
+
+        Mientras no se alcance el tope configurado el mensaje CONTINÚA en
+        ``pending`` para que el cron lo reintente solo cuando el proveedor
+        vuelva a estar disponible. Solo al agotar los reintentos pasa a
+        ``error``.
+        """
+        self.ensure_one()
+        retry_count = self.retry_count + 1
+        max_retries = self._get_max_retries()
+        self.write({
+            'state': 'error' if retry_count >= max_retries else 'pending',
+            'error_msg': str(error)[:2000],
+            'retry_count': retry_count,
+        })
+        return retry_count < max_retries
 
     def action_send_message(self):
         """Envía un registro por su proveedor y guarda la causa si falla."""
         for record in self:
             if not record.provider_id:
-                record.write({'state': 'error',
-                              'error_msg': _('Sin proveedor asignado.'),
-                              'retry_count': record.retry_count + 1})
+                record._register_failure(_('Sin proveedor asignado.'))
                 continue
             try:
                 record.provider_id.send_message(
@@ -130,21 +151,21 @@ class WhatsappQueueMessage(models.Model):
                               'date_sent': fields.Datetime.now(),
                               'error_msg': False})
             except Exception as e:
-                record.write({'state': 'error',
-                              'error_msg': str(e)[:2000],
-                              'retry_count': record.retry_count + 1})
+                record._register_failure(e)
+        return True
 
     def action_retry(self):
-        """Devuelve a pendiente los mensajes en error (ver botón)."""
-        max_retries = self._get_param(
-            'all_in_one_whatsapp_integration.whatsapp_queue_max_retries', 5,
-            cast=int)
-        retryable = self.filtered(
-            lambda r: r.state == 'error' and r.retry_count < max_retries)
+        """Devuelve a pendiente los mensajes en error (ver botón).
+
+        Reinicia el contador para abrir un nuevo ciclo de reintentos
+        automáticos después de corregir la causa (p. ej. el proveedor caído).
+        """
+        retryable = self.filtered(lambda r: r.state == 'error')
         if not retryable:
             raise ValidationError(
-                _("Nada que reintentar: sin errores o tope alcanzado."))
-        retryable.write({'state': 'pending', 'error_msg': False})
+                _("Nada que reintentar: no hay mensajes en error."))
+        retryable.write({'state': 'pending', 'error_msg': False,
+                         'retry_count': 0})
         return True
 
     @api.depends('provider_id', 'partner_id', 'phone', 'state')

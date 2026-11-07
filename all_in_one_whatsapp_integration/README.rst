@@ -57,6 +57,10 @@ Cola única de WhatsApp
   aparecen en el wizard y los procesa el cron (cada 5').
 * Entradas a la cola: wizard (opción *Encolar*), espejo de Discuss y
   `whatsapp.queue.message.create_queue_message()`.
-* Reintento: botón *Reintentar* en los registros en estado *Error*
+* Reintento: si un envío falla, el mensaje permanece *Pendiente* y el cron
+  lo reintenta automáticamente hasta el tope de *Reintentos máximos*. Al
+  agotarlo pasa a *Error* y puede reencolarse con el botón *Reintentar*
   (Ajustes > Técnico > WhatsApp > Cola de mensajes).
+* Un fallo del servicio en modo *Enviar ahora* (Cloud/Evolution) también
+  deja el mensaje en la cola para reintentarlo, en lugar de perderlo.
 * Prueba de conexión: botones por proveedor en Ajustes > WhatsApp.

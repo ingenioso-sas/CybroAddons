@@ -8,7 +8,6 @@
                 <field name="provider_id"/>
                 <field name="partner_id"/>
                 <field name="phone"/>
-                <field name="message"/>
                 <field name="state" widget="badge"/>
                 <field name="retry_count"/>
                 <field name="create_date"/>
@@ -39,7 +38,7 @@
                         <field name="create_date" readonly="1"/>
                         <field name="date_sent" readonly="1"/>
                     </group>
-                    <group string="Causa del fallo" invisible="state != 'error'">
+                    <group string="Causa del fallo" invisible="not error_msg">
                         <field name="error_msg" nolabel="1"/>
                     </group>
                     <notebook>
@@ -52,13 +51,64 @@
         </field>
     </record>
 
+    <record id="view_whatsapp_queue_message_search" model="ir.ui.view">
+        <field name="name">whatsapp.queue.message.search</field>
+        <field name="model">whatsapp.queue.message</field>
+        <field name="arch" type="xml">
+            <search string="Cola de Mensajes WhatsApp">
+                <field name="phone"/>
+                <field name="partner_id"/>
+                <field name="message"/>
+                <field name="provider_id"/>
+                <field name="error_msg"/>
+                <field name="model"/>
+                <filter name="filter_to_manage" string="Por gestionar"
+                        domain="[('state', '!=', 'sent')]"/>
+                <separator/>
+                <filter name="filter_pending" string="Pendientes"
+                        domain="[('state', '=', 'pending')]"/>
+                <filter name="filter_retrying" string="Reintentando"
+                        domain="[('state', '=', 'pending'), ('retry_count', '&gt;', 0)]"/>
+                <filter name="filter_error" string="Con error"
+                        domain="[('state', '=', 'error')]"/>
+                <filter name="filter_sent" string="Enviados"
+                        domain="[('state', '=', 'sent')]"/>
+                <separator/>
+                <filter name="filter_failed" string="Con fallo registrado"
+                        domain="[('error_msg', '!=', False)]"/>
+                <filter name="filter_with_attachments" string="Con adjuntos"
+                        domain="[('attachment_ids', '!=', False)]"/>
+                <filter name="filter_without_attachments" string="Sin adjuntos"
+                        domain="[('attachment_ids', '=', False)]"/>
+                <filter name="filter_with_document" string="Con documento relacionado"
+                        domain="[('model', '!=', False)]"/>
+                <separator/>
+                <filter name="filter_create_date" string="Fecha de creación"
+                        date="create_date"/>
+                <group>
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_provider" string="Proveedor"
+                            context="{'group_by': 'provider_id'}"/>
+                    <filter name="group_partner" string="Contacto"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_create_date" string="Fecha de creación"
+                            context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_whatsapp_queue_message" model="ir.actions.act_window">
         <field name="name">Cola de Mensajes WhatsApp</field>
         <field name="res_model">whatsapp.queue.message</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_whatsapp_queue_message_search"/>
+        <field name="context">{'search_default_filter_pending': 1}</field>
         <field name="help" type="html">
             <p>Gestione aquí los mensajes de WhatsApp pendientes, enviados o con error.
-            Si un mensaje falla, verá la causa y podrá reintentarlo.</p>
+            Los fallos se reintentan automáticamente hasta el tope configurado.
+            Si un mensaje queda en Error, verá la causa y podrá reintentarlo.</p>
         </field>
     </record>
 </odoo>

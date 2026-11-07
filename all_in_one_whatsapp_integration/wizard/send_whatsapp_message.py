@@ -19,10 +19,14 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+import logging
 import urllib.parse as parse
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
+
 
 class SendWhatsappMessage(models.TransientModel):
     """Wizard: envío directo o entrada real a la cola única.
@@ -37,8 +41,8 @@ class SendWhatsappMessage(models.TransientModel):
     @api.model
     def _default_partner(self):
         try:
-            active_model = self._context.get('active_model')
-            active_ids = self._context.get('active_ids') or []
+            active_model = self.env.context.get('active_model')
+            active_ids = self.env.context.get('active_ids') or []
             if not active_model or not active_ids:
                 return False
             record = self.env[active_model].browse(active_ids[0]).exists()
@@ -134,10 +138,21 @@ class SendWhatsappMessage(models.TransientModel):
         if provider.code == 'web':
             return self._send_web(number)
         if provider.code in ('cloud', 'evolution'):
-            provider.send_message(
-                number, self.whatsapp_message or "", self.attachment_ids)
-            return self._notify_sent(provider.name)
+            return self._send_now_or_enqueue(number, provider)
         raise ValidationError(_("Proveedor no soportado."))
+
+    def _create_queue_record(self, number, provider, error_msg=False):
+        queue = self.env['whatsapp.queue.message'].sudo()
+        record = queue.create_queue_message(
+            phone=number, message=self.whatsapp_message or "",
+            provider_code=provider.code,
+            partner_id=self.sale_user_id.id or False,
+            attachment_ids=self.attachment_ids,
+            model=self.env.context.get('active_model'),
+            res_id=(self.env.context.get('active_ids') or [False])[0] or False)
+        if error_msg:
+            record.write({'error_msg': str(error_msg)[:2000]})
+        return record
 
     def _enqueue(self, number, provider):
         """Crea el registro en la cola única (solo cloud/evolution)."""
@@ -145,14 +160,7 @@ class SendWhatsappMessage(models.TransientModel):
             raise ValidationError(
                 _("Solo Cloud API y Evolution API usan la cola. "
                   "Web y Twilio son de envío directo."))
-        queue = self.env['whatsapp.queue.message'].sudo()
-        queue.create_queue_message(
-            phone=number, message=self.whatsapp_message or "",
-            provider_code=provider.code,
-            partner_id=self.sale_user_id.id or False,
-            attachment_ids=self.attachment_ids,
-            model=self._context.get('active_model'),
-            res_id=(self._context.get('active_ids') or [False])[0] or False)
+        self._create_queue_record(number, provider)
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -160,6 +168,32 @@ class SendWhatsappMessage(models.TransientModel):
                        'message': _('Mensaje en la cola de WhatsApp.'),
                        'type': 'success', 'sticky': False},
         }
+
+    def _send_now_or_enqueue(self, number, provider):
+        """Envía ya; si el servicio falla deja el mensaje en cola.
+
+        Un fallo de Cloud/Evolution (servicio caído, timeout, error 5xx)
+        no debe perder el mensaje: se encola para que el cron lo reintente
+        cuando el proveedor recupere disponibilidad.
+        """
+        try:
+            provider.send_message(
+                number, self.whatsapp_message or "", self.attachment_ids)
+        except Exception as e:  # noqa: BLE001 - nunca perder el mensaje
+            _logger.exception(
+                "WhatsApp direct send failed; enqueueing for retry")
+            self._create_queue_record(number, provider, error_msg=e)
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Encolado por fallo de envío'),
+                    'message': _(
+                        'No se pudo enviar ahora (%s). El mensaje quedó en '
+                        'cola para reintentarse automáticamente.') % e,
+                    'type': 'warning', 'sticky': True},
+            }
+        return self._notify_sent(provider.name)
 
     def _notify_sent(self, provider_name):
         return {
