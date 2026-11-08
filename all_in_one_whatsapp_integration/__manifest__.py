@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': "All in one Whatsapp",
-    'version': '19.0.1.0.2',
+    'version': '19.0.1.0.3',
     'category': 'Extra Tools',
     'summary': """Send whatsapp messages to the partner""",
     'description': """ This module helps you to send a whatsapp message to your
