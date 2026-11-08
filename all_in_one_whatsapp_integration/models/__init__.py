@@ -20,6 +20,7 @@
 #
 ###############################################################################
 from . import whatsapp_tools
+from . import whatsapp_exceptions
 from . import whatsapp_provider
 from . import whatsapp_service
 from . import account_move

@@ -4,10 +4,11 @@
         <field name="name">whatsapp.provider.tree</field>
         <field name="model">whatsapp.provider</field>
         <field name="arch" type="xml">
-            <list string="Proveedores WhatsApp" decoration-muted="not active" create="false">
+            <list string="Proveedores WhatsApp" decoration-muted="not active">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="code"/>
+                <field name="company_id"/>
                 <field name="active" widget="boolean_toggle"/>
                 <field name="last_test_state" widget="badge"/>
                 <field name="last_test_date"/>
@@ -26,10 +27,35 @@
                     </div>
                     <group>
                         <field name="name"/>
-                        <field name="code" readonly="1"
-                               help="Canal de envío. No se puede cambiar."/>
+                        <field name="code" readonly="id"
+                               help="Canal de envío. No se puede cambiar una vez creado."/>
+                        <field name="company_id"/>
                         <field name="sequence"/>
                     </group>
+                    <notebook>
+                        <page string="Credenciales" name="credentials"
+                              groups="all_in_one_whatsapp_integration.group_whatsapp_manager">
+                            <group string="Cloud API (Meta)">
+                                <field name="cloud_graph_version"/>
+                                <field name="cloud_phone_number_id"/>
+                                <field name="cloud_bearer_token" password="True"/>
+                            </group>
+                            <group string="Evolution API">
+                                <field name="evolution_base_url"/>
+                                <field name="evolution_instance"/>
+                                <field name="evolution_apikey" password="True"/>
+                            </group>
+                            <group string="Twilio">
+                                <field name="twilio_account_sid"/>
+                                <field name="twilio_auth_token" password="True"/>
+                                <field name="twilio_whatsapp_number"/>
+                            </group>
+                            <div class="text-muted">
+                                Si deja un campo vacío se usará el valor global
+                                de Ajustes → WhatsApp.
+                            </div>
+                        </page>
+                    </notebook>
                     <group string="Última prueba de conexión">
                         <field name="last_test_state"/>
                         <field name="last_test_date"/>

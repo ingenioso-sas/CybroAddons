@@ -34,15 +34,10 @@ class SaleOrder(models.Model):
         """Open wizard with rendered message + PDF. Never crashes on None."""
         self.ensure_one()
         service = self.env["whatsapp.document.service"]
-        service._whatsapp_validate_partner_mobile(self.partner_id)
-        service._whatsapp_validate_twilio_config()
-        message = service._whatsapp_render_text(
-            "all_in_one_whatsapp_integration.sale_order_whatsapp_template",
+        return service._whatsapp_document_action(
             self,
-        )
-        attachment = service._whatsapp_create_pdf_attachment(
-            self, "sale.action_report_saleorder", "Sale Report", "sale.order"
-        )
-        return service._whatsapp_build_wizard_action(
-            message, attachment.id if attachment else False
+            "all_in_one_whatsapp_integration.sale_order_whatsapp_template",
+            "sale.action_report_saleorder",
+            "Sale Report",
+            "sale.order",
         )

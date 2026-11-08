@@ -1,2 +1,2 @@
-twilio
-html2text
+twilio>=9.0,<10.0
+html2text>=2024.2.26

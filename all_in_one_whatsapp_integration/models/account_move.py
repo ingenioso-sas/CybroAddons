@@ -29,19 +29,13 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     def action_send_by_whatsapp(self):
-        """Open wizard with rendered message + PDF. Never leaves `report`
-        undefined (previous UnboundLocalError)."""
+        """Open wizard with rendered message + PDF."""
         self.ensure_one()
         service = self.env["whatsapp.document.service"]
-        service._whatsapp_validate_partner_mobile(self.partner_id)
-        service._whatsapp_validate_twilio_config()
-        message = service._whatsapp_render_text(
-            "all_in_one_whatsapp_integration.account_move_whatsapp_template",
+        return service._whatsapp_document_action(
             self,
-        )
-        attachment = service._whatsapp_create_pdf_attachment(
-            self, "account.account_invoices", "Invoice Report", "account.move"
-        )
-        return service._whatsapp_build_wizard_action(
-            message, attachment.id if attachment else False
+            "all_in_one_whatsapp_integration.account_move_whatsapp_template",
+            "account.account_invoices",
+            "Invoice Report",
+            "account.move",
         )

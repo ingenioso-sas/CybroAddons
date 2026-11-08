@@ -28,22 +28,13 @@ class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
     def action_send_by_whatsapp(self):
-        """ When you click the send_by_whatsapp button, it will open a wizard
-        that contain the message to send to the whatsapp web page. """
+        """Open wizard with rendered message + PDF."""
         self.ensure_one()
         service = self.env["whatsapp.document.service"]
-        service._whatsapp_validate_partner_mobile(self.partner_id)
-        service._whatsapp_validate_twilio_config()
-        message = service._whatsapp_render_text(
+        return service._whatsapp_document_action(
+            self,
             "all_in_one_whatsapp_integration.purchase_order_whatsapp_template",
-            self,
-        )
-        attachment = service._whatsapp_create_pdf_attachment(
-            self,
             "purchase.action_report_purchase_order",
             "Purchase Report",
             "purchase.order",
-        )
-        return service._whatsapp_build_wizard_action(
-            message, attachment.id if attachment else False
         )

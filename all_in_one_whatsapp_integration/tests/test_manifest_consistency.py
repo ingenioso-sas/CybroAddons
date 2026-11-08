@@ -65,13 +65,25 @@ class TestManifestConsistency(_OdooBase):
         with open(os.path.join(ROOT, "models", "__init__.py")) as f:
             init = f.read()
         for mod in ["whatsapp_provider", "whatsapp_queue_message",
-                    "whatsapp_service", "whatsapp_tools"]:
+                    "whatsapp_service", "whatsapp_tools",
+                    "whatsapp_exceptions"]:
             self.assertIn(mod, init)
         # Modelo legacy eliminado: no debe importarse ni existir
         self.assertNotIn("whatsapp_message", init.replace(
             "whatsapp_queue_message", ""))
         self.assertFalse(os.path.exists(
             os.path.join(ROOT, "models", "whatsapp_message.py")))
+
+    def test_security_and_mail_dependency(self):
+        manifest = _manifest()
+        self.assertIn("mail", manifest.get("depends", []))
+        self.assertTrue(os.path.isfile(
+            os.path.join(ROOT, "security", "whatsapp_security.xml")))
+        with open(os.path.join(ROOT, "security", "ir.model.access.csv")) as f:
+            rows = list(csv.DictReader(f))
+        groups = {r["group_id:id"] for r in rows}
+        self.assertIn("group_whatsapp_user", groups)
+        self.assertIn("group_whatsapp_manager", groups)
 
     def test_access_rights_cover_models(self):
         with open(os.path.join(ROOT, "security", "ir.model.access.csv")) as f:

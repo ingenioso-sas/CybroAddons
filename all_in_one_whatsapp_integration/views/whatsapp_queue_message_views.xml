@@ -4,12 +4,16 @@
         <field name="name">whatsapp.queue.message.tree</field>
         <field name="model">whatsapp.queue.message</field>
         <field name="arch" type="xml">
-            <list string="Cola de Mensajes WhatsApp" decoration-danger="state == 'error'" decoration-success="state == 'sent'">
+            <list string="Cola de Mensajes WhatsApp" decoration-danger="state == 'error'" decoration-success="state == 'sent'" decoration-warning="state == 'pending' and retry_count &gt; 0">
                 <field name="provider_id"/>
                 <field name="partner_id"/>
                 <field name="phone"/>
+                <field name="company_id" optional="hide"/>
+                <field name="message_type" optional="show"/>
                 <field name="state" widget="badge"/>
                 <field name="retry_count"/>
+                <field name="permanent" optional="hide"/>
+                <field name="next_attempt" optional="hide"/>
                 <field name="create_date"/>
                 <field name="date_sent"/>
             </list>
@@ -32,9 +36,18 @@
                     <group>
                         <field name="provider_id" required="1"/>
                         <field name="partner_id"/>
+                        <field name="company_id"/>
                         <field name="phone"/>
+                        <field name="message_type"/>
+                        <field name="template_name" invisible="message_type != 'template'"/>
+                        <field name="template_language" invisible="message_type != 'template'"/>
+                        <field name="template_components" invisible="message_type != 'template'"/>
                         <field name="message"/>
                         <field name="retry_count" readonly="1"/>
+                        <field name="permanent" readonly="1"/>
+                        <field name="last_attempt" readonly="1"/>
+                        <field name="next_attempt" readonly="1"/>
+                        <field name="provider_message_id" readonly="1"/>
                         <field name="create_date" readonly="1"/>
                         <field name="date_sent" readonly="1"/>
                     </group>
@@ -60,8 +73,10 @@
                 <field name="partner_id"/>
                 <field name="message"/>
                 <field name="provider_id"/>
+                <field name="company_id"/>
                 <field name="error_msg"/>
                 <field name="model"/>
+                <field name="template_name"/>
                 <filter name="filter_to_manage" string="Por gestionar"
                         domain="[('state', '!=', 'sent')]"/>
                 <separator/>
@@ -76,6 +91,10 @@
                 <separator/>
                 <filter name="filter_failed" string="Con fallo registrado"
                         domain="[('error_msg', '!=', False)]"/>
+                <filter name="filter_permanent" string="Fallo permanente"
+                        domain="[('permanent', '=', True)]"/>
+                <filter name="filter_scheduled" string="Programados"
+                        domain="[('next_attempt', '!=', False)]"/>
                 <filter name="filter_with_attachments" string="Con adjuntos"
                         domain="[('attachment_ids', '!=', False)]"/>
                 <filter name="filter_without_attachments" string="Sin adjuntos"
@@ -90,6 +109,8 @@
                             context="{'group_by': 'state'}"/>
                     <filter name="group_provider" string="Proveedor"
                             context="{'group_by': 'provider_id'}"/>
+                    <filter name="group_company" string="Compañía"
+                            context="{'group_by': 'company_id'}"/>
                     <filter name="group_partner" string="Contacto"
                             context="{'group_by': 'partner_id'}"/>
                     <filter name="group_create_date" string="Fecha de creación"

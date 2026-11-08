@@ -16,8 +16,6 @@
                         <field name="whatsapp_mobile_number" nolabel="1"/>
                         <field name="provider_id" options="{'no_create': True}"/>
                         <field name="delivery" widget="radio"/>
-                        <field name="message_type" widget="radio"
-                               invisible="delivery != 'now'"/>
                         <field name="attachment_ids"
                                widget='many2many_binary'/>
                     </group>
@@ -25,6 +23,10 @@
                         <field name="whatsapp_message"/>
                     </group>
                 </group>
+                <div class="alert alert-warning" role="alert"
+                     invisible="not warning_message">
+                    <field name="warning_message" nolabel="1"/>
+                </div>
                 <footer>
                     <button name="action_send_custom_message" string="Send"
                             type="object"/>

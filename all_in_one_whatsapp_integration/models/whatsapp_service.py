@@ -17,9 +17,6 @@ from . import whatsapp_tools as tools
 
 _logger = logging.getLogger(__name__)
 
-PARAM_TWILIO_NUMBER = "all_in_one_whatsapp_integration.twilio_whatsapp"
-PARAM_TWILIO_ENABLED = "all_in_one_whatsapp_integration.twilio_enabled"
-
 
 class WhatsappDocumentService(models.AbstractModel):
     _name = "whatsapp.document.service"
@@ -33,26 +30,13 @@ class WhatsappDocumentService(models.AbstractModel):
 
     @api.model
     def _whatsapp_validate_partner_mobile(self, partner):
-        mobile = (partner.phone or "").strip() if partner else ""
+        mobile = ""
+        if partner:
+            mobile = (partner.phone or partner.mobile or "").strip()
         try:
             return tools.validate_e164_or_raise(mobile, "sale order partner")
         except ValueError as e:
             raise ValidationError(_(str(e)))
-
-    @api.model
-    def _whatsapp_validate_twilio_config(self):
-        """Solo valida si Twilio está habilitado. Nunca revienta con None."""
-        enabled = self._whatsapp_get_param(PARAM_TWILIO_ENABLED)
-        twilio_number = (self._whatsapp_get_param(PARAM_TWILIO_NUMBER) or "").strip()
-        if enabled and not twilio_number:
-            raise ValidationError(
-                _("Please add your valid twilio whatsapp number in settings")
-            )
-        if twilio_number and not twilio_number.startswith("+"):
-            raise ValidationError(
-                _("Please add a valid twilio mobile number along with +")
-            )
-        return twilio_number
 
     @api.model
     def _whatsapp_render_text(self, template_xmlid, record):
@@ -95,7 +79,7 @@ class WhatsappDocumentService(models.AbstractModel):
         """Genera el PDF y lo devuelve como ir.attachment, o None si falla.
 
         Nunca deja `report` indefinido (bug anterior en account_move).
-        Usa `store_fname` correcto y `res_id` para trazabilidad.
+        El `store_fname` lo calcula Odoo a partir de `datas`.
         """
         try:
             report_content, _ext = self.env["ir.actions.report"]._render_qweb_pdf(
@@ -105,6 +89,7 @@ class WhatsappDocumentService(models.AbstractModel):
             _logger.exception("Could not render PDF %s: %s", report_xmlid, e)
             return False
         if not report_content:
+            _logger.warning("Empty PDF content for %s", report_xmlid)
             return False
         return (
             self.env["ir.attachment"]
@@ -114,7 +99,6 @@ class WhatsappDocumentService(models.AbstractModel):
                     "name": filename,
                     "type": "binary",
                     "datas": base64.b64encode(report_content),
-                    "store_fname": "%s.pdf" % filename,
                     "mimetype": "application/pdf",
                     "res_model": res_model,
                     "res_id": record.id,
@@ -123,8 +107,32 @@ class WhatsappDocumentService(models.AbstractModel):
         )
 
     @api.model
-    def _whatsapp_build_wizard_action(self, message, attachment_id=False):
+    def _whatsapp_document_action(self, record, template_xmlid, report_xmlid,
+                                  filename, res_model):
+        """Valida, renderiza y genera el PDF, devolviendo la acción del wizard."""
+        self._whatsapp_validate_partner_mobile(record.partner_id)
+        warnings = []
+        message = self._whatsapp_render_text(template_xmlid, record)
+        if not message:
+            warnings.append(_(
+                "No se pudo renderizar la plantilla; revise el mensaje antes "
+                "de enviar."))
+        attachment = self._whatsapp_create_pdf_attachment(
+            record, report_xmlid, filename, res_model)
+        if not attachment:
+            warnings.append(_(
+                "No se pudo generar el PDF; el mensaje se enviará sin "
+                "adjunto."))
+        return self._whatsapp_build_wizard_action(
+            message, attachment.id if attachment else False,
+            warning="\n".join(warnings))
+
+    @api.model
+    def _whatsapp_build_wizard_action(self, message, attachment_id=False,
+                                      warning=False):
         ctx = {"default_whatsapp_message": message or ""}
+        if warning:
+            ctx["default_warning_message"] = warning
         if attachment_id:
             ctx["default_attachment_ids"] = [(6, 0, [attachment_id])]
         return {

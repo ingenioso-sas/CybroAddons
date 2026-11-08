@@ -21,21 +21,21 @@
 ###############################################################################
 {
     'name': "All in one Whatsapp",
-    'version': '19.0.1.0.1',
+    'version': '19.0.1.0.2',
     'category': 'Extra Tools',
     'summary': """Send whatsapp messages to the partner""",
-    'description': """ This module helps you to send a whatsapp message to your 
+    'description': """ This module helps you to send a whatsapp message to your
      partners that are in sale order, purchase order, invoice and bills, and
      deliver orders.""",
     'author': 'Cybrosys Techno Solutions',
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
-    'depends': ['base', 'web', 'sale', 'stock', 'purchase', 'account',
+    'depends': ['base', 'web', 'mail', 'sale', 'stock', 'purchase', 'account',
                 'contacts', ],
     'data': [
+        'security/whatsapp_security.xml',
         'security/ir.model.access.csv',
-        'data/cleanup_legacy.xml',
         'data/whatsapp_provider_data.xml',
         'data/account_move_data.xml',
         'data/purchase_order_data.xml',

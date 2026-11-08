@@ -7,6 +7,8 @@ from odoo.exceptions import ValidationError
 from odoo import _
 
 from odoo.addons.all_in_one_whatsapp_integration.models import whatsapp_tools as tools
+from odoo.addons.all_in_one_whatsapp_integration.models.whatsapp_exceptions \
+    import WhatsappPermanentError
 
 _logger = logging.getLogger(__name__)
 REQUEST_TIMEOUT = 30
@@ -21,18 +23,36 @@ REQUEST_TIMEOUT = 30
 class WhatsappModeMessage:
     """Helper (no es un modelo Odoo) para Evolution API v2."""
 
-    def __init__(self, env):
+    def __init__(self, env, provider=None):
         self.env = env
+        self.provider = provider
         get = self.env['ir.config_parameter'].sudo().get_param
-        self.evolution_base_url = (
-            get('all_in_one_whatsapp_integration.evolution_base_url') or ""
-        ).strip().rstrip("/")
-        self.evolution_instance = (
-            get('all_in_one_whatsapp_integration.evolution_instance') or ""
-        ).strip()
-        self.evolution_apikey = (
-            get('all_in_one_whatsapp_integration.evolution_apikey') or ""
-        ).strip()
+        if provider:
+            self.evolution_base_url = (
+                provider._get_credential(
+                    'evolution_base_url',
+                    'all_in_one_whatsapp_integration.evolution_base_url')
+                or "").strip().rstrip("/")
+            self.evolution_instance = (
+                provider._get_credential(
+                    'evolution_instance',
+                    'all_in_one_whatsapp_integration.evolution_instance')
+                or "").strip()
+            self.evolution_apikey = (
+                provider._get_credential(
+                    'evolution_apikey',
+                    'all_in_one_whatsapp_integration.evolution_apikey')
+                or "").strip()
+        else:
+            self.evolution_base_url = (
+                get('all_in_one_whatsapp_integration.evolution_base_url') or ""
+            ).strip().rstrip("/")
+            self.evolution_instance = (
+                get('all_in_one_whatsapp_integration.evolution_instance') or ""
+            ).strip()
+            self.evolution_apikey = (
+                get('all_in_one_whatsapp_integration.evolution_apikey') or ""
+            ).strip()
 
     def clean_number(self, number):
         return tools.clean_number_digits(number)
@@ -40,7 +60,7 @@ class WhatsappModeMessage:
     def _ensure_config(self):
         if not self.evolution_base_url or not self.evolution_instance \
                 or not self.evolution_apikey:
-            raise ValidationError(
+            raise WhatsappPermanentError(
                 _("Configure Evolution API (base URL, instance and apiKey) "
                   "in Settings before sending."))
 
@@ -72,9 +92,12 @@ class WhatsappModeMessage:
         if response.status_code not in (200, 201):
             _logger.error("Evolution API error: %s %s",
                           response.status_code, response.text[:500])
-            raise ValidationError(
-                _("Evolution API error %s: %s") % (
-                    response.status_code, response.text[:500]))
+            message = _("Evolution API error %s: %s") % (
+                response.status_code, response.text[:500])
+            if 400 <= response.status_code < 500 \
+                    and response.status_code not in (408, 429):
+                raise WhatsappPermanentError(message)
+            raise ValidationError(message)
         _logger.info("Mensaje WhatsApp enviado correctamente")
         return response
 
@@ -110,20 +133,7 @@ class WhatsappModeMessage:
             payload["delay"] = 1200
         return self.send_request_whatsapp(url, payload)
 
-    def action_send_image_message(self, number, whatsapp_message,
-                                  message_type_media):
-        """Imagen: base64 o URL pública (.jpg/.jpeg/.png)."""
-        return self._send_media(
-            number, "image", self._guess_mimetype("img.jpg"),
-            whatsapp_message, message_type_media)
-
-    def action_send_video_message(self, number, whatsapp_message,
-                                  message_type_media):
-        """Video: base64 o URL pública (.mp4)."""
-        return self._send_media(
-            number, "video", "video/mp4",
-            whatsapp_message, message_type_media)
-
+    # -- documento -------------------------------------------------------
     def action_send_attachment_document_message(self, number, file_name,
                                                 whatsapp_message,
                                                 message_type_media):
@@ -131,20 +141,3 @@ class WhatsappModeMessage:
         return self._send_media(
             number, "document", self._guess_mimetype(file_name or ""),
             whatsapp_message, message_type_media, file_name or "document.pdf")
-
-    # -- sticker / audio (payload plano v2) -------------------------------
-    def action_send_sticker_message(self, number, message_type_media):
-        """Sticker: base64 .webp o URL pública."""
-        url = self.build_URL("sendSticker")
-        payload = {"number": self.clean_number(number),
-                   "sticker": str(message_type_media)}
-        return self.send_request_whatsapp(url, payload)
-
-    def action_send_audio_message(self, number, message_type_media):
-        """Audio: base64 .mp3/.ogg o URL pública."""
-        url = self.build_URL("sendWhatsAppAudio")
-        payload = {"number": self.clean_number(number),
-                   "audio": str(message_type_media),
-                   "delay": 1200,
-                   "encoding": True}
-        return self.send_request_whatsapp(url, payload)

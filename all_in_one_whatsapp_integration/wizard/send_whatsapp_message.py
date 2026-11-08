@@ -25,6 +25,10 @@ import urllib.parse as parse
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+from odoo.addons.all_in_one_whatsapp_integration.models import whatsapp_tools as tools
+from odoo.addons.all_in_one_whatsapp_integration.models.whatsapp_exceptions \
+    import WhatsappPermanentError
+
 _logger = logging.getLogger(__name__)
 
 
@@ -60,10 +64,14 @@ class SendWhatsappMessage(models.TransientModel):
 
     @api.model
     def _default_provider(self):
-        Provider = self.env['whatsapp.provider'].sudo().with_context(
+        Provider = self.env['whatsapp.provider'].with_context(
             active_test=False)
-        return (Provider.search([('code', '=', 'web'), ('active', '=', True)],
-                                limit=1)
+        # Preferir canales que soportan adjuntos; Web es el último recurso.
+        return (Provider.search([
+                    ('code', 'in', ('cloud', 'evolution')),
+                    ('active', '=', True)], limit=1, order='sequence, id')
+                or Provider.search([('code', '=', 'web'),
+                                    ('active', '=', True)], limit=1)
                 or Provider.search([('active', '=', True)], limit=1)
                 or Provider.search([], limit=1))
 
@@ -71,8 +79,8 @@ class SendWhatsappMessage(models.TransientModel):
         'res.partner', string="Partner Name", default=_default_partner,
         help="Select the partner associated with the sale.")
     whatsapp_mobile_number = fields.Char(
-        related='sale_user_id.phone', readonly=True,
-        help="The phone number associated with the selected partner.")
+        string="Whatsapp Number", compute='_compute_whatsapp_mobile_number',
+        help="The phone/mobile number associated with the selected partner.")
     whatsapp_message = fields.Text(
         string="WhatsApp Message",
         help="Enter the message to be sent via WhatsApp.")
@@ -89,13 +97,19 @@ class SendWhatsappMessage(models.TransientModel):
         'ir.attachment', 'send_whatsapp_message_attachment_rel', 'wizard_id',
         'attachment_id', string='Attachments',
         help="Attachments to include in the WhatsApp message.")
-    message_type = fields.Selection(
-        string='Message Type',
-        selection=[('text', 'Text'), ('document', 'Document')],
-        default='text')
+    warning_message = fields.Text(
+        string='Aviso', readonly=True,
+        help="Advertencias generadas al preparar el documento.")
 
     def _get_param(self, key, default=False):
         return self.env['ir.config_parameter'].sudo().get_param(key, default)
+
+    @api.depends('sale_user_id.phone', 'sale_user_id.mobile')
+    def _compute_whatsapp_mobile_number(self):
+        for wizard in self:
+            partner = wizard.sale_user_id
+            wizard.whatsapp_mobile_number = (
+                partner.phone or partner.mobile or "") if partner else ""
 
     def _get_provider(self):
         """Devuelve el proveedor elegido, garantizado habilitado."""
@@ -108,19 +122,21 @@ class SendWhatsappMessage(models.TransientModel):
                 _("El proveedor '%s' está deshabilitado. Actívelo en "
                   "WhatsApp → Proveedores (o en Ajustes → WhatsApp → "
                   "Canales habilitados).") % provider.name)
+        if provider.company_id and provider.company_id not in self.env.companies:
+            raise ValidationError(
+                _("El proveedor '%s' pertenece a otra compañía.")
+                % provider.name)
         return provider
 
     def _get_number_e164(self):
-        number = (self.sale_user_id.phone or "").strip()
-        if not number:
-            raise ValidationError(
-                _('Add whatsapp mobile number in sale order partner!'))
-        compact = number.replace(" ", "")
-        if not compact.startswith("+"):
-            raise ValidationError(
-                _('Please add a valid mobile number along with a valid '
-                  'country code!'))
-        return compact
+        partner = self.sale_user_id
+        number = (partner.phone or partner.mobile or "").strip() \
+            if partner else ""
+        try:
+            return tools.validate_e164_or_raise(
+                number, "sale order partner")
+        except ValueError as e:
+            raise ValidationError(_(str(e)))
 
     def action_send_custom_message(self):
         """Envío directo o entrada real a la cola única."""
@@ -130,7 +146,10 @@ class SendWhatsappMessage(models.TransientModel):
                 and not self.attachment_ids:
             raise ValidationError(_("Write a message or attach a file."))
         provider = self._get_provider()
-
+        if provider.code == 'web' and self.attachment_ids:
+            raise ValidationError(_(
+                "WhatsApp Web no permite adjuntar archivos automáticamente. "
+                "Quite los adjuntos o use Cloud API/Evolution API."))
         if self.delivery == 'queue':
             return self._enqueue(number, provider)
         if provider.code == 'twilio':
@@ -149,7 +168,9 @@ class SendWhatsappMessage(models.TransientModel):
             partner_id=self.sale_user_id.id or False,
             attachment_ids=self.attachment_ids,
             model=self.env.context.get('active_model'),
-            res_id=(self.env.context.get('active_ids') or [False])[0] or False)
+            res_id=(self.env.context.get('active_ids') or [False])[0] or False,
+            message_type='document' if self.attachment_ids else 'text',
+            company_id=provider.company_id.id)
         if error_msg:
             record.write({'error_msg': str(error_msg)[:2000]})
         return record
@@ -178,7 +199,11 @@ class SendWhatsappMessage(models.TransientModel):
         """
         try:
             provider.send_message(
-                number, self.whatsapp_message or "", self.attachment_ids)
+                number, self.whatsapp_message or "", self.attachment_ids,
+                message_type='document' if self.attachment_ids else 'text')
+        except WhatsappPermanentError:
+            # Errores 4xx/configuración: no tiene sentido reintentarlos.
+            raise
         except Exception as e:  # noqa: BLE001 - nunca perder el mensaje
             _logger.exception(
                 "WhatsApp direct send failed; enqueueing for retry")
@@ -206,10 +231,12 @@ class SendWhatsappMessage(models.TransientModel):
 
     # -- envío directo (no encolables) -----------------------------------
     def _send_twilio(self, number, provider):
-        return provider._send_twilio(number, self.whatsapp_message or "")
+        provider._send_twilio(
+            number, self.whatsapp_message or "", self.attachment_ids)
+        return self._notify_sent(provider.name)
 
     def _send_web(self, number):
-        digits = number.replace(" ", "").replace("+", "")
+        digits = tools.clean_number_digits(number)
         message_string = parse.quote((self.whatsapp_message or "").strip())
         link = "https://web.whatsapp.com/send?phone=" + digits
         if message_string:

@@ -46,12 +46,12 @@
                                     <field name="whatsapp_no" class="o_light_label"/>
                                 </div>
                                 <div class="mt16">
-                                    <label for="whatsapp_business" string="Business Account ID"/>
-                                    <field name="whatsapp_business" class="o_light_label"/>
-                                </div>
-                                <div class="mt16">
                                     <label for="bearer_token" string="Access Token"/>
                                     <field name="bearer_token" password="True" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="whatsapp_graph_version" string="Graph API Version"/>
+                                    <field name="whatsapp_graph_version" class="o_light_label" placeholder="v27.0"/>
                                 </div>
                             </div>
                         </setting>
@@ -84,11 +84,30 @@
                         <setting string="Reintentos máximos" help="Tras este número de fallos el mensaje queda en Error y ya no se reintenta solo.">
                             <field name="whatsapp_queue_max_retries" class="o_light_label"/>
                         </setting>
+                        <setting string="Retardo base de reintento" help="Minutos base del backoff exponencial entre reintentos.">
+                            <field name="whatsapp_queue_retry_delay" class="o_light_label"/>
+                        </setting>
+                        <setting string="Retención de enviados" help="Días que se conservan los mensajes enviados. 0 desactiva la purga.">
+                            <field name="whatsapp_queue_retention_days" class="o_light_label"/>
+                        </setting>
+                        <setting string="Espejar Discuss" help="Encola los mensajes de usuarios internos en canales de Discuss con teléfono.">
+                            <field name="whatsapp_discuss_mirror" class="o_light_label"/>
+                        </setting>
+                        <setting string="Grupo del inbox" help="Grupo que puede ver los canales creados por el webhook.">
+                            <field name="whatsapp_inbox_group_id" class="o_light_label"/>
+                        </setting>
+                        <setting string="Notificar fallos" help="Publica una nota en el documento origen cuando el envío falla definitivamente.">
+                            <field name="whatsapp_notify_source_on_error" class="o_light_label"/>
+                        </setting>
                         <setting string="Webhook" help="Token configurado en la app de Meta para verificar el webhook /whatsapp_message.">
                             <div class="content-group">
                                 <div class="mt16">
                                     <label for="webhook_verify_token" string="Verify Token"/>
                                     <field name="webhook_verify_token" password="True" class="o_light_label"/>
+                                </div>
+                                <div class="mt16">
+                                    <label for="whatsapp_app_secret" string="App Secret"/>
+                                    <field name="whatsapp_app_secret" password="True" class="o_light_label"/>
                                 </div>
                             </div>
                         </setting>

@@ -1,4 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_send_whatsapp_message,access.send.whatsapp.message,model_send_whatsapp_message,base.group_user,1,1,1,1
-access_whatsapp_queue_message,access.whatsapp.queue.message,model_whatsapp_queue_message,base.group_user,1,1,1,1
-access_whatsapp_provider,access.whatsapp.provider,model_whatsapp_provider,base.group_user,1,1,1,1
+access_send_whatsapp_message,access.send.whatsapp.message,model_send_whatsapp_message,group_whatsapp_user,1,1,1,1
+access_whatsapp_queue_message,access.whatsapp.queue.message,model_whatsapp_queue_message,group_whatsapp_user,1,1,1,0
+access_whatsapp_queue_message_manager,access.whatsapp.queue.message.manager,model_whatsapp_queue_message,group_whatsapp_manager,1,1,1,1
+access_whatsapp_provider,access.whatsapp.provider,model_whatsapp_provider,group_whatsapp_user,1,0,0,0
+access_whatsapp_provider_manager,access.whatsapp.provider.manager,model_whatsapp_provider,group_whatsapp_manager,1,1,1,1

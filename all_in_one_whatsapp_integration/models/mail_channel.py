@@ -29,4 +29,4 @@ class MailChannel(models.Model):
      communication channel."""
     _inherit = 'discuss.channel'
 
-    phone = fields.Char(string='Phone', help='Phone')
+    phone = fields.Char(string='Phone', help='Phone', index=True)

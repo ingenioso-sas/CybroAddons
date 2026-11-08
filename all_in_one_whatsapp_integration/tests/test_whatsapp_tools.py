@@ -61,6 +61,40 @@ class TestWhatsappTools(_OdooBase):
         self.assertEqual(
             tools.validate_e164_or_raise("+573001234567"), "+573001234567")
 
+    def test_normalize_formatted_numbers(self):
+        for value in ("+57 (300) 123-4567", "+57.300.123.4567",
+                      "+57 300 123 4567"):
+            self.assertEqual(tools.normalize_e164(value), "+573001234567")
+
+    def test_normalize_inbound_phone(self):
+        self.assertEqual(
+            tools.normalize_inbound_phone("573001234567"), "+573001234567")
+        self.assertEqual(
+            tools.normalize_inbound_phone("+57 300 123 4567"),
+            "+573001234567")
+        self.assertEqual(tools.normalize_inbound_phone(""), "")
+        self.assertEqual(tools.normalize_inbound_phone("123"), "")
+
+    def test_phone_search_variants(self):
+        self.assertEqual(
+            tools.phone_search_variants("573001234567"),
+            ["+573001234567", "573001234567"])
+        self.assertEqual(
+            tools.phone_search_variants("+573001234567"),
+            ["+573001234567", "573001234567"])
+
+    def test_webhook_signature(self):
+        secret = "test-secret"
+        body = b'{"hello": "world"}'
+        signature = tools.compute_webhook_signature(secret, body)
+        self.assertTrue(signature.startswith("sha256="))
+        self.assertTrue(
+            tools.verify_webhook_signature(secret, body, signature))
+        self.assertFalse(
+            tools.verify_webhook_signature(secret, body, "sha256=bad"))
+        self.assertFalse(
+            tools.verify_webhook_signature("", body, signature))
+
 
 if __name__ == "__main__":
     unittest.main()

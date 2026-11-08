@@ -58,9 +58,43 @@ Cola única de WhatsApp
 * Entradas a la cola: wizard (opción *Encolar*), espejo de Discuss y
   `whatsapp.queue.message.create_queue_message()`.
 * Reintento: si un envío falla, el mensaje permanece *Pendiente* y el cron
-  lo reintenta automáticamente hasta el tope de *Reintentos máximos*. Al
-  agotarlo pasa a *Error* y puede reencolarse con el botón *Reintentar*
-  (Ajustes > Técnico > WhatsApp > Cola de mensajes).
+  lo reintenta automáticamente con backoff exponencial hasta el tope de
+  *Reintentos máximos*. Al agotarlo pasa a *Error* y puede reencolarse con
+  el botón *Reintentar* (Ajustes > Técnico > WhatsApp > Cola de mensajes).
+* Los errores 4xx no recuperables (excepto 408/429) se marcan como
+  *Fallo permanente* y no se reintentan solos.
 * Un fallo del servicio en modo *Enviar ahora* (Cloud/Evolution) también
   deja el mensaje en la cola para reintentarlo, en lugar de perderlo.
 * Prueba de conexión: botones por proveedor en Ajustes > WhatsApp.
+
+Seguridad y permisos
+====================
+* El webhook POST exige ``X-Hub-Signature-256`` calculado con el
+  *Meta App Secret* (Ajustes > WhatsApp > Webhook). Sin ese secreto el
+  endpoint rechaza todas las peticiones.
+* Se valida el ``phone_number_id`` contra el configurado y se deduplican
+  los mensajes por ``wamid``.
+* Grupos propios: *WhatsApp / Operador* (envío y cola) y
+  *WhatsApp / Administrador* (proveedores, credenciales y ajustes).
+* Las credenciales pueden definirse por proveedor/compañía; si quedan
+  vacías se usan los parámetros globales de Ajustes.
+* Los registros de cola y proveedores se filtran por compañía.
+
+Proveedores y adjuntos
+======================
+* Cloud API y Evolution API soportan varios adjuntos (se envía uno por
+  mensaje). Twilio soporta medios vía ``media_url``. WhatsApp Web no
+  permite adjuntar archivos automáticamente: el wizard lo advierte.
+* Cloud API usa por defecto Graph API ``v27.0`` (configurable). Para
+  mensajes iniciados por la empresa fuera de la ventana de 24 h se debe
+  usar una plantilla aprobada (campos *Plantilla* de la cola).
+* El espejo de Discuss solo reenvía mensajes escritos por usuarios
+  internos; los mensajes entrantes del webhook nunca se reenvían.
+
+Retención y mantenimiento
+=========================
+* Un cron diario purga los enviados antiguos según *Retención de enviados*
+  y los errores antiguos. La generación de PDFs y adjuntos también se
+  limpia cuando corresponde.
+* Las vistas de la cola incluyen filtros por estado, reintentos, fallos
+  permanentes, adjuntos, documento relacionado, compañía y fecha.

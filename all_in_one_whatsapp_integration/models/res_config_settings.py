@@ -19,6 +19,8 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+import re
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -81,6 +83,45 @@ class ResConfigSettings(models.TransientModel):
         default=5,
         help="Tras este número de fallos el mensaje queda en Error y "
              "ya no se reintenta solo.")
+    whatsapp_queue_retry_delay = fields.Integer(
+        string="Retardo base de reintento (min)",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_queue_retry_delay",
+        default=5,
+        help="Minutos base del backoff exponencial entre reintentos.")
+    whatsapp_queue_retention_days = fields.Integer(
+        string="Retención de enviados (días)",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_queue_retention_days",
+        default=90,
+        help="Días que se conservan los mensajes enviados. Use 0 para "
+             "no purgar automáticamente.")
+    whatsapp_discuss_mirror = fields.Boolean(
+        string="Espejar Discuss a WhatsApp",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_discuss_mirror",
+        default=True,
+        help="Encola los mensajes escritos por usuarios internos en canales "
+             "de Discuss que tengan teléfono.")
+    whatsapp_inbox_group_id = fields.Many2one(
+        "res.groups", string="Grupo del inbox de WhatsApp",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_inbox_group_id",
+        default=lambda self: self.env.ref(
+            "base.group_user", raise_if_not_found=False),
+        help="Grupo que puede ver los canales creados por el webhook.")
+    whatsapp_notify_source_on_error = fields.Boolean(
+        string="Notificar fallos en el documento origen",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_notify_source_on_error",
+        default=True,
+        help="Publica una nota en la orden/factura/entrega cuando el envío "
+             "de WhatsApp falla definitivamente.")
+    whatsapp_app_secret = fields.Char(
+        string="Meta App Secret",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_app_secret",
+        help="Secreto de la app de Meta para validar X-Hub-Signature-256. "
+             "Sin este valor el webhook POST rechaza todas las peticiones.")
+    whatsapp_graph_version = fields.Char(
+        string="Cloud API Graph Version",
+        config_parameter="all_in_one_whatsapp_integration.whatsapp_graph_version",
+        default="v27.0",
+        help="Versión de Graph API usada por Cloud API (ej. v27.0).")
     whatsapp_test_phone = fields.Char(
         string="Teléfono de prueba",
         config_parameter="all_in_one_whatsapp_integration.whatsapp_test_phone",
@@ -99,11 +140,7 @@ class ResConfigSettings(models.TransientModel):
                                   config_parameter='all_in_one_whatsapp_integration'
                                                    '.twilio_whatsapp',
                                   help="Whatsapp number of twilio account")
-    twilio_whatsapp_enabled = fields.Boolean(string="Twilio whatsapp Enabled",
-                                config_parameter='all_in_one_whatsapp_integration'
-                                                   '.twilio_enabled',
-                                help="Enabled Whatsapp twilio account")
-                                
+
     bearer_token = fields.Char(string="Whatsapp Access Token",
                                help="Authorization Token of Whatsapp Cloud "
                                     "API",
@@ -113,25 +150,12 @@ class ResConfigSettings(models.TransientModel):
                               help="Phone Number ID of Whatsapp Cloud API",
                               config_parameter='all_in_one_whatsapp_integration.'
                                                'whatsapp_no', )
-    whatsapp_business = fields.Char(help="Business ID of Whatsapp Cloud API",
-                                    string="Whatsapp Business Account ID",
-                                    config_parameter='all_in_one_whatsapp_integration.'
-                                                     'whatsapp_business', )
-    cloud_api_enabled = fields.Boolean(string="Cloud API whatsapp Enabled",
-                                config_parameter='all_in_one_whatsapp_integration'
-                                                   '.cloud_api_enabled',
-                                help="Enabled Whatsapp twilio account")
-    
-    evolution_api_enabled = fields.Boolean(string="Evolution API whatsapp Enabled",
-                                config_parameter='all_in_one_whatsapp_integration'
-                                                   '.evolution_api_enabled',
-                                help="Enabled API Evoution For Whatsapp")
-    
+
     evolution_base_url = fields.Char(string="Url base",
                               help="Url base for Evolution API",
                               config_parameter='all_in_one_whatsapp_integration.'
                                                'evolution_base_url',)
-    
+
     evolution_instance = fields.Char(string="Instance",
                               help="Instance for Evolution API",
                               config_parameter='all_in_one_whatsapp_integration.'
@@ -145,4 +169,30 @@ class ResConfigSettings(models.TransientModel):
         string="Webhook Verify Token",
         config_parameter='all_in_one_whatsapp_integration.'
                          'webhook_verify_token',
-        help="Token configured in Meta App to verify GET /whatsapp_message")                                
+        help="Token configured in Meta App to verify GET /whatsapp_message")
+
+    @api.constrains('whatsapp_queue_limit', 'whatsapp_queue_max_retries',
+                    'whatsapp_queue_retry_delay',
+                    'whatsapp_queue_retention_days')
+    def _check_queue_settings(self):
+        for setting in self:
+            if setting.whatsapp_queue_limit < 1:
+                raise ValidationError(
+                    _("Mensajes por ciclo debe ser al menos 1."))
+            if setting.whatsapp_queue_max_retries < 1:
+                raise ValidationError(
+                    _("Reintentos máximos debe ser al menos 1."))
+            if setting.whatsapp_queue_retry_delay < 1:
+                raise ValidationError(
+                    _("El retardo base debe ser al menos 1 minuto."))
+            if setting.whatsapp_queue_retention_days < 0:
+                raise ValidationError(
+                    _("La retención no puede ser negativa."))
+
+    @api.constrains('whatsapp_graph_version')
+    def _check_graph_version(self):
+        for setting in self:
+            version = (setting.whatsapp_graph_version or "").strip()
+            if version and not re.match(r"^v?\d+\.\d+$", version):
+                raise ValidationError(
+                    _("Versión de Graph API inválida: %s") % version)
