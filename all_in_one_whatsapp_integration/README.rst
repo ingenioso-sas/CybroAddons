@@ -91,6 +91,30 @@ Proveedores y adjuntos
 * El espejo de Discuss solo reenvía mensajes escritos por usuarios
   internos; los mensajes entrantes del webhook nunca se reenvían.
 
+API de integración
+==================
+* Consentimiento y número en el partner:
+
+  * ``res.partner.whatsapp_opt_in`` y ``whatsapp_opt_in_date`` (pestaña
+    *WhatsApp* de la ficha).
+  * ``partner._get_whatsapp_number()``: número E.164 válido o vacío.
+  * ``partner._get_whatsapp_recipient()``: contacto con consentimiento o
+    partner comercial.
+  * ``partner._can_send_whatsapp()``: consentimiento + número válido.
+
+* ``whatsapp.provider.get_default_for_company(company, code=None)``:
+  proveedor por defecto de la compañía, priorizando Cloud/Evolution.
+
+* ``whatsapp.message.service.send_to_partner(partner, body, ...)`` y
+  ``send_to_number(phone, body, ...)``: API de alto nivel que resuelve
+  número, consentimiento, proveedor y cola/envío directo. Devuelve un
+  diccionario con ``sent``, ``queue``, ``provider``, ``phone`` y ``reason``.
+
+* ``whatsapp.tools.mask_number(phone)``: enmascarado para auditoría.
+
+Los módulos de negocio deben usar esta API en lugar de replicar la
+selección de proveedor o el branching cola/directo.
+
 Retención y mantenimiento
 =========================
 * Un cron diario purga los enviados antiguos según *Retención de enviados*

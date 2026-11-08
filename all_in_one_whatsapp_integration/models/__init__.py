@@ -23,12 +23,14 @@ from . import whatsapp_tools
 from . import whatsapp_exceptions
 from . import whatsapp_provider
 from . import whatsapp_service
+from . import whatsapp_delivery_service
 from . import account_move
 from . import mail_channel
 from . import mail_message
 from . import mail_template
 from . import purchase_order
 from . import res_config_settings
+from . import res_partner
 from . import sale_order
 from . import stock_picking
 from . import whatsapp_queue_message

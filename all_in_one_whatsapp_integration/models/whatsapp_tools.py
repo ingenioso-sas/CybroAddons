@@ -64,6 +64,13 @@ def is_valid_e164(number):
     return bool(number and _E164_RE.match(normalize_e164(number)))
 
 
+def mask_number(number):
+    """Return a masked E.164 number for logs and audit."""
+    normalized = normalize_e164(number)
+    digits = clean_number_digits(normalized)
+    return f"***{digits[-4:]}" if len(digits) >= 4 else "***"
+
+
 def validate_e164_or_raise(number, field_label="mobile"):
     """Raise ValueError (pure) — la capa Odoo lo convierte a ValidationError."""
     normalized = normalize_e164(number)

@@ -104,12 +104,14 @@ class SendWhatsappMessage(models.TransientModel):
     def _get_param(self, key, default=False):
         return self.env['ir.config_parameter'].sudo().get_param(key, default)
 
-    @api.depends('sale_user_id.phone', 'sale_user_id.mobile')
+    @api.depends('sale_user_id.phone')
     def _compute_whatsapp_mobile_number(self):
         for wizard in self:
             partner = wizard.sale_user_id
             wizard.whatsapp_mobile_number = (
-                partner.phone or partner.mobile or "") if partner else ""
+                partner._get_whatsapp_number()
+                or (partner.phone or getattr(partner, "mobile", "") or "")
+            ) if partner else ""
 
     def _get_provider(self):
         """Devuelve el proveedor elegido, garantizado habilitado."""
@@ -130,13 +132,12 @@ class SendWhatsappMessage(models.TransientModel):
 
     def _get_number_e164(self):
         partner = self.sale_user_id
-        number = (partner.phone or partner.mobile or "").strip() \
-            if partner else ""
-        try:
-            return tools.validate_e164_or_raise(
-                number, "sale order partner")
-        except ValueError as e:
-            raise ValidationError(_(str(e)))
+        number = partner._get_whatsapp_number() if partner else ""
+        if not number:
+            raise ValidationError(_(
+                "Please add a valid mobile number along with a valid "
+                "country code (E.164, e.g. +573001234567)!"))
+        return number
 
     def action_send_custom_message(self):
         """Envío directo o entrada real a la cola única."""

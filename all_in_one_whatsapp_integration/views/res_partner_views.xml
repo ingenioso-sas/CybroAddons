@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_whatsapp" model="ir.ui.view">
+        <field name="name">res.partner.form.whatsapp</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="WhatsApp" name="whatsapp">
+                    <group>
+                        <group string="Consent">
+                            <field name="whatsapp_opt_in"/>
+                            <field
+                                name="whatsapp_opt_in_date"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+                    <div class="text-muted">
+                        El número debe estar en formato E.164, por ejemplo
+                        +573001234567. Si el contacto no tiene consentimiento
+                        o número, se usa el partner comercial.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

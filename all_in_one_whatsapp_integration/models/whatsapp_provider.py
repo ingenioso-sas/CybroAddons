@@ -14,7 +14,7 @@ import logging
 
 import requests
 
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 from . import whatsapp_tools as tools
@@ -199,6 +199,33 @@ class WhatsappProvider(models.Model):
     # ------------------------------------------------------------------
     # Envío (usado por la cola y por el wizard en modo directo)
     # ------------------------------------------------------------------
+    @api.model
+    def get_default_for_company(self, company, code=None):
+        """Return the provider that should be used by default.
+
+        When ``code`` is given, only that provider code is considered. When
+        it is omitted, queue-capable providers are preferred, then Twilio,
+        then WhatsApp Web.
+        """
+        company = company or self.env.company
+        domain = [
+            ("company_id", "=", company.id),
+            ("active", "=", True),
+        ]
+        if code:
+            domain.append(("code", "=", code))
+            return self.sudo().search(domain, order="sequence, id", limit=1)
+        providers = self.sudo().search(domain, order="sequence, id")
+        for codes in (
+            ("cloud", "evolution"),
+            ("twilio",),
+            ("web",),
+        ):
+            match = providers.filtered(lambda provider: provider.code in codes)
+            if match:
+                return match[:1]
+        return providers[:1]
+
     def send_message(self, phone, body, attachment_ids=None,
                      message_type="text", template_name=False,
                      template_language="es", template_components=False):
