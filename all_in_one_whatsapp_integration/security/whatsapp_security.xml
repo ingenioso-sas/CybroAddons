@@ -24,6 +24,11 @@
         <field name="comment">Configura proveedores, credenciales y la cola de WhatsApp.</field>
     </record>
 
+    <!-- Los administradores del sistema conservan acceso al módulo. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_whatsapp_manager'))]"/>
+    </record>
+
     <record id="rule_whatsapp_queue_company" model="ir.rule">
         <field name="name">Cola WhatsApp: regla multi-compañía</field>
         <field name="model_id" ref="model_whatsapp_queue_message"/>
