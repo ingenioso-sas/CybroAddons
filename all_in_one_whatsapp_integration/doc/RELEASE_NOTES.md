@@ -1,5 +1,15 @@
 # Release Notes
 
+## 19.0.1.1.1 — 2026-11-09
+
+### Proveedores
+- El formulario de proveedor muestra los **valores efectivos** de las
+  credenciales y su origen: Global, Proveedor o Mixta.
+- Botones para copiar las credenciales globales al proveedor o vaciar sus
+  campos y volver al fallback de Ajustes → WhatsApp.
+- Mensaje más claro cuando Evolution API devuelve «Connection Closed»:
+  indica que la instancia perdió la conexión y debe reconectarse.
+
 ## 19.0.1.0.2 — 2026-11-08
 
 ### Seguridad

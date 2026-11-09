@@ -78,6 +78,9 @@ Seguridad y permisos
   *WhatsApp / Administrador* (proveedores, credenciales y ajustes).
 * Las credenciales pueden definirse por proveedor/compañía; si quedan
   vacías se usan los parámetros globales de Ajustes.
+* En Proveedores → Credenciales se muestran los valores efectivos y su
+  origen (*Global*, *Proveedor* o *Mixta*). Los botones permiten copiar
+  las credenciales globales al proveedor o volver al fallback global.
 * Los registros de cola y proveedores se filtran por compañía.
 
 Proveedores y adjuntos

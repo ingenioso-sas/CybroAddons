@@ -103,6 +103,39 @@ class WhatsappProvider(models.Model):
     twilio_whatsapp_number = fields.Char(
         string="Twilio: WhatsApp Number", groups=MANAGER_GROUP)
 
+    # Valores efectivos (proveedor o fallback global) para que el formulario
+    # no parezca vacío cuando en realidad usa Ajustes → WhatsApp.
+    evolution_credential_source = fields.Selection(
+        [("global", "Global"), ("provider", "Proveedor"),
+         ("mixed", "Mixta")],
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    cloud_credential_source = fields.Selection(
+        [("global", "Global"), ("provider", "Proveedor"),
+         ("mixed", "Mixta")],
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    twilio_credential_source = fields.Selection(
+        [("global", "Global"), ("provider", "Proveedor"),
+         ("mixed", "Mixta")],
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_evolution_base_url = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_evolution_instance = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_evolution_apikey = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_cloud_phone_number_id = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_cloud_graph_version = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_cloud_bearer_token = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_twilio_account_sid = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_twilio_whatsapp_number = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+    effective_twilio_auth_token = fields.Char(
+        compute="_compute_effective_credentials", groups=MANAGER_GROUP)
+
     last_test_state = fields.Selection(
         [("ok", "OK"), ("error", "Error")], string="Última prueba",
         readonly=True)
@@ -136,6 +169,130 @@ class WhatsappProvider(models.Model):
             "all_in_one_whatsapp_integration.whatsapp_graph_version",
             "v27.0") or "v27.0"
         return version if version.startswith("v") else "v%s" % version
+
+    @staticmethod
+    def _mask_secret(value):
+        if not value:
+            return ""
+        value = str(value)
+        return "••••%s" % value[-4:] if len(value) >= 4 else "Configurada"
+
+    @staticmethod
+    def _credential_source(values):
+        configured = sum(1 for value in values if value)
+        if not configured:
+            return "global"
+        if configured == len(values):
+            return "provider"
+        return "mixed"
+
+    @api.depends(
+        "evolution_base_url", "evolution_instance", "evolution_apikey",
+        "cloud_bearer_token", "cloud_phone_number_id", "cloud_graph_version",
+        "twilio_account_sid", "twilio_auth_token", "twilio_whatsapp_number",
+    )
+    def _compute_effective_credentials(self):
+        for provider in self:
+            provider.effective_evolution_base_url = provider._get_credential(
+                "evolution_base_url",
+                "all_in_one_whatsapp_integration.evolution_base_url")
+            provider.effective_evolution_instance = provider._get_credential(
+                "evolution_instance",
+                "all_in_one_whatsapp_integration.evolution_instance")
+            provider.effective_evolution_apikey = provider._mask_secret(
+                provider._get_credential(
+                    "evolution_apikey",
+                    "all_in_one_whatsapp_integration.evolution_apikey"))
+            provider.effective_cloud_phone_number_id = \
+                provider._get_credential(
+                    "cloud_phone_number_id",
+                    "all_in_one_whatsapp_integration.whatsapp_no")
+            provider.effective_cloud_graph_version = \
+                provider._get_graph_version()
+            provider.effective_cloud_bearer_token = provider._mask_secret(
+                provider._get_credential(
+                    "cloud_bearer_token",
+                    "all_in_one_whatsapp_integration.bearer_token"))
+            provider.effective_twilio_account_sid = provider._get_credential(
+                "twilio_account_sid",
+                "all_in_one_whatsapp_integration.account_sid")
+            provider.effective_twilio_whatsapp_number = \
+                provider._get_credential(
+                    "twilio_whatsapp_number",
+                    "all_in_one_whatsapp_integration.twilio_whatsapp")
+            provider.effective_twilio_auth_token = provider._mask_secret(
+                provider._get_credential(
+                    "twilio_auth_token",
+                    "all_in_one_whatsapp_integration.auth_token"))
+            provider.evolution_credential_source = provider._credential_source([
+                provider.sudo().evolution_base_url,
+                provider.sudo().evolution_instance,
+                provider.sudo().evolution_apikey,
+            ])
+            provider.cloud_credential_source = provider._credential_source([
+                provider.sudo().cloud_bearer_token,
+                provider.sudo().cloud_phone_number_id,
+            ])
+            provider.twilio_credential_source = provider._credential_source([
+                provider.sudo().twilio_account_sid,
+                provider.sudo().twilio_auth_token,
+                provider.sudo().twilio_whatsapp_number,
+            ])
+
+    def _global_credential_mapping(self):
+        return {
+            "evolution": [
+                ("evolution_base_url",
+                 "all_in_one_whatsapp_integration.evolution_base_url"),
+                ("evolution_instance",
+                 "all_in_one_whatsapp_integration.evolution_instance"),
+                ("evolution_apikey",
+                 "all_in_one_whatsapp_integration.evolution_apikey"),
+            ],
+            "cloud": [
+                ("cloud_bearer_token",
+                 "all_in_one_whatsapp_integration.bearer_token"),
+                ("cloud_phone_number_id",
+                 "all_in_one_whatsapp_integration.whatsapp_no"),
+                ("cloud_graph_version",
+                 "all_in_one_whatsapp_integration.whatsapp_graph_version"),
+            ],
+            "twilio": [
+                ("twilio_account_sid",
+                 "all_in_one_whatsapp_integration.account_sid"),
+                ("twilio_auth_token",
+                 "all_in_one_whatsapp_integration.auth_token"),
+                ("twilio_whatsapp_number",
+                 "all_in_one_whatsapp_integration.twilio_whatsapp"),
+            ],
+        }
+
+    def action_copy_global_credentials(self):
+        """Copia las credenciales globales al proveedor seleccionado."""
+        self.ensure_one()
+        vals = {}
+        for field_name, param_key in (
+                self._global_credential_mapping().get(self.code, [])):
+            value = self._get_param(param_key)
+            if value:
+                vals[field_name] = value
+        if not vals:
+            raise UserError(
+                _("No hay credenciales globales configuradas para %s.")
+                % self.name)
+        self.write(vals)
+        return True
+
+    def action_use_global_credentials(self):
+        """Vacía las credenciales del proveedor y usa las globales."""
+        self.ensure_one()
+        fields_to_clear = [
+            field_name for field_name, _param_key in (
+                self._global_credential_mapping().get(self.code, []))
+        ]
+        if fields_to_clear:
+            self.write({field_name: False for field_name in fields_to_clear})
+        return True
 
     def _attachment_url(self, attachment):
         """URL pública temporal (token de Odoo) para un adjunto."""

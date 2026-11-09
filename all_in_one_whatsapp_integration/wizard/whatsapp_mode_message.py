@@ -92,6 +92,13 @@ class WhatsappModeMessage:
         if response.status_code not in (200, 201):
             _logger.error("Evolution API error: %s %s",
                           response.status_code, response.text[:500])
+            if response.status_code >= 500 \
+                    and "connection closed" in response.text.lower():
+                raise ValidationError(_(
+                    "Evolution API perdió la conexión con WhatsApp en la "
+                    "instancia '%s'. Reconecte la instancia (QR) en Evolution "
+                    "Manager y reintente. Detalle: %s")
+                    % (self.evolution_instance, response.text[:300]))
             message = _("Evolution API error %s: %s") % (
                 response.status_code, response.text[:500])
             if 400 <= response.status_code < 500 \

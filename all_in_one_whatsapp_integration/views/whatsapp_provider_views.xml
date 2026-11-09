@@ -35,6 +35,21 @@
                     <notebook>
                         <page string="Credenciales" name="credentials"
                               groups="all_in_one_whatsapp_integration.group_whatsapp_manager">
+                            <div class="alert alert-info" role="alert">
+                                Los campos vacíos usan las credenciales globales
+                                de Ajustes → WhatsApp. Los valores efectivos que
+                                se usarán se muestran al final.
+                            </div>
+                            <div class="mb-2">
+                                <button name="action_copy_global_credentials"
+                                        type="object"
+                                        string="Copiar credenciales globales"
+                                        class="btn-secondary"/>
+                                <button name="action_use_global_credentials"
+                                        type="object"
+                                        string="Usar credenciales globales"
+                                        class="btn-link"/>
+                            </div>
                             <group string="Cloud API (Meta)">
                                 <field name="cloud_graph_version"/>
                                 <field name="cloud_phone_number_id"/>
@@ -50,9 +65,31 @@
                                 <field name="twilio_auth_token" password="True"/>
                                 <field name="twilio_whatsapp_number"/>
                             </group>
+                            <group string="Valores efectivos (solo lectura)">
+                                <group string="Evolution API">
+                                    <field name="evolution_credential_source" widget="badge"/>
+                                    <field name="effective_evolution_base_url" readonly="1"/>
+                                    <field name="effective_evolution_instance" readonly="1"/>
+                                    <field name="effective_evolution_apikey" readonly="1"/>
+                                </group>
+                                <group string="Cloud API (Meta)">
+                                    <field name="cloud_credential_source" widget="badge"/>
+                                    <field name="effective_cloud_phone_number_id" readonly="1"/>
+                                    <field name="effective_cloud_graph_version" readonly="1"/>
+                                    <field name="effective_cloud_bearer_token" readonly="1"/>
+                                </group>
+                                <group string="Twilio">
+                                    <field name="twilio_credential_source" widget="badge"/>
+                                    <field name="effective_twilio_account_sid" readonly="1"/>
+                                    <field name="effective_twilio_whatsapp_number" readonly="1"/>
+                                    <field name="effective_twilio_auth_token" readonly="1"/>
+                                </group>
+                            </group>
                             <div class="text-muted">
-                                Si deja un campo vacío se usará el valor global
-                                de Ajustes → WhatsApp.
+                                «Copiar credenciales globales» guarda los valores
+                                globales en este proveedor. «Usar credenciales
+                                globales» vacía los campos para volver al
+                                fallback de Ajustes → WhatsApp.
                             </div>
                         </page>
                     </notebook>

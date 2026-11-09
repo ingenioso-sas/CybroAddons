@@ -3,7 +3,7 @@
 import base64
 from unittest.mock import patch
 
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
@@ -154,3 +154,54 @@ class TestWhatsappProvider(TransactionCase):
             self.evolution.send_message(
                 '+573001234567', '', message_type='template',
                 template_name='hello')
+
+    def test_credential_fallback_and_copy(self):
+        params = self.env['ir.config_parameter'].sudo()
+        params.set_param(
+            'all_in_one_whatsapp_integration.evolution_base_url',
+            'https://global.example.com')
+        params.set_param(
+            'all_in_one_whatsapp_integration.evolution_instance',
+            'global-instance')
+        params.set_param(
+            'all_in_one_whatsapp_integration.evolution_apikey',
+            'global-apikey')
+        self.evolution.write({
+            'evolution_base_url': False,
+            'evolution_instance': False,
+            'evolution_apikey': False,
+        })
+        self.assertEqual(
+            self.evolution._get_credential(
+                'evolution_base_url',
+                'all_in_one_whatsapp_integration.evolution_base_url'),
+            'https://global.example.com')
+        self.assertEqual(
+            self.evolution.evolution_credential_source, 'global')
+        self.assertEqual(
+            self.evolution.effective_evolution_base_url,
+            'https://global.example.com')
+        self.assertTrue(
+            self.evolution.effective_evolution_apikey.startswith('••••'))
+
+        self.evolution.action_copy_global_credentials()
+        self.assertEqual(
+            self.evolution.evolution_base_url, 'https://global.example.com')
+        self.assertEqual(
+            self.evolution.evolution_credential_source, 'provider')
+
+        self.evolution.action_use_global_credentials()
+        self.assertFalse(self.evolution.evolution_base_url)
+        self.assertEqual(
+            self.evolution.evolution_credential_source, 'global')
+
+    def test_evolution_connection_closed_message(self):
+        response = FakeResponse(
+            500, text='{"message":"Connection Closed"}')
+        with patch(
+                'odoo.addons.all_in_one_whatsapp_integration.wizard.'
+                'whatsapp_mode_message.requests.post',
+                return_value=response):
+            with self.assertRaises(ValidationError) as error:
+                self.evolution.send_message('+573001234567', 'hola')
+        self.assertIn('Reconecte', str(error.exception))
