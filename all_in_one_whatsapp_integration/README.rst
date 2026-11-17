@@ -9,8 +9,11 @@ purchase order, invoice and bills, and deliver orders.
 
 Installation
 ============
-- www.odoo.com/documentation/16.0/setup/install.html
-- pip install twilio
+- www.odoo.com/documentation/19.0/setup/install.html
+- pip install html2text
+
+Twilio no requiere instalar su SDK: el módulo usa directamente la API REST
+de Twilio, por lo que el canal funciona en cualquier entorno sin pasos extra.
 
 Company
 -------
@@ -86,8 +89,9 @@ Seguridad y permisos
 Proveedores y adjuntos
 ======================
 * Cloud API y Evolution API soportan varios adjuntos (se envía uno por
-  mensaje). Twilio soporta medios vía ``media_url``. WhatsApp Web no
-  permite adjuntar archivos automáticamente: el wizard lo advierte.
+  mensaje). Twilio soporta medios vía ``MediaUrl`` en su API REST (hasta
+  10 por mensaje). WhatsApp Web no permite adjuntar archivos
+  automáticamente: el wizard lo advierte.
 * Cloud API usa por defecto Graph API ``v27.0`` (configurable). Para
   mensajes iniciados por la empresa fuera de la ventana de 24 h se debe
   usar una plantilla aprobada (campos *Plantilla* de la cola).

@@ -1,5 +1,18 @@
 # Release Notes
 
+## 19.0.1.2.0 — 2026-11-17
+
+### Proveedores
+- Twilio se envía con la **API REST oficial** mediante ``requests``, sin el
+  SDK ``twilio``. El módulo ya no exige `pip install twilio` para
+  instalarse o actualizarse, y el canal funciona en cualquier entorno.
+- Los medios se envían como claves ``MediaUrl`` repetidas (máximo 10) y el
+  ``sid`` de la respuesta se conserva como ID de mensaje.
+- Los errores HTTP se clasifican igual que en Cloud API/Evolution: 4xx
+  permanente (salvo 408/429) y 5xx reintentable.
+- Nuevo test de manifiesto que impide reintroducir ``twilio`` como
+  dependencia Python.
+
 ## 19.0.1.1.1 — 2026-11-09
 
 ### Proveedores

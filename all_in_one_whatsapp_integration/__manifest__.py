@@ -21,7 +21,7 @@
 ###############################################################################
 {
     'name': "All in one Whatsapp",
-    'version': '19.0.1.1.1',
+    'version': '19.0.1.2.0',
     'category': 'Extra Tools',
     'summary': """Send whatsapp messages to the partner""",
     'description': """ This module helps you to send a whatsapp message to your
@@ -56,7 +56,7 @@
         'views/whatsapp_queue_message_menu.xml',
     ],
     'external_dependencies': {
-        'python': ['twilio','html2text'],
+        'python': ['html2text'],
     },
     'images': ['static/description/banner.png'],
     'license': "AGPL-3",

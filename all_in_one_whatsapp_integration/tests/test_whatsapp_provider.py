@@ -139,15 +139,39 @@ class TestWhatsappProvider(TransactionCase):
         self.assertEqual(first['mediatype'], 'document')
 
     def test_twilio_media_url(self):
-        with patch('twilio.rest.Client') as client_cls:
-            client = client_cls.return_value
-            client.messages.create.return_value = object()
-            self.twilio.send_message(
+        response = FakeResponse(201, data={'sid': 'SM123'})
+        with patch.object(provider_module.requests, 'post',
+                          return_value=response) as mocked:
+            result = self.twilio.send_message(
                 '+573001234567', 'hola', self.attachment_1)
-        kwargs = client.messages.create.call_args.kwargs
-        self.assertEqual(kwargs['to'], 'whatsapp:+573001234567')
-        self.assertEqual(len(kwargs['media_url']), 1)
-        self.assertIn('/web/content/', kwargs['media_url'][0])
+        args, kwargs = mocked.call_args
+        self.assertEqual(
+            args[0],
+            'https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json')
+        self.assertEqual(kwargs['auth'], ('AC123', 'token'))
+        data = dict(kwargs['data'])
+        self.assertEqual(data['From'], 'whatsapp:+15550000000')
+        self.assertEqual(data['To'], 'whatsapp:+573001234567')
+        self.assertEqual(data['Body'], 'hola')
+        media = [value for key, value in kwargs['data']
+                 if key == 'MediaUrl']
+        self.assertEqual(len(media), 1)
+        self.assertIn('/web/content/', media[0])
+        self.assertEqual(
+            self.twilio._extract_message_id(result), 'SM123')
+
+    def test_twilio_4xx_is_permanent(self):
+        with patch.object(provider_module.requests, 'post',
+                          return_value=FakeResponse(400, text='bad request')):
+            with self.assertRaises(WhatsappPermanentError):
+                self.twilio.send_message('+573001234567', 'hola')
+
+    def test_twilio_5xx_is_retryable(self):
+        with patch.object(provider_module.requests, 'post',
+                          return_value=FakeResponse(500, text='server error')):
+            with self.assertRaises(UserError) as error:
+                self.twilio.send_message('+573001234567', 'hola')
+            self.assertNotIsInstance(error.exception, WhatsappPermanentError)
 
     def test_unsupported_template_for_evolution(self):
         with self.assertRaises(WhatsappPermanentError):

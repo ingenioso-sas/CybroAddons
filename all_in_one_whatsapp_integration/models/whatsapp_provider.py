@@ -22,6 +22,9 @@ from .whatsapp_exceptions import WhatsappPermanentError
 
 _logger = logging.getLogger(__name__)
 REQUEST_TIMEOUT = 30
+TWILIO_API_URL = (
+    "https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json")
+TWILIO_MAX_MEDIA = 10
 
 OLD_PARAM_BY_CODE = {
     "twilio": "all_in_one_whatsapp_integration.twilio_enabled",
@@ -324,6 +327,8 @@ class WhatsappProvider(models.Model):
             return False
         if not isinstance(data, dict):
             return False
+        if data.get("sid"):  # Twilio REST API
+            return str(data["sid"])
         messages = data.get("messages")
         if isinstance(messages, list) and messages:
             return str(messages[0].get("id") or "") or False
@@ -532,7 +537,7 @@ class WhatsappProvider(models.Model):
                 base64.b64encode(raw).decode("utf-8"))
         return response
 
-    # -- envío Twilio (directo) ------------------------------------------
+    # -- envío Twilio (directo, API REST sin SDK) ------------------------
     def _send_twilio(self, phone, body, attachments=None):
         account_sid = self._get_credential(
             "twilio_account_sid",
@@ -551,25 +556,31 @@ class WhatsappProvider(models.Model):
             raise WhatsappPermanentError(
                 _("Número de WhatsApp inválido: %s") % phone)
         media_urls = [self._attachment_url(a) for a in (attachments or [])]
-        kwargs = {
-            "from_": "whatsapp:" + twilio_no,
-            "body": body or "",
-            "to": "whatsapp:" + number.replace(" ", ""),
-        }
-        if media_urls:
-            kwargs["media_url"] = media_urls
+        if len(media_urls) > TWILIO_MAX_MEDIA:
+            raise WhatsappPermanentError(
+                _("Twilio admite como máximo %s adjuntos por mensaje.")
+                % TWILIO_MAX_MEDIA)
+        # Twilio espera application/x-www-form-urlencoded y una clave
+        # MediaUrl repetida por cada adjunto.
+        data = [
+            ("From", "whatsapp:" + twilio_no),
+            ("To", "whatsapp:" + number),
+            ("Body", body or ""),
+        ]
+        data.extend(("MediaUrl", url) for url in media_urls)
         try:
-            from twilio.rest import Client
-            client = Client(account_sid, auth_token)
-            return client.messages.create(**kwargs)
+            response = requests.post(
+                TWILIO_API_URL % account_sid,
+                data=data,
+                auth=(account_sid, auth_token),
+                timeout=REQUEST_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            raise UserError(_("No se pudo contactar Twilio: %s") % e)
         except Exception as e:  # noqa: BLE001
             _logger.exception("Twilio send failed")
-            status = getattr(e, "status", None)
-            if isinstance(status, int) and 400 <= status < 500 \
-                    and status not in (408, 429):
-                raise WhatsappPermanentError(
-                    _("Twilio send failed: %s") % e)
             raise UserError(_("Twilio send failed: %s") % e)
+        return self._check_http(response, "Twilio API")
 
     # -- prueba de conexión ----------------------------------------------
     def run_test(self, phone):
