@@ -10,10 +10,10 @@ purchase order, invoice and bills, and deliver orders.
 Installation
 ============
 - www.odoo.com/documentation/19.0/setup/install.html
-- pip install html2text
 
-Twilio no requiere instalar su SDK: el módulo usa directamente la API REST
-de Twilio, por lo que el canal funciona en cualquier entorno sin pasos extra.
+El módulo no requiere dependencias Python externas: Twilio se envía por su
+API REST y el HTML de las plantillas se convierte con las utilidades
+incluidas en Odoo (``odoo.tools.html2plaintext``).
 
 Company
 -------

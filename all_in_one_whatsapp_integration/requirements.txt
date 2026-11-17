@@ -1,1 +1,3 @@
-html2text>=2024.2.26
+# El módulo no requiere dependencias Python externas:
+# - Twilio se envía por su API REST con `requests` (incluido en Odoo).
+# - El HTML se convierte con odoo.tools.html2plaintext.

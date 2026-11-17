@@ -19,6 +19,12 @@ except ImportError:  # entorno standalone sin Odoo instalado
 
     from unittest import TestCase as _OdooBase
 
+try:
+    import odoo  # noqa: F401
+    HAS_ODOO = True
+except ImportError:
+    HAS_ODOO = False
+
 _TOOLS = os.path.join(os.path.dirname(__file__), "..", "models",
                       "whatsapp_tools.py")
 
@@ -82,6 +88,20 @@ class TestWhatsappTools(_OdooBase):
         self.assertEqual(
             tools.phone_search_variants("+573001234567"),
             ["+573001234567", "573001234567"])
+
+    @unittest.skipUnless(HAS_ODOO, "requiere las utilidades de Odoo")
+    def test_html_to_whatsapp_text(self):
+        text = tools.html_to_whatsapp_text(
+            "<div>Hola <b>Juan</b>,</div><div>Pedido 42</div>"
+            "<ul><li>A</li><li>B</li></ul>"
+            '<p><a href="https://example.com">Portal</a></p>')
+        self.assertIn("Hola *Juan*,", text)
+        self.assertIn("Pedido 42", text)
+        self.assertIn("• A", text)
+        self.assertIn("• B", text)
+        self.assertIn("[1] https://example.com", text)
+        self.assertNotIn("<div>", text)
+        self.assertNotIn("\n\n\n", text)
 
     def test_webhook_signature(self):
         secret = "test-secret"

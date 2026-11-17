@@ -74,18 +74,25 @@ class TestManifestConsistency(_OdooBase):
         self.assertFalse(os.path.exists(
             os.path.join(ROOT, "models", "whatsapp_message.py")))
 
-    def test_twilio_sdk_is_not_required(self):
-        """Twilio usa su API REST: no debe volver a ser dependencia pip."""
+    def test_no_python_external_dependencies(self):
+        """Twilio usa su API REST y HTML usa las utilidades de Odoo."""
         manifest = _manifest()
         deps = manifest.get("external_dependencies", {}).get("python", [])
-        self.assertNotIn("twilio", deps)
+        self.assertEqual(deps, [])
         with open(os.path.join(ROOT, "requirements.txt")) as f:
-            self.assertNotIn("twilio", f.read())
+            requirements = f.read()
+        self.assertNotIn("twilio", requirements)
+        self.assertNotIn("html2text", requirements)
         with open(os.path.join(ROOT, "models",
                                "whatsapp_provider.py")) as f:
-            source = f.read()
-        self.assertNotIn("from twilio", source)
-        self.assertIn("api.twilio.com", source)
+            provider_source = f.read()
+        self.assertNotIn("from twilio", provider_source)
+        self.assertIn("api.twilio.com", provider_source)
+        for name in ("whatsapp_service", "mail_message"):
+            with open(os.path.join(ROOT, "models", name + ".py")) as f:
+                source = f.read()
+            self.assertNotIn("import html2text", source)
+            self.assertIn("html_to_whatsapp_text", source)
 
     def test_security_and_mail_dependency(self):
         manifest = _manifest()

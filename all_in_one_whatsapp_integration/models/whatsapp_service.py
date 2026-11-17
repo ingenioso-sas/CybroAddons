@@ -8,8 +8,6 @@ stock_picking.py con sutiles divergencias y crashes con valores None.
 import base64
 import logging
 
-import html2text
-
 from odoo import _, api, models
 from odoo.exceptions import ValidationError
 
@@ -67,7 +65,7 @@ class WhatsappDocumentService(models.AbstractModel):
                 ._generate_template([record.id], render_fields=["body_html"])
             )
             body_html = values.get(record.id, {}).pop("body_html", "") or ""
-            return html2text.html2text(body_html)
+            return tools.html_to_whatsapp_text(body_html)
         except Exception as e:
             _logger.exception("Error rendering WhatsApp template: %s", e)
             return ""

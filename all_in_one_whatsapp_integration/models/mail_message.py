@@ -6,8 +6,6 @@
 ###############################################################################
 import logging
 
-import html2text
-
 from odoo import api, fields, models
 
 from . import whatsapp_tools as tools
@@ -93,7 +91,7 @@ class MailMessage(models.Model):
                 if not channel or not channel.phone:
                     continue
                 try:
-                    body = html2text.html2text(
+                    body = tools.html_to_whatsapp_text(
                         record.body or "").strip()[:4000]
                 except Exception:
                     body = (record.body or "")[:4000]

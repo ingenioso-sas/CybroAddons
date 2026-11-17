@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Pure phone helpers (no Odoo dependency) + shared WhatsApp helpers.
+"""Pure phone helpers + shared WhatsApp helpers.
 
-Separar la parte pura permite testearla sin instancia de Odoo.
+Separar la parte pura permite testearla sin instancia de Odoo. La
+conversión de HTML importa ``odoo.tools`` de forma diferida para no
+romper esa propiedad.
 """
 import hashlib
 import hmac
@@ -9,6 +11,9 @@ import re
 
 _E164_RE = re.compile(r"^\+\d{7,15}$")
 _NON_DIGIT_PLUS_RE = re.compile(r"[^\d+]")
+_BLOCK_END_RE = re.compile(r"</(?:div|li)>", re.IGNORECASE)
+_LIST_ITEM_RE = re.compile(r"<li\b[^>]*>", re.IGNORECASE)
+_EXTRA_BLANK_LINES_RE = re.compile(r"\n{3,}")
 
 
 def clean_number_digits(number):
@@ -82,6 +87,27 @@ def validate_e164_or_raise(number, field_label="mobile"):
             "a valid country code (E.164, e.g. +573001234567)!"
         )
     return normalized
+
+
+def html_to_whatsapp_text(html):
+    """Convierte HTML a texto plano usando las utilidades de Odoo.
+
+    Evita depender del paquete ``html2text``. El conversor de Odoo no
+    inserta saltos de línea en ``</div>``/``</li>``, etiquetas que usan las
+    plantillas de correo, así que se normalizan a ``<br/>`` antes de
+    convertirlas. Se mantienen los enlaces como referencias al final.
+
+    La importación es diferida para que el resto del módulo (helpers de
+    teléfono) siga siendo utilizable sin Odoo.
+    """
+    if not html:
+        return ""
+    from odoo.tools import html2plaintext
+
+    prepared = _LIST_ITEM_RE.sub("<br/>• ", str(html))
+    prepared = _BLOCK_END_RE.sub("<br/>", prepared)
+    text = html2plaintext(prepared)
+    return _EXTRA_BLANK_LINES_RE.sub("\n\n", text)
 
 
 def compute_webhook_signature(app_secret, raw_body):

@@ -1,5 +1,16 @@
 # Release Notes
 
+## 19.0.1.3.0 — 2026-11-17
+
+### Mantenimiento
+- Se elimina la dependencia Python ``html2text``. La conversión de HTML a
+  texto usa ``odoo.tools.html2plaintext`` (incluido en Odoo), adaptada para
+  conservar los saltos de línea de ``div``/``li`` de las plantillas y los
+  enlaces como referencias.
+- El módulo ya no declara **ninguna** dependencia Python externa ni
+  requiere ``pip install``.
+- Nuevo test de la conversión HTML → texto de WhatsApp.
+
 ## 19.0.1.2.0 — 2026-11-17
 
 ### Proveedores
