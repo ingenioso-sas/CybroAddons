@@ -24,6 +24,7 @@
                                 <tr>
                                     <th>Date Range</th>
                                     <th>Journal</th>
+                                    <th>Account</th>
                                     <th>Analytic</th>
                                     <th>Options</th>
                                 </tr>
@@ -48,10 +49,18 @@
                                     </th>
                                     <th>
                                         <t t-set="first_account" t-value="True"/>
-                                        <t t-foreach="filters['analytic']" t-as="selected_analytic_account">
+                                        <t t-foreach="filters.get('account', [])" t-as="selected_account">
                                             <t t-if="not first_account">,</t>
-                                            <t t-out="selected_analytic_account"/>
+                                            <t t-out="selected_account"/>
                                             <t t-set="first_account" t-value="False"/>
+                                        </t>
+                                    </th>
+                                    <th>
+                                        <t t-set="first_analytic" t-value="True"/>
+                                        <t t-foreach="filters['analytic']" t-as="selected_analytic_account">
+                                            <t t-if="not first_analytic">,</t>
+                                            <t t-out="selected_analytic_account"/>
+                                            <t t-set="first_analytic" t-value="False"/>
                                         </t>
                                     </th>
                                     <th>

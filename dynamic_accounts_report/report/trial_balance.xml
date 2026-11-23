@@ -27,6 +27,7 @@
                                     <th>Account</th>
                                     <th>Journal</th>
                                     <th>Options</th>
+                                    <th>Display Accounts</th>
                                 </tr>
                             </thead>
                             <tbody style="font-size:11px;font-weight:100;">
@@ -69,6 +70,17 @@
                                             <t t-out="selected_options"/>,
                                         </t>
                                     </th>
+                                    <th>
+                                        <t t-if="filters.get('display_account') == 'all'">
+                                            All Accounts
+                                        </t>
+                                        <t t-elif="filters.get('display_account') == 'not_zero'">
+                                            Non-zero Balance
+                                        </t>
+                                        <t t-else="">
+                                            With Movements
+                                        </t>
+                                    </th>
                                 </tr>
                             </tbody>
                         </table>
@@ -88,8 +100,8 @@
                                         <t t-esc="date_view"/>
                                     </th>
                                 </t>
-                                <t t-if="apply_comparison == true">
-                                    <t t-foreach="data[0][0]['dynamic_date_num'].items()" t-as="item" t-key="item[0]">
+                                <t t-if="apply_comparison == true and data and data[0] and data[0][0] and data[0][0].get('dynamic_date_num')">
+                                    <t t-foreach="data[0][0].get('dynamic_date_num').items()" t-as="item" t-key="item[0]">
                                         <th colspan="2">
                                             <t t-esc="item[1]"/>
                                         </th>
@@ -166,6 +178,43 @@
                                         <th style="text-align:center;">
                                             <t t-if="move_line['end_total_credit']"
                                                t-esc="move_line['end_total_credit']"/>
+                                        </th>
+                                    </tr>
+                                </t>
+                                <t t-if="totals">
+                                    <tr class="border-bottom"
+                                        style="border-spacing: 0 10px;">
+                                        <th colspan="6">Total</th>
+                                        <th style="text-align:center;">
+                                            <t t-esc="totals.get('initial_total_debit', 0.0)"/>
+                                        </th>
+                                        <th style="text-align:center;">
+                                            <t t-esc="totals.get('initial_total_credit', 0.0)"/>
+                                        </th>
+                                        <t t-if="apply_comparison == true">
+                                            <t t-set="number_of_periods"
+                                               t-value="comparison_number_range"/>
+                                            <t t-foreach="number_of_periods"
+                                               t-as="num" t-key="num">
+                                                <th style="text-align:center;">
+                                                    <t t-esc="totals.get('dynamic_total_debit_' + str(num), 0.0)"/>
+                                                </th>
+                                                <th style="text-align:center;">
+                                                    <t t-esc="totals.get('dynamic_total_credit_' + str(num), 0.0)"/>
+                                                </th>
+                                            </t>
+                                        </t>
+                                        <th style="text-align:center;">
+                                            <t t-esc="totals.get('total_debit', 0.0)"/>
+                                        </th>
+                                        <th style="text-align:center;">
+                                            <t t-esc="totals.get('total_credit', 0.0)"/>
+                                        </th>
+                                        <th style="text-align:center;">
+                                            <t t-esc="totals.get('end_total_debit', 0.0)"/>
+                                        </th>
+                                        <th style="text-align:center;">
+                                            <t t-esc="totals.get('end_total_credit', 0.0)"/>
                                         </th>
                                     </tr>
                                 </t>

@@ -35,7 +35,7 @@ class AccountGeneralLedger(models.TransientModel):
     _description = 'General Ledger Report'
 
     @api.model
-    def view_report(self, option, tag):
+    def view_report(self, option, tag, accounts=None):
         """
         Retrieve partner ledger report data based on options and tags.
 
@@ -45,19 +45,26 @@ class AccountGeneralLedger(models.TransientModel):
         :param tag: The tag to filter the report data.
         :type tag: str
 
+        :param accounts: Optional account IDs to filter the report data.
+        :type accounts: list
+
         :return: A dictionary containing the partner ledger report data.
         :rtype: dict
         """
         account_dict = {}
         account_totals = {}
-        move_line_ids = self.env['account.move.line'].search(
-            [('parent_state', '=', 'posted')])
+        domain = [('parent_state', '=', 'posted')]
+        if accounts:
+            domain.append(('account_id', 'in', accounts))
+        move_line_ids = self.env['account.move.line'].search(domain)
         account_ids = move_line_ids.mapped('account_id')
         account_dict['journal_ids'] = self.env['account.journal'].search_read(
             [], ['name'])
         account_dict['analytic_ids'] = self.env[
             'account.analytic.account'].search_read(
             [], ['name'])
+        account_dict['account_ids'] = self.env['account.account'].search_read(
+            [], ['display_name'])
         for account in account_ids:
             move_line_id = move_line_ids.filtered(
                 lambda x: x.account_id == account)
@@ -80,7 +87,7 @@ class AccountGeneralLedger(models.TransientModel):
 
     @api.model
     def get_filter_values(self, journal_id, date_range, options, analytic,
-                          method):
+                          method, accounts=None):
         """
         Retrieve filtered values for the partner ledger report.
 
@@ -98,6 +105,9 @@ class AccountGeneralLedger(models.TransientModel):
 
         :param analytic: The analytic IDs to filter the report data.
         :type analytic: list
+
+        :param accounts: The account IDs to filter the report data.
+        :type accounts: list
 
         :return: A dictionary containing the filtered values for the partner
         ledger report.
@@ -127,6 +137,8 @@ class AccountGeneralLedger(models.TransientModel):
             analytic_line = self.env['account.analytic.line'].search(
                 [('account_id', 'in', analytic)]).mapped('id')
             domain += [('analytic_line_ids', 'in', analytic_line)]
+        if accounts:
+            domain += [('account_id', 'in', accounts)]
         if date_range:
             if date_range == 'month':
                 domain += [('date', '>=', today.replace(day=1)),
@@ -177,6 +189,8 @@ class AccountGeneralLedger(models.TransientModel):
         account_dict['analytic_ids'] = self.env[
             'account.analytic.account'].search_read(
             [], ['name'])
+        account_dict['account_ids'] = self.env['account.account'].search_read(
+            [], ['display_name'])
         for account in account_ids:
             move_line_id = move_line_ids.filtered(
                 lambda x: x.account_id == account)
@@ -249,6 +263,7 @@ class AccountGeneralLedger(models.TransientModel):
         sheet.write('B4:b4', 'Journals', filter_head)
         sheet.write('B5:b4', 'Analytic', filter_head)
         sheet.write('B6:b4', 'Options', filter_head)
+        sheet.write('B7:b4', 'Account', filter_head)
         if start_date or end_date:
             sheet.merge_range('C3:G3', f"{start_date} to {end_date}",
                               filter_body)
@@ -266,6 +281,9 @@ class AccountGeneralLedger(models.TransientModel):
             option_keys = list(data['filters']['options'].keys())
             option_keys_str = ', '.join(option_keys)
             sheet.merge_range('C6:G6', option_keys_str, filter_body)
+        if data['filters'].get('account'):
+            account_names = [account for account in data['filters']['account']]
+            sheet.merge_range('C7:G7', ', '.join(account_names), filter_body)
         if data:
             if report_action == 'dynamic_accounts_report.action_general_ledger':
                 sheet.write(8, col, ' ', sub_heading)

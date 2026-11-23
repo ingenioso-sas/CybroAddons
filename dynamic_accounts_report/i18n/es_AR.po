@@ -2310,3 +2310,32 @@ msgstr "al corriente"
 #: model_terms:ir.ui.view,arch_db:dynamic_accounts_report.trial_balance
 msgid "to"
 msgstr "a"
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Display Accounts"
+msgstr "Cuentas a mostrar"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "All Accounts"
+msgstr "Todas las cuentas"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "With Movements"
+msgstr "Con movimientos"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "With Non-zero Balance"
+msgstr "Con saldo distinto de cero"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Non-zero Balance"
+msgstr "Saldo distinto de cero"

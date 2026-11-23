@@ -34,14 +34,53 @@ class AccountTrialBalance(models.TransientModel):
     _name = 'account.trial.balance'
     _description = 'Trial Balance Report'
 
+    @staticmethod
+    def _to_float(value):
+        """Return a float from a number or a formatted amount string."""
+        if isinstance(value, str):
+            value = value.replace(',', '')
+        try:
+            return float(value or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _filter_report_lines(self, move_line_list, display_account):
+        """
+        Filter the report lines according to the selected display option.
+
+        The options are the same ones available in the original 13.0 report:
+        all accounts, accounts with movements and accounts with a non-zero
+        balance.
+        """
+        if not display_account or display_account == 'all':
+            return move_line_list
+        filtered_lines = []
+        for line in move_line_list:
+            if display_account == 'not_zero':
+                amount = (self._to_float(line.get('end_total_debit')) +
+                          self._to_float(line.get('end_total_credit')))
+            else:
+                amount = sum(
+                    self._to_float(line.get(key)) for key in (
+                        'initial_total_debit', 'initial_total_credit',
+                        'total_debit', 'total_credit'))
+                amount += sum(
+                    self._to_float(value) for key, value in line.items()
+                    if key.startswith('dynamic_total_'))
+            if abs(round(amount, 2)) > 0:
+                filtered_lines.append(line)
+        return filtered_lines
+
     @api.model
-    def view_report(self):
+    def view_report(self, display_account='movement'):
         """
         Generates a trial balance report for multiple accounts.
         Retrieves account information and calculates total debit and credit
         amounts for each account within the specified date range. Returns a list
         of dictionaries containing account details and transaction totals.
 
+        :param str display_account: Display Accounts option ('all', 'movement'
+            or 'not_zero').
         :return: List of dictionaries representing the trial balance report.
         :rtype: list
         """
@@ -90,12 +129,13 @@ class AccountTrialBalance(models.TransientModel):
             'journal_ids': self.env['account.journal'].search_read([], [
                 'name'])
         }
-        return move_line_list, journal
+        return self._filter_report_lines(
+            move_line_list, display_account), journal
 
     @api.model
     def get_filter_values(self, start_date, end_date, comparison_number,
                           comparison_type, journal_list, analytic, options,
-                          method):
+                          method, display_account=None):
         """
         Retrieves and calculates filtered values for generating a financial
         report.
@@ -112,6 +152,8 @@ class AccountTrialBalance(models.TransientModel):
         :param list[int] analytic: List of selected analytic line IDs.
         :param dict options: Additional filtering options (e.g., 'draft').
         :param dict method: Find the method.
+        :param str display_account: Display Accounts option ('all', 'movement'
+            or 'not_zero').
         :return: List of dictionaries representing the financial report.
         :rtype: list
         """
@@ -313,7 +355,7 @@ class AccountTrialBalance(models.TransientModel):
                         f"dynamic_total_credit_{int(comparison_number) + 1 - i}",
                         0.0)
             move_line_list.append(data)
-        return move_line_list
+        return self._filter_report_lines(move_line_list, display_account)
 
     @api.model
     def get_month_name(self, date):
@@ -363,6 +405,8 @@ class AccountTrialBalance(models.TransientModel):
              'border': 1,
              'border_color': 'black'})
         side_heading_sub.set_indent(1)
+        total_format = workbook.add_format(
+            {'font_size': '10px', 'border': 1, 'bold': True})
         txt_name = workbook.add_format({'font_size': '10px', 'border': 1})
         txt_name.set_indent(2)
         sheet.set_column(0, 0, 30)
@@ -376,6 +420,7 @@ class AccountTrialBalance(models.TransientModel):
         sheet.write('B5:b4', 'Journal', filter_head)
         sheet.write('B6:b4', 'Account', filter_head)
         sheet.write('B7:b4', 'Option', filter_head)
+        sheet.write('B8:b4', 'Display Accounts', filter_head)
         if start_date or end_date:
             sheet.merge_range('C3:G3', f"{start_date} to {end_date}",
                               filter_body)
@@ -397,6 +442,14 @@ class AccountTrialBalance(models.TransientModel):
             option_keys = list(data['filters']['options'].keys())
             option_keys_str = ', '.join(option_keys)
             sheet.merge_range('C7:G7', option_keys_str, filter_body)
+        display_account = data['filters'].get('display_account', 'movement')
+        display_account_labels = {
+            'all': 'All Accounts',
+            'movement': 'With Movements',
+            'not_zero': 'Non-zero Balance',
+        }
+        sheet.merge_range('C8:G8', display_account_labels.get(
+            display_account, 'With Movements'), filter_body)
         sheet.write(9, col, '', sub_heading)
         # sheet.merge_range(9, col + 1, 9, col + 2, 'Initial Balance',
         #                   sub_heading)
@@ -459,6 +512,36 @@ class AccountTrialBalance(models.TransientModel):
                     sheet.write(row, col + j + 3,
                                 move_line['end_total_credit'], txt_name)
                     row += 1
+                totals = data.get('totals') or {}
+                row += 1
+                sheet.write(row, col, 'Total', side_heading_sub)
+                sheet.write(row, col + 1,
+                            totals.get('initial_total_debit', 0.0),
+                            total_format)
+                sheet.write(row, col + 2,
+                            totals.get('initial_total_credit', 0.0),
+                            total_format)
+                j = 3
+                if data['apply_comparison']:
+                    number_of_periods = data['comparison_number_range']
+                    for num in number_of_periods:
+                        sheet.write(
+                            row, col + j,
+                            totals.get('dynamic_total_debit_' + str(num),
+                                       0.0), total_format)
+                        sheet.write(
+                            row, col + j + 1,
+                            totals.get('dynamic_total_credit_' + str(num),
+                                       0.0), total_format)
+                        j += 2
+                sheet.write(row, col + j,
+                            totals.get('total_debit', 0.0), total_format)
+                sheet.write(row, col + j + 1,
+                            totals.get('total_credit', 0.0), total_format)
+                sheet.write(row, col + j + 2,
+                            totals.get('end_total_debit', 0.0), total_format)
+                sheet.write(row, col + j + 3,
+                            totals.get('end_total_credit', 0.0), total_format)
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())

@@ -27,6 +27,8 @@ class GeneralLedger extends owl.Component {
             currency: null,
             journals: null,
             selected_journal_list: [],
+            accounts: null,
+            selected_account_list: [],
             analytics: null,
             selected_analytic_list: [],
             title: null,
@@ -61,13 +63,14 @@ class GeneralLedger extends owl.Component {
         var action_title = self.props.action.display_name;
         try {
             var self = this;
-            let filtered_data = await this.orm.call("account.general.ledger", "get_filter_values", [self.state.selected_journal_list, self.state.date_range, self.state.options, self.state.selected_analytic_list,self.state.method]);
+            let filtered_data = await this.orm.call("account.general.ledger", "get_filter_values", [self.state.selected_journal_list, self.state.date_range, self.state.options, self.state.selected_analytic_list,self.state.method, self.state.selected_account_list]);
             self.state.journals = filtered_data['journal_ids']
             self.state.analytics = filtered_data['analytic_ids']
             account_totals = filtered_data['account_totals']
             self.state.account_data = await self.orm.call("account.general.ledger", "view_report", [self.wizard_id, action_title,]);
+            self.state.accounts = self.state.account_data['account_ids'] || [];
             for (const [index, value] of Object.entries(self.state.account_data)){
-                if (index !== 'account_totals' && index !== 'journal_ids' && index !== 'analytic_ids') {
+                if (index !== 'account_totals' && index !== 'journal_ids' && index !== 'analytic_ids' && index !== 'account_ids') {
                     account_list.push(index)
                 } else if (index == 'journal_ids') {
                     self.state.journals = value
@@ -232,6 +235,17 @@ class GeneralLedger extends owl.Component {
             } else if (val.target.attributes["data-value"].value == 'last-quarter') {
                 this.state.date_range = val.target.attributes["data-value"].value
             }
+            else if (val.target.attributes["data-value"].value == 'account') {
+                const accountId = parseInt(val.target.attributes["data-id"].value, 10);
+                if (!val.target.classList.contains("selected-filter")) {
+                    this.state.selected_account_list.push(accountId)
+                    val.target.classList.add("selected-filter");
+                } else {
+                    const updatedList = this.state.selected_account_list.filter(item => item !== accountId);
+                    this.state.selected_account_list = updatedList
+                    val.target.classList.remove("selected-filter");
+                }
+            }
             else if (val.target.attributes["data-value"].value == 'journal') {
                 if (!val.target.classList.contains("selected-filter")) {
                     this.state.selected_journal_list.push(parseInt(val.target.attributes["data-id"].value, 10))
@@ -306,10 +320,11 @@ class GeneralLedger extends owl.Component {
                 }
             }
         }
-        let filtered_data = await this.orm.call("account.general.ledger", "get_filter_values", [this.state.selected_journal_list, this.state.date_range, this.state.options, this.state.selected_analytic_list,this.state.method]);
+        let filtered_data = await this.orm.call("account.general.ledger", "get_filter_values", [this.state.selected_journal_list, this.state.date_range, this.state.options, this.state.selected_analytic_list,this.state.method, this.state.selected_account_list]);
+        this.state.accounts = filtered_data['account_ids'] || this.state.accounts;
         for (let index in filtered_data) {
              const value = filtered_data[index];
-            if (index !== 'account_totals' && index !== 'journal_ids' && index !== 'analytic_ids') {
+            if (index !== 'account_totals' && index !== 'journal_ids' && index !== 'analytic_ids' && index !== 'account_ids') {
                 account_list.push(index)
             }
             else {
@@ -395,10 +410,15 @@ class GeneralLedger extends owl.Component {
           const analytic = self.state.analytics.find((analytic) => analytic.id === analyticID);
           return analytic ? analytic.name : '';
         });
+        const selectedAccountIDs = Object.values(self.state.selected_account_list);
+        const selectedAccountNames = selectedAccountIDs.map((accountID) => {
+          const account = (self.state.accounts || []).find((account) => account.id === accountID);
+          return account ? (account.display_name || account.name) : '';
+        }).filter((name) => name);
         let filters = {
             'journal': selectedJournalNames,
             'analytic': selectedAnalyticNames,
-            'account': self.state.selected_analytic_account_rec,
+            'account': selectedAccountNames,
             'options': self.state.options,
             'start_date': null,
             'end_date': null,
