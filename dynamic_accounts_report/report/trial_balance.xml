@@ -85,99 +85,76 @@
                             </tbody>
                         </table>
                     </div>
+                    <div style="font-size:11px;font-weight:100;">
+                        <strong>PUC Level:</strong>
+                        <t t-esc="filters.get('puc_level') or '0'"/>
+                        <strong>Range:</strong>
+                        <t t-esc="filters.get('account_from_code') or '...'"/> to
+                        <t t-esc="filters.get('account_to_code') or '...'"/>
+                        <strong>Analytic:</strong>
+                        <t t-esc="filters.get('analytics_label') or 'All'"/>
+                        (<t t-esc="filters.get('analytic_filter_label') or 'All lines'"/>)
+                    </div>
                     <br/>
                     <br/>
                     <br/>
+                    <t t-if="not period_columns">
+                        <t t-set="period_columns"
+                           t-value="[{'label': (date_viewed or [''])[-1], 'debitKey': 'total_debit', 'creditKey': 'total_credit'}]"/>
+                    </t>
                     <table class="table table-sm table-reports"
                            style="width: fit-content;">
                         <thead style="background:#808080;">
                             <tr>
-                                <th colspan="6"/>
-                                <th colspan="2">Initial Balance</th>
-                                <t t-foreach="date_viewed" t-as="date_view"
-                                   t-key="date_view_index">
+                                <th colspan="6">Account</th>
+                                <th>Initial Balance</th>
+                                <t t-foreach="period_columns" t-as="period"
+                                   t-key="period_index">
                                     <th colspan="2">
-                                        <t t-esc="date_view"/>
+                                        <t t-esc="period['label']"/>
                                     </th>
-                                </t>
-                                <t t-if="apply_comparison == true and data and data[0] and data[0][0] and data[0][0].get('dynamic_date_num')">
-                                    <t t-foreach="data[0][0].get('dynamic_date_num').items()" t-as="item" t-key="item[0]">
-                                        <th colspan="2">
-                                            <t t-esc="item[1]"/>
-                                        </th>
-                                    </t>
                                 </t>
                                 <th colspan="2">End Balance</th>
                             </tr>
-                            <tr class="o_heading" style="text-align:center;background:#D3D3D3;">
+                            <tr class="o_heading"
+                                style="text-align:center;background:#D3D3D3;">
                                 <th colspan="6"/>
-                                <th>Debit</th>
-                                <th>Credit</th>
-                                <th>Debit</th>
-                                <th>Credit</th>
-                                <th>Debit</th>
-                                <th>Credit</th>
-                                <t t-if="apply_comparison == true">
-                                    <t t-set="number_of_periods"
-                                       t-value="comparison_number_range"/>
-                                    <t t-foreach="number_of_periods"
-                                       t-as="number" t-key="number">
-                                        <th>Debit</th>
-                                        <th>Credit</th>
-                                    </t>
+                                <th>Amount</th>
+                                <t t-foreach="period_columns" t-as="period"
+                                   t-key="period_index">
+                                    <th>Debit</th>
+                                    <th>Credit</th>
                                 </t>
+                                <th>Debit</th>
+                                <th>Credit</th>
                             </tr>
                         </thead>
                         <tbody>
                             <t t-if="data">
-                                <t t-set="i" t-value="0"/>
-                                <t t-foreach="data[0]"
-                                   t-as="move_line"
+                                <t t-foreach="data[0]" t-as="move_line"
                                    t-key="move_line_index">
-                                    <t t-set="i" t-value="i + 1"/>
                                     <tr class="border-bottom"
                                         style="border-spacing: 0 10px;">
                                         <th colspan="6">
                                             <t t-esc="move_line['account']"/>
                                         </th>
                                         <th style="text-align:center;">
-                                            <t t-if="move_line['initial_total_debit']"
-                                               t-esc="move_line['initial_total_debit']"/>
+                                            <t t-esc="move_line.get('initial', 0.0)"/>
                                         </th>
-                                        <th style="text-align:center;">
-                                            <t t-if="move_line['initial_total_credit']"
-                                               t-esc="move_line['initial_total_credit']"/>
-                                        </th>
-                                        <t t-if="apply_comparison == true">
-                                            <t t-set="number_of_periods"
-                                               t-value="comparison_number_range"/>
-                                            <t t-foreach="number_of_periods"
-                                               t-as="num" t-key="num">
-                                                <th style="text-align:center;">
-                                                    <t t-if="move_line['dynamic_total_debit_' + str(num)]"
-                                                       t-esc="move_line['dynamic_total_debit_' + str(num)]"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-if="move_line['dynamic_total_credit_' + str(num)]"
-                                                       t-esc="move_line['dynamic_total_credit_' + str(num)]"/>
-                                                </th>
-                                            </t>
+                                        <t t-foreach="period_columns" t-as="period"
+                                           t-key="period_index">
+                                            <th style="text-align:center;">
+                                                <t t-esc="move_line.get(period['debitKey'], 0.0)"/>
+                                            </th>
+                                            <th style="text-align:center;">
+                                                <t t-esc="move_line.get(period['creditKey'], 0.0)"/>
+                                            </th>
                                         </t>
                                         <th style="text-align:center;">
-                                            <t t-if="move_line['total_debit']"
-                                               t-esc="move_line['total_debit']"/>
+                                            <t t-esc="move_line.get('final_debit', 0.0)"/>
                                         </th>
                                         <th style="text-align:center;">
-                                            <t t-if="move_line['total_credit']"
-                                               t-esc="move_line['total_credit']"/>
-                                        </th>
-                                        <th style="text-align:center;">
-                                            <t t-if="move_line['end_total_debit']"
-                                               t-esc="move_line['end_total_debit']"/>
-                                        </th>
-                                        <th style="text-align:center;">
-                                            <t t-if="move_line['end_total_credit']"
-                                               t-esc="move_line['end_total_credit']"/>
+                                            <t t-esc="move_line.get('final_credit', 0.0)"/>
                                         </th>
                                     </tr>
                                 </t>
@@ -186,35 +163,22 @@
                                         style="border-spacing: 0 10px;">
                                         <th colspan="6">Total</th>
                                         <th style="text-align:center;">
-                                            <t t-esc="totals.get('initial_total_debit', 0.0)"/>
+                                            <t t-esc="totals.get('initial', 0.0)"/>
                                         </th>
-                                        <th style="text-align:center;">
-                                            <t t-esc="totals.get('initial_total_credit', 0.0)"/>
-                                        </th>
-                                        <t t-if="apply_comparison == true">
-                                            <t t-set="number_of_periods"
-                                               t-value="comparison_number_range"/>
-                                            <t t-foreach="number_of_periods"
-                                               t-as="num" t-key="num">
-                                                <th style="text-align:center;">
-                                                    <t t-esc="totals.get('dynamic_total_debit_' + str(num), 0.0)"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="totals.get('dynamic_total_credit_' + str(num), 0.0)"/>
-                                                </th>
-                                            </t>
+                                        <t t-foreach="period_columns" t-as="period"
+                                           t-key="period_index">
+                                            <th style="text-align:center;">
+                                                <t t-esc="totals.get(period['debitKey'], 0.0)"/>
+                                            </th>
+                                            <th style="text-align:center;">
+                                                <t t-esc="totals.get(period['creditKey'], 0.0)"/>
+                                            </th>
                                         </t>
                                         <th style="text-align:center;">
-                                            <t t-esc="totals.get('total_debit', 0.0)"/>
+                                            <t t-esc="totals.get('final_debit', 0.0)"/>
                                         </th>
                                         <th style="text-align:center;">
-                                            <t t-esc="totals.get('total_credit', 0.0)"/>
-                                        </th>
-                                        <th style="text-align:center;">
-                                            <t t-esc="totals.get('end_total_debit', 0.0)"/>
-                                        </th>
-                                        <th style="text-align:center;">
-                                            <t t-esc="totals.get('end_total_credit', 0.0)"/>
+                                            <t t-esc="totals.get('final_credit', 0.0)"/>
                                         </th>
                                     </tr>
                                 </t>

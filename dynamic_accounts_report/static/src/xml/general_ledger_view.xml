@@ -310,6 +310,7 @@
                                         <th>Date</th>
                                         <th>Communication</th>
                                         <th>Partner</th>
+                                        <th>Partner ID</th>
                                         <th>Debit</th>
                                         <th>Credit</th>
                                         <th>Balance</th>
@@ -430,6 +431,11 @@
                                                         </th>
                                                         <th>
                                                             <span>
+                                                                <t t-esc="valuelist[0]['partner_vat']"/>
+                                                            </span>
+                                                        </th>
+                                                        <th>
+                                                            <span>
                                                                 <t t-if="valuelist[0]['debit']"
                                                                    t-esc="state.account_data.account_totals[account]['currency_id']"/>
                                                                 <t t-if="valuelist[0]['debit']"
@@ -452,7 +458,7 @@
                                     </t>
                                     <tr>
                                         <th/>
-                                        <th colspan="8" class="o_heading">
+                                        <th colspan="9" class="o_heading">
                                             Total
                                         </th>
                                         <th class="o_heading" t-if="state.total_debit">

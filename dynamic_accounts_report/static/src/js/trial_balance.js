@@ -32,6 +32,12 @@ class TrialBalance extends owl.Component {
             analytic_account: null,
             selected_journal_list: [],
             selected_analytic_account_rec: [],
+            analytics: null,
+            analytic_filter_mode: 'all',
+            puc_level: '0',
+            account_from_code: '',
+            account_to_code: '',
+            period_columns: [],
             date_range: 'month',
             date_type: 'month',
             apply_comparison: false,
@@ -60,12 +66,21 @@ class TrialBalance extends owl.Component {
             var today = new Date();
             var startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             var endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            self.state.data = await self.orm.call("account.trial.balance", "view_report", [self.state.display_account]);
+            self.state.data = await self.orm.call("account.trial.balance", "view_report", [
+                self.state.display_account,
+                self.state.puc_level,
+                self.state.account_from_code,
+                self.state.account_to_code,
+                self.state.selected_analytic,
+                self.state.analytic_filter_mode,
+            ]);
             self.start_date.el.value = startOfMonth.getFullYear() + '-' + String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + String(startOfMonth.getDate()).padStart(2, '0');
             self.end_date.el.value = endOfMonth.getFullYear() + '-' + String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + String(endOfMonth.getDate()).padStart(2, '0');
             self.state.date_viewed.push(monthNamesShort[today.getMonth()] + '  ' + today.getFullYear())
             self.state.journals = self.state.data[1]['journal_ids']
+            self.state.analytics = self.state.data[1]['analytic_ids'] || []
             self.state.accounts = self.state.data[0]
+            self.refreshPeriodColumns()
             $.each(self.state.data, function (index, value) {
                 self.state.journals = value.journal_ids
             })
@@ -73,6 +88,43 @@ class TrialBalance extends owl.Component {
         catch (el) {
             window.location.href;
         }
+    }
+    refreshPeriodColumns() {
+        /**
+         * Build the displayed period columns, oldest comparison first and the
+         * current period at the end.
+         */
+        const columns = [];
+        const source = (Array.isArray(this.state.data) &&
+            this.state.data.length && Array.isArray(this.state.data[0]))
+            ? this.state.data[0]
+            : this.state.data;
+        const firstRow = (Array.isArray(source) && source.length) ? source[0] : {};
+        const dynamicLabels = firstRow && firstRow.dynamic_date_num
+            ? firstRow.dynamic_date_num : {};
+        const comparisonNumber = parseInt(this.state.comparison_number) || 0;
+        if (this.state.apply_comparison && comparisonNumber > 0) {
+            for (let i = 1; i <= comparisonNumber; i++) {
+                columns.push({
+                    label: dynamicLabels['dynamic_date_num' + i] || '',
+                    debitKey: 'dynamic_total_debit_' + i,
+                    creditKey: 'dynamic_total_credit_' + i,
+                });
+            }
+        }
+        let currentLabel = dynamicLabels['dynamic_date_num0'] || '';
+        if (!currentLabel && this.state.date_viewed.length) {
+            currentLabel = this.state.date_viewed[this.state.date_viewed.length - 1];
+        }
+        if (!currentLabel) {
+            currentLabel = 'Current Period';
+        }
+        columns.push({
+            label: currentLabel,
+            debitKey: 'total_debit',
+            creditKey: 'total_credit',
+        });
+        this.state.period_columns = columns;
     }
     async applyFilter(val, ev, is_delete) {
         /**
@@ -107,7 +159,11 @@ class TrialBalance extends owl.Component {
             }
         }
         else {
-            if (val && val.target.name === 'start_date') {
+            if (val && val.target.name === 'account_from_code') {
+                this.state.account_from_code = val.target.value || '';
+            } else if (val && val.target.name === 'account_to_code') {
+                this.state.account_to_code = val.target.value || '';
+            } else if (val && val.target.name === 'start_date') {
                 this.state.date_viewed = []
                 this.state.date_viewed.push('From' + ' ' + this.formatDate(this.start_date.el.value) + ' ' + 'To' + ' ' + this.formatDate(this.end_date.el.value))
                 this.state.date_range = {
@@ -196,6 +252,20 @@ class TrialBalance extends owl.Component {
                     this.state.selected_journal_list = updatedList
                     val.target.classList.remove("selected-filter");
                 }
+            } else if (val && val.target.attributes["data-value"].value == 'analytic') {
+                const analyticId = parseInt(val.target.attributes["data-id"].value, 10);
+                if (!val.target.classList.contains("selected-filter")) {
+                    this.state.selected_analytic.push(analyticId)
+                    val.target.classList.add("selected-filter");
+                } else {
+                    const updatedList = this.state.selected_analytic.filter(item => item !== analyticId);
+                    this.state.selected_analytic = updatedList
+                    val.target.classList.remove("selected-filter");
+                }
+            } else if (val && val.target.attributes["data-value"].value.startsWith('analytic-mode-')) {
+                this.state.analytic_filter_mode = val.target.attributes["data-value"].value.replace('analytic-mode-', '');
+            } else if (val && val.target.attributes["data-value"].value.startsWith('puc-')) {
+                this.state.puc_level = val.target.attributes["data-value"].value.replace('puc-', '');
             } else if (val && val.target.attributes["data-value"].value.startsWith('display-')) {
                 this.state.display_account = val.target.attributes["data-value"].value.replace('display-', '');
             } else if (val && val.target.attributes["data-value"].value === 'draft') {
@@ -247,8 +317,9 @@ class TrialBalance extends owl.Component {
                 this.state.comparison_number = this.period.el.value
             }
         }
-        this.state.data = await this.orm.call("account.trial.balance", "get_filter_values", [this.start_date.el.value, this.end_date.el.value, this.state.comparison_number, this.state.comparison_type, this.state.selected_journal_list, this.state.selected_analytic, this.state.options,this.state.method, this.state.display_account]);
+        this.state.data = await this.orm.call("account.trial.balance", "get_filter_values", [this.start_date.el.value, this.end_date.el.value, this.state.comparison_number, this.state.comparison_type, this.state.selected_journal_list, this.state.selected_analytic, this.state.options,this.state.method, this.state.display_account, this.state.puc_level, this.state.account_from_code, this.state.account_to_code, this.state.analytic_filter_mode]);
         this.state.default_report = false
+        this.refreshPeriodColumns()
         var date_viewed = []
         if (date_viewed.length !== 0) {
             this.state.date_viewed = date_viewed.reverse()
@@ -363,7 +434,7 @@ class TrialBalance extends owl.Component {
                 continue;
             }
             for (const [key, rawValue] of Object.entries(row)) {
-                if (!/^(initial_total_|dynamic_total_|total_|end_total_)/.test(key)) {
+                if (!/^(initial$|initial_total_|dynamic_total_|total_|end_total_|final_)/.test(key)) {
                     continue;
                 }
                 const value = typeof rawValue === 'string'
@@ -418,6 +489,7 @@ class TrialBalance extends owl.Component {
                 'filters': this.filter(),
                 'apply_comparison': self.state.apply_comparison,
                 'comparison_number_range': comparison_number_range,
+                'period_columns': self.state.period_columns,
                 'totals': this.computeTotals(self.state.data),
                 'title': action_title,
                 'report_name': self.props.action.display_name
@@ -467,12 +539,36 @@ class TrialBalance extends owl.Component {
         }
         const selectedJournalIDs = Object.values(self.state.selected_journal_list);
         const selectedJournalNames = selectedJournalIDs.map((journalID) => {
-          const journal = self.state.journals[journalID];
-          return journal ? journal.name : ''; // Return the name if journal exists, otherwise an empty string
+          const journal = (self.state.journals || []).find((item) => item.id === journalID);
+          return journal ? journal.name : '';
         });
+        const selectedAnalyticIDs = Object.values(self.state.selected_analytic || []);
+        const selectedAnalyticNames = selectedAnalyticIDs.map((analyticID) => {
+          const analytic = (self.state.analytics || []).find((item) => item.id === analyticID);
+          return analytic ? analytic.name : '';
+        }).filter((name) => name);
+        const analyticModeLabels = {
+            all: 'All lines',
+            with: 'With analytic account',
+            without: 'Without analytic account',
+        };
+        let analyticLabel = 'All';
+        if (self.state.analytic_filter_mode === 'without') {
+            analyticLabel = 'Without analytic account';
+        } else if (self.state.analytic_filter_mode === 'with') {
+            analyticLabel = selectedAnalyticNames.length
+                ? selectedAnalyticNames.join(', ')
+                : 'All with analytic account';
+        }
         let filters = {
             'journal': selectedJournalNames,
             'account': self.state.selected_analytic_account_rec,
+            'analytics_label': analyticLabel,
+            'analytic_filter_label': analyticModeLabels[self.state.analytic_filter_mode] || 'All lines',
+            'analytic_filter_mode': self.state.analytic_filter_mode,
+            'puc_level': self.state.puc_level,
+            'account_from_code': self.state.account_from_code,
+            'account_to_code': self.state.account_to_code,
             'options': self.state.options,
             'display_account': self.state.display_account,
             'comparison_type': self.state.comparison_type,
@@ -516,6 +612,7 @@ class TrialBalance extends owl.Component {
             filters: self.filter(),
             apply_comparison: self.state.apply_comparison,
             comparison_number_range: comparison_number_range,
+            period_columns: self.state.period_columns,
             totals: self.computeTotals(self.state.data),
             title: action_title,
             report_name: action_title,

@@ -234,6 +234,158 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- PUC Level Dropdown -->
+                            <div class="puc_level" style="">
+                                <a type="button" class="dropdown-toggle"
+                                   data-bs-toggle="dropdown">
+                                    <span class="fa fa-sitemap" title="PUC Level"
+                                          role="img"/>
+                                    PUC Level :
+                                    <t t-if="state.puc_level == '1'">Class (1)</t>
+                                    <t t-elif="state.puc_level == '2'">Group (2)</t>
+                                    <t t-elif="state.puc_level == '4'">Account (4)</t>
+                                    <t t-elif="state.puc_level == '6'">Subaccount (6)</t>
+                                    <t t-else="">Full detail</t>
+                                </a>
+                                <div class="dropdown-menu" role="menu">
+                                    <div class="list-group">
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'puc-0'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            Full detail
+                                        </button>
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'puc-1'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            Class (1 digit)
+                                        </button>
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'puc-2'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            Group (2 digits)
+                                        </button>
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'puc-4'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            Account (4 digits)
+                                        </button>
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'puc-6'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            Subaccount (6 digits)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- PUC Code Range -->
+                            <div class="account_range" style="">
+                                <a type="button" class="dropdown-toggle"
+                                   data-bs-toggle="dropdown">
+                                    <span class="fa fa-list-ol" title="PUC Range"
+                                          role="img"/>
+                                    PUC Range
+                                </a>
+                                <div class="dropdown-menu" role="menu"
+                                     style="padding:8px;">
+                                    <label for="account_from_code">From:</label>
+                                    <input type="text" name="account_from_code"
+                                           class="form-control"
+                                           placeholder="e.g. 11"
+                                           t-att-value="state.account_from_code"
+                                           t-on-change="applyFilter"/>
+                                    <label for="account_to_code">To:</label>
+                                    <input type="text" name="account_to_code"
+                                           class="form-control"
+                                           placeholder="e.g. 23"
+                                           t-att-value="state.account_to_code"
+                                           t-on-change="applyFilter"/>
+                                </div>
+                            </div>
+                            <!-- Analytic Account Filter -->
+                            <div class="analytic" style="">
+                                <a type="button" class="dropdown-toggle"
+                                   data-bs-toggle="dropdown">
+                                    <span class="fa fa-search-plus"
+                                          title="Analytic Accounts"
+                                          role="img"/>
+                                    Analytic Account
+                                    <t t-if="state.selected_analytic">
+                                        :
+                                        <t t-foreach="state.selected_analytic"
+                                           t-as="analytic_key"
+                                           t-key="analytic_key_index">
+                                            <t t-foreach="state.analytics"
+                                               t-as="analytic"
+                                               t-key="analytic.id">
+                                                <t t-if="analytic.id == analytic_key">
+                                                    <t t-esc="analytic.name"/>
+                                                </t>
+                                            </t>
+                                            <t t-if="analytic_key_index != state.selected_analytic.length - 1">
+                                                ,
+                                            </t>
+                                        </t>
+                                    </t>
+                                </a>
+                                <div class="dropdown-menu" role="menu"
+                                     style="max-height:400px;overflow-y:auto;">
+                                    <div class="list-group">
+                                        <t t-if="state.analytics">
+                                            <t t-foreach="state.analytics"
+                                               t-as="analytic"
+                                               t-key="analytic.id">
+                                                <button class="report-filter-button"
+                                                        t-att-data-value="'analytic'"
+                                                        t-att-data-id="analytic.id"
+                                                        type="button"
+                                                        t-on-click="applyFilter">
+                                                    <t t-esc="analytic.name"/>
+                                                </button>
+                                            </t>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Analytic Records Mode -->
+                            <div class="analytic_mode" style="">
+                                <a type="button" class="dropdown-toggle"
+                                   data-bs-toggle="dropdown">
+                                    <span class="fa fa-filter"
+                                          title="Analytic Records"
+                                          role="img"/>
+                                    Analytic Records :
+                                    <t t-if="state.analytic_filter_mode == 'with'">With account</t>
+                                    <t t-elif="state.analytic_filter_mode == 'without'">Without account</t>
+                                    <t t-else="">All lines</t>
+                                </a>
+                                <div class="dropdown-menu" role="menu">
+                                    <div class="list-group">
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'analytic-mode-all'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            All lines
+                                        </button>
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'analytic-mode-with'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            With analytic account
+                                        </button>
+                                        <button class="report-filter-button"
+                                                t-att-data-value="'analytic-mode-without'"
+                                                type="button"
+                                                t-on-click="applyFilter">
+                                            Without analytic account
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Display Accounts Dropdown -->
                             <div class="display_account" style="">
                                 <a type="button" class="dropdown-toggle"
@@ -315,71 +467,48 @@
                         <div class="table_main_view">
                             <table cellspacing="0" width="100%">
                                 <thead>
-                                    <tr class="o_heading"
-                                        style="text-align:center;">
-                                        <th colspan="6"/>
-                                        <th colspan="2">Initial Balance</th>
-                                        <t t-if="state.date_viewed.length != 0">
-                                            <t t-foreach="state.date_viewed"
-                                               t-as="date_view"
-                                               t-key="date_view_index">
-                                                <th colspan="2">
-                                                    <t t-esc="date_view"/>
-                                                </th>
-                                            </t>
-                                        </t>
-                                        <t t-if="state.apply_comparison == true">
-                                            <t t-if="state.data and state.data.length and state.data[0].dynamic_date_num">
-                                                <!-- Safely create a list of numbers to loop over, adding one extra period -->
-                                                <t t-set="number_of_periods"
-                                                   t-value="Array.from({length: ((comparison_number_range || []).length + 1)}, (_, i) => i)"/>
-                                                <t t-foreach="number_of_periods" t-as="number" t-key="number">
-                                                    <th colspan="2">
-                                                        <t t-esc="state.data[0].dynamic_date_num['dynamic_date_num' + number] or ''"/>
-                                                    </th>
-                                                </t>
-                                            </t>
+                                    <tr class="o_heading" style="text-align:center;">
+                                        <th colspan="6">Account</th>
+                                        <th>Initial Balance</th>
+                                        <t t-foreach="state.period_columns"
+                                           t-as="period" t-key="period_index">
+                                            <th colspan="2">
+                                                <t t-esc="period.label"/>
+                                            </th>
                                         </t>
                                         <th colspan="2">End Balance</th>
                                     </tr>
-                                    <tr class="o_heading"
-                                        style="text-align:center;">
+                                    <tr class="o_heading" style="text-align:center;">
                                         <th colspan="6"/>
-                                        <th>Debit</th>
-                                        <th>Credit</th>
-                                        <th>Debit</th>
-                                        <th>Credit</th>
-                                        <th>Debit</th>
-                                        <th>Credit</th>
-                                        <t t-if="state.apply_comparison == true">
-                                            <t t-set="number_of_periods"
-                                               t-value="comparison_number_range"/>
-                                            <t t-foreach="number_of_periods"
-                                               t-as="number" t-key="number">
-                                                <th>Debit</th>
-                                                <th>Credit</th>
-                                            </t>
+                                        <th>Amount</th>
+                                        <t t-foreach="state.period_columns"
+                                           t-as="period" t-key="period_index">
+                                            <th>Debit</th>
+                                            <th>Credit</th>
                                         </t>
+                                        <th>Debit</th>
+                                        <th>Credit</th>
                                     </tr>
                                 </thead>
                                 <tbody t-ref="tbody">
-                                    <t t-set="show" t-value="True"/>
-                                    <t t-if="this.state.default_report == false">
-                                        <t t-if="state.data">
-                                            <t t-foreach="state.data" t-as="each" t-key="each.account_id">
-                                                <t t-set="show" t-value="False"/>
-                                                <tr class="border-bottom"
-                                                    style="border-spacing: 0 10px;">
-                                                    <th colspan="6">
-                                                        <span class="dropdown">
-                                                            <a class="dropdown-toggle"
-                                                               data-bs-toggle="dropdown"
-                                                               style="color: black;">
-                                                                <span>
-                                                                    <t t-esc="each['account']"/>
-                                                                </span>
-                                                            </a>
-                                                            <span class="dropdown-menu">
+                                    <t t-set="report_rows"
+                                       t-value="state.default_report ? state.accounts : state.data"/>
+                                    <t t-if="report_rows">
+                                        <t t-foreach="report_rows"
+                                           t-as="each" t-key="each.account_id or each.code">
+                                            <tr class="border-bottom"
+                                                style="border-spacing: 0 10px;">
+                                                <th colspan="6">
+                                                    <span class="dropdown">
+                                                        <a class="dropdown-toggle"
+                                                           data-bs-toggle="dropdown"
+                                                           style="color: black;">
+                                                            <span>
+                                                                <t t-esc="each['account']"/>
+                                                            </span>
+                                                        </a>
+                                                        <span class="dropdown-menu">
+                                                            <t t-if="each['account_id']">
                                                                 <a role="menuitem"
                                                                    t-on-click="show_gl"
                                                                    class="show_gl">
@@ -393,199 +522,57 @@
                                                                    class="show_gl">
                                                                     Journal Items
                                                                 </a>
-                                                            </span>
+                                                            </t>
                                                         </span>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="each['initial_total_debit']"
-                                                           t-esc="each['initial_total_debit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="each['initial_total_credit']"
-                                                           t-esc="each['initial_total_credit']"/>
-                                                    </th>
-                                                    <t t-if="state.apply_comparison == true">
-                                                        <t t-set="number_of_periods"
-                                                           t-value="comparison_number_range"/>
-                                                        <t t-foreach="number_of_periods"
-                                                           t-as="num" t-key="num">
-                                                            <th style="text-align:center;">
-                                                                <t t-if="each['dynamic_total_debit_' + num]"
-                                                                   t-esc="each['dynamic_total_debit_' + num]"/>
-                                                            </th>
-                                                            <th style="text-align:center;">
-                                                                <t t-if="each['dynamic_total_credit_' + num]"
-                                                                   t-esc="each['dynamic_total_credit_' + num]"/>
-                                                            </th>
-                                                        </t>
-                                                    </t>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="each['total_debit']"
-                                                           t-esc="each['total_debit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="each['total_credit']"
-                                                           t-esc="each['total_credit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="each['end_total_debit']"
-                                                           t-esc="each['end_total_debit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="each['end_total_credit']"
-                                                           t-esc="each['end_total_credit']"/>
-                                                    </th>
-                                                </tr>
-                                            </t>
-                                            <tr class="border-bottom"
-                                                style="border-spacing: 0 10px;color:#000">
-                                                <th colspan="6">Total</th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.data, 'initial_total_debit')"/>
+                                                    </span>
                                                 </th>
                                                 <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.data, 'initial_total_credit')"/>
+                                                    <t t-if="each['initial']"
+                                                       t-esc="each['initial']"/>
                                                 </th>
-                                                <t t-if="state.apply_comparison == true">
-                                                    <t t-set="number_of_periods"
-                                                       t-value="comparison_number_range"/>
-                                                    <t t-foreach="number_of_periods"
-                                                       t-as="nb" t-key="nb">
-                                                        <th style="text-align:center;">
-                                                            <t t-esc="sumByKey(state.data, 'dynamic_total_debit_' + nb)"/>
-                                                        </th>
-                                                        <th style="text-align:center;">
-                                                            <t t-esc="sumByKey(state.data, 'dynamic_total_credit_' + nb)"/>
-                                                        </th>
-                                                    </t>
+                                                <t t-foreach="state.period_columns"
+                                                   t-as="period" t-key="period_index">
+                                                    <th style="text-align:center;">
+                                                        <t t-if="each[period.debitKey]"
+                                                           t-esc="each[period.debitKey]"/>
+                                                    </th>
+                                                    <th style="text-align:center;">
+                                                        <t t-if="each[period.creditKey]"
+                                                           t-esc="each[period.creditKey]"/>
+                                                    </th>
                                                 </t>
                                                 <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.data, 'total_debit')"/>
+                                                    <t t-if="each['final_debit']"
+                                                       t-esc="each['final_debit']"/>
                                                 </th>
                                                 <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.data, 'total_credit')"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.data, 'end_total_debit')"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.data, 'end_total_credit')"/>
+                                                    <t t-if="each['final_credit']"
+                                                       t-esc="each['final_credit']"/>
                                                 </th>
                                             </tr>
                                         </t>
-                                    </t>
-                                    <t t-if="this.state.default_report == true">
-                                        <t t-if="state.data">
-                                            <t t-set="i" t-value="0"/>
-                                            <t t-foreach="state.accounts"
-                                               t-as="move_line"
-                                               t-key="move_line_index">
-                                                <t t-set="i" t-value="i + 1"/>
-                                                <tr class="border-bottom"
-                                                    style="border-spacing: 0 10px;">
-                                                    <th colspan="6">
-                                                        <span class="dropdown">
-                                                            <a class="dropdown-toggle"
-                                                               data-bs-toggle="dropdown"
-                                                               style="color: black;">
-                                                                <span>
-                                                                    <t t-esc="move_line['account']"/>
-                                                                </span>
-                                                            </a>
-                                                            <span class="dropdown-menu">
-                                                                <a role="menuitem"
-                                                                   t-on-click="show_gl"
-                                                                   class="show_gl">
-                                                                    General Ledger
-                                                                </a>
-                                                                <div role="separator"
-                                                                     class="dropdown-divider"/>
-                                                                <a role="menuitem"
-                                                                   t-att-data-id="move_line['account_id']"
-                                                                   t-on-click="gotoJournalItem"
-                                                                   class="show_gl">
-                                                                    Journal Items
-                                                                </a>
-                                                            </span>
-                                                        </span>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="move_line['initial_total_debit']"
-                                                           t-esc="move_line['initial_total_debit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="move_line['initial_total_credit']"
-                                                           t-esc="move_line['initial_total_credit']"/>
-                                                    </th>
-                                                    <t t-if="state.apply_comparison == true">
-                                                        <t t-set="number_of_periods"
-                                                           t-value="comparison_number_range"/>
-                                                        <t t-foreach="number_of_periods"
-                                                           t-as="num" t-key="num">
-                                                            <th style="text-align:center;">
-                                                                <t t-if="move_line['dynamic_total_debit_' + num]"
-                                                                   t-esc="move_line['dynamic_total_debit_' + num]"/>
-                                                            </th>
-                                                            <th style="text-align:center;">
-                                                                <t t-if="move_line['dynamic_total_credit_' + num]"
-                                                                   t-esc="move_line['dynamic_total_credit_' + num]"/>
-                                                            </th>
-                                                        </t>
-                                                    </t>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="move_line['total_debit']"
-                                                           t-esc="move_line['total_debit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="move_line['total_credit']"
-                                                           t-esc="move_line['total_credit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="move_line['end_total_debit']"
-                                                           t-esc="move_line['end_total_debit']"/>
-                                                    </th>
-                                                    <th style="text-align:center;">
-                                                        <t t-if="move_line['end_total_credit']"
-                                                           t-esc="move_line['end_total_credit']"/>
-                                                    </th>
-                                                </tr>
+                                        <tr class="border-bottom"
+                                            style="border-spacing: 0 10px;color:#000">
+                                            <th colspan="6">Total</th>
+                                            <th style="text-align:center;">
+                                                <t t-esc="sumByKey(report_rows, 'initial')"/>
+                                            </th>
+                                            <t t-foreach="state.period_columns"
+                                               t-as="period" t-key="period_index">
+                                                <th style="text-align:center;">
+                                                    <t t-esc="sumByKey(report_rows, period.debitKey)"/>
+                                                </th>
+                                                <th style="text-align:center;">
+                                                    <t t-esc="sumByKey(report_rows, period.creditKey)"/>
+                                                </th>
                                             </t>
-                                            <tr class="border-bottom"
-                                                style="border-spacing: 0 10px;color:#000">
-                                                <th colspan="6">Total</th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.accounts, 'initial_total_debit')"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.accounts, 'initial_total_credit')"/>
-                                                </th>
-                                                <t t-if="state.apply_comparison == true">
-                                                    <t t-set="number_of_periods"
-                                                       t-value="comparison_number_range"/>
-                                                    <t t-foreach="number_of_periods"
-                                                       t-as="nb" t-key="nb">
-                                                        <th style="text-align:center;">
-                                                            <t t-esc="sumByKey(state.accounts, 'dynamic_total_debit_' + nb)"/>
-                                                        </th>
-                                                        <th style="text-align:center;">
-                                                            <t t-esc="sumByKey(state.accounts, 'dynamic_total_credit_' + nb)"/>
-                                                        </th>
-                                                    </t>
-                                                </t>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.accounts, 'total_debit')"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.accounts, 'total_credit')"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.accounts, 'end_total_debit')"/>
-                                                </th>
-                                                <th style="text-align:center;">
-                                                    <t t-esc="sumByKey(state.accounts, 'end_total_credit')"/>
-                                                </th>
-                                            </tr>
-                                        </t>
+                                            <th style="text-align:center;">
+                                                <t t-esc="sumByKey(report_rows, 'final_debit')"/>
+                                            </th>
+                                            <th style="text-align:center;">
+                                                <t t-esc="sumByKey(report_rows, 'final_credit')"/>
+                                            </th>
+                                        </tr>
                                     </t>
                                 </tbody>
                             </table>

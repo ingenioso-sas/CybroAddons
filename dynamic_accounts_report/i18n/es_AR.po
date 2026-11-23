@@ -2339,3 +2339,91 @@ msgstr "Con saldo distinto de cero"
 #: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
 msgid "Non-zero Balance"
 msgstr "Saldo distinto de cero"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "PUC Level"
+msgstr "Nivel PUC"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "PUC Range"
+msgstr "Rango PUC"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Full detail"
+msgstr "Detalle completo"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Class (1 digit)"
+msgstr "Clase (1 dígito)"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Group (2 digits)"
+msgstr "Grupo (2 dígitos)"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Account (4 digits)"
+msgstr "Cuenta (4 dígitos)"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Subaccount (6 digits)"
+msgstr "Subcuenta (6 dígitos)"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "All lines"
+msgstr "Todas las líneas"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "With analytic account"
+msgstr "Con cuenta analítica"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Without analytic account"
+msgstr "Sin cuenta analítica"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Analytic Records"
+msgstr "Registros analíticos"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Amount"
+msgstr "Valor"
+
+#. module: dynamic_accounts_report
+#: model:ir.model,name:dynamic_accounts_report.model_account_trial_balance
+msgid "No code"
+msgstr "Sin código"
+
+#. module: dynamic_accounts_report
+#: model:ir.model,name:dynamic_accounts_report.model_account_trial_balance
+msgid "Group"
+msgstr "Grupo"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/general_ledger_view.xml:0
+msgid "Partner ID"
+msgstr "Identificación del socio"

@@ -34,6 +34,9 @@ class AccountTrialBalance(models.TransientModel):
     _name = 'account.trial.balance'
     _description = 'Trial Balance Report'
 
+    # ---------------------------------------------------------------------
+    # Helpers
+    # ---------------------------------------------------------------------
     @staticmethod
     def _to_float(value):
         """Return a float from a number or a formatted amount string."""
@@ -44,342 +47,340 @@ class AccountTrialBalance(models.TransientModel):
         except (TypeError, ValueError):
             return 0.0
 
-    def _filter_report_lines(self, move_line_list, display_account):
-        """
-        Filter the report lines according to the selected display option.
-
-        The options are the same ones available in the original 13.0 report:
-        all accounts, accounts with movements and accounts with a non-zero
-        balance.
-        """
-        if not display_account or display_account == 'all':
-            return move_line_list
-        filtered_lines = []
-        for line in move_line_list:
-            if display_account == 'not_zero':
-                amount = (self._to_float(line.get('end_total_debit')) +
-                          self._to_float(line.get('end_total_credit')))
-            else:
-                amount = sum(
-                    self._to_float(line.get(key)) for key in (
-                        'initial_total_debit', 'initial_total_credit',
-                        'total_debit', 'total_credit'))
-                amount += sum(
-                    self._to_float(value) for key, value in line.items()
-                    if key.startswith('dynamic_total_'))
-            if abs(round(amount, 2)) > 0:
-                filtered_lines.append(line)
-        return filtered_lines
+    @staticmethod
+    def _to_date(value):
+        """Convert a string date to a date object."""
+        if not value:
+            return False
+        if hasattr(value, 'year') and not isinstance(value, str):
+            return value
+        try:
+            return datetime.strptime(str(value), '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            return False
 
     @api.model
-    def view_report(self, display_account='movement'):
-        """
-        Generates a trial balance report for multiple accounts.
-        Retrieves account information and calculates total debit and credit
-        amounts for each account within the specified date range. Returns a list
-        of dictionaries containing account details and transaction totals.
+    def get_month_name(self, date):
+        """Return the abbreviated month name for a date."""
+        return calendar.month_abbr[date.month]
 
-        :param str display_account: Display Accounts option ('all', 'movement'
-            or 'not_zero').
-        :return: List of dictionaries representing the trial balance report.
-        :rtype: list
-        """
-        account_ids = self.env['account.move.line'].search([]).mapped(
-            'account_id')
-        today = fields.Date.today()
-        move_line_list = []
-        for account_id in account_ids:
-            initial_move_line_ids = self.env['account.move.line'].search(
-                [('date', '<', get_month(today)[0]),
-                 ('account_id', '=', account_id.id),
-                 ('parent_state', '=', 'posted')])
-            initial_total_debit = round(
-                sum(initial_move_line_ids.mapped('debit')), 2)
-            initial_total_credit = round(
-                sum(initial_move_line_ids.mapped('credit')), 2)
-            move_line_ids = self.env['account.move.line'].search(
-                [('date', '>=', get_month(today)[0]),
-                 ('account_id', '=', account_id.id),
-                 ('date', '<=', get_month(today)[1]),
-                 ('parent_state', '=', 'posted')])
-            total_debit = round(sum(move_line_ids.mapped('debit')), 2)
-            total_credit = round(sum(move_line_ids.mapped('credit')), 2)
-            sum_debit = initial_total_debit + total_debit
-            sum_credit = initial_total_credit + total_credit
-            diff_credit_debit = sum_debit - sum_credit
-            if diff_credit_debit > 0:
-                end_total_debit = diff_credit_debit
-                end_total_credit = 0.0
+    def _get_base_domain(self, journal_list, analytic, options, method,
+                         analytic_filter_mode=None):
+        """Build the common domain used by all the grouped queries."""
+        option_domain = ['posted']
+        if options and 'draft' in options:
+            option_domain = ['posted', 'draft']
+        domain = [('parent_state', 'in', option_domain)]
+        if journal_list:
+            domain.append(('journal_id', 'in', journal_list))
+        if method and 'cash' in method:
+            domain.append(
+                ('journal_id', 'in',
+                 self.env.company.tax_cash_basis_journal_id.ids))
+        analytic_mode = analytic_filter_mode or 'all'
+        if analytic_mode == 'without':
+            domain.append(('analytic_line_ids', '=', False))
+        elif analytic_mode == 'with':
+            if analytic:
+                domain.append(('analytic_line_ids.account_id', 'in', analytic))
             else:
-                end_total_debit = 0.0
-                end_total_credit = abs(diff_credit_debit)
-            data = {
-                'account': account_id.display_name,
-                'account_id': account_id.id,
-                'journal_ids': self.env['account.journal'].search_read([], ['name']),
-                'initial_total_debit': "{:,.2f}".format(initial_total_debit),
-                'initial_total_credit': "{:,.2f}".format(initial_total_credit),
-                'total_debit': total_debit,
-                'total_credit': total_credit,
-                'end_total_debit': "{:,.2f}".format(end_total_debit),
-                'end_total_credit': "{:,.2f}".format(end_total_credit)
-            }
-            move_line_list.append(data)
-        journal = {
-            'journal_ids': self.env['account.journal'].search_read([], [
-                'name'])
+                domain.append(('analytic_line_ids', '!=', False))
+        return domain
+
+    def _get_group_totals(self, domain):
+        """Return {account_id: (debit, credit)} with a single grouped query."""
+        groups = self.env['account.move.line']._read_group(
+            domain, groupby=['account_id'],
+            aggregates=['debit:sum', 'credit:sum'])
+        return {
+            account.id: (debit or 0.0, credit or 0.0)
+            for account, debit, credit in groups
         }
-        return self._filter_report_lines(
-            move_line_list, display_account), journal
+
+    def _get_periods(self, start_date, end_date, comparison_number,
+                     comparison_type):
+        """Build the displayed periods, oldest first, and the initial date."""
+        start = self._to_date(start_date) or fields.Date.today()
+        end = self._to_date(end_date) or start
+        if comparison_type == 'year':
+            start_first = get_fiscal_year(start)[0]
+            end_first = get_fiscal_year(end)[1]
+        else:
+            start_first = start
+            end_first = end
+        try:
+            number = int(comparison_number or 0)
+        except (TypeError, ValueError):
+            number = 0
+        periods = []
+        if number > 0 and comparison_type in ('year', 'month', 'quarter'):
+            # Oldest period first so the report columns are chronological.
+            for index in range(number, 0, -1):
+                if comparison_type == 'year':
+                    period_start = subtract(start_first, years=index)
+                    period_end = subtract(end_first, years=index)
+                    label = str(period_start.year)
+                elif comparison_type == 'month':
+                    period_start = subtract(start_first, months=index)
+                    period_end = subtract(end_first, months=index)
+                    label = '%s %s' % (
+                        self.get_month_name(period_start), period_start.year)
+                else:
+                    period_start = subtract(start_first, months=index * 3)
+                    period_end = subtract(end_first, months=index * 3)
+                    label = 'Q %s %s' % (
+                        get_quarter_number(period_start), period_start.year)
+                periods.append({
+                    'kind': 'dynamic',
+                    'index': len(periods) + 1,
+                    'label': label,
+                    'start': period_start,
+                    'end': period_end,
+                })
+        if comparison_type == 'year':
+            current_label = str(start_first.year)
+        elif comparison_type == 'month':
+            current_label = '%s %s' % (
+                self.get_month_name(start_first), start_first.year)
+        elif comparison_type == 'quarter':
+            current_label = 'Q %s %s' % (
+                get_quarter_number(start_first), start_first.year)
+        else:
+            current_label = '%s - %s' % (
+                start_first.strftime('%d/%m/%Y'),
+                end_first.strftime('%d/%m/%Y'))
+        periods.append({
+            'kind': 'current',
+            'index': None,
+            'label': current_label,
+            'start': start_first,
+            'end': end_first,
+        })
+        initial_start = periods[0]['start'] if number > 0 else start_first
+        return initial_start, periods
+
+    def _consolidate_by_level(self, rows, accounts, level):
+        """Consolidate account rows by a PUC code prefix."""
+        if level <= 0:
+            return rows
+        accounts_by_code = {
+            (account.code or '').strip(): account for account in accounts}
+        grouped = {}
+        for row in rows:
+            code = row.get('code') or ''
+            if code:
+                prefix = code[:level] or code
+            else:
+                prefix = '__no_code__'
+            if prefix not in grouped:
+                account = accounts_by_code.get(prefix)
+                if code:
+                    name = account.name if account else 'Group'
+                    label = ('%s %s' % (prefix, name)).strip()
+                else:
+                    name = 'No code'
+                    label = name
+                grouped[prefix] = {
+                    'account': label,
+                    'account_id': account.id if account else False,
+                    'code': prefix if code else '',
+                    'name': name,
+                    'initial': 0.0,
+                    'initial_total_debit': 0.0,
+                    'initial_total_credit': 0.0,
+                    'debit': 0.0,
+                    'credit': 0.0,
+                    'total_debit': 0.0,
+                    'total_credit': 0.0,
+                    'balance': 0.0,
+                    'final_debit': 0.0,
+                    'final_credit': 0.0,
+                    'end_total_debit': 0.0,
+                    'end_total_credit': 0.0,
+                }
+                if row.get('dynamic_date_num'):
+                    grouped[prefix]['dynamic_date_num'] = row[
+                        'dynamic_date_num']
+            target = grouped[prefix]
+            for key, value in row.items():
+                if key in ('final_debit', 'final_credit', 'end_total_debit',
+                           'end_total_credit', 'balance'):
+                    continue
+                if not isinstance(value, (int, float)):
+                    continue
+                if key in target:
+                    target[key] += value
+                elif key.startswith('dynamic_total_'):
+                    target[key] = value
+        for target in grouped.values():
+            total_debit = target['total_debit'] + sum(
+                value for key, value in target.items()
+                if key.startswith('dynamic_total_debit_'))
+            total_credit = target['total_credit'] + sum(
+                value for key, value in target.items()
+                if key.startswith('dynamic_total_credit_'))
+            balance = target['initial'] + total_debit - total_credit
+            target['balance'] = round(balance, 2)
+            target['final_debit'] = round(
+                balance if balance > 0 else 0.0, 2)
+            target['final_credit'] = round(
+                -balance if balance < 0 else 0.0, 2)
+            target['end_total_debit'] = target['final_debit']
+            target['end_total_credit'] = target['final_credit']
+        return sorted(grouped.values(), key=lambda item: item['code'])
+
+    def _filter_report_lines(self, rows, display_account):
+        """Apply the Display Accounts option to the report rows."""
+        if not display_account or display_account == 'all':
+            return rows
+        filtered = []
+        for row in rows:
+            if display_account == 'not_zero':
+                amount = (self._to_float(row.get('final_debit')) +
+                          self._to_float(row.get('final_credit')))
+            else:
+                amount = sum(
+                    self._to_float(row.get(key)) for key in (
+                        'initial', 'debit', 'credit'))
+                amount += sum(
+                    self._to_float(value) for key, value in row.items()
+                    if key.startswith('dynamic_total_'))
+            if abs(round(amount, 2)) > 0:
+                filtered.append(row)
+        return filtered
+
+    def _build_report(self, start_date, end_date, comparison_number,
+                      comparison_type, journal_list, analytic, options, method,
+                      display_account, puc_level, account_from_code,
+                      account_to_code, analytic_filter_mode):
+        """Build the Trial Balance rows with grouped period queries."""
+        initial_start, periods = self._get_periods(
+            start_date, end_date, comparison_number, comparison_type)
+        base_domain = self._get_base_domain(
+            journal_list, analytic, options, method, analytic_filter_mode)
+        period_totals = []
+        for period in periods:
+            domain = list(base_domain) + [
+                ('date', '>=', period['start']),
+                ('date', '<=', period['end']),
+            ]
+            period_totals.append(self._get_group_totals(domain))
+        initial_totals = self._get_group_totals(
+            list(base_domain) + [('date', '<', initial_start)])
+
+        account_ids = set(initial_totals)
+        for totals in period_totals:
+            account_ids.update(totals)
+        accounts = self.env['account.account'].browse(list(account_ids))
+        code_from = (account_from_code or '').strip()
+        code_to = (account_to_code or '').strip()
+        if code_from:
+            accounts = accounts.filtered(
+                lambda account: (account.code or '') >= code_from)
+        if code_to:
+            accounts = accounts.filtered(
+                lambda account: (account.code or '') <= code_to)
+        try:
+            level = int(puc_level or 0)
+        except (TypeError, ValueError):
+            level = 0
+
+        comparison = len(periods) - 1
+        dynamic_labels = {}
+        if comparison:
+            dynamic_labels['dynamic_date_num0'] = periods[-1]['label']
+            for period in periods[:-1]:
+                dynamic_labels[
+                    'dynamic_date_num%s' % period['index']] = period['label']
+
+        rows = []
+        for account in accounts.sorted(
+                key=lambda item: ((item.code or ''), item.id)):
+            initial_debit, initial_credit = initial_totals.get(
+                account.id, (0.0, 0.0))
+            initial = initial_debit - initial_credit
+            current_debit, current_credit = period_totals[-1].get(
+                account.id, (0.0, 0.0))
+            row = {
+                'account': ('%s %s' % (
+                    account.code or '', account.name or '')).strip(),
+                'account_id': account.id,
+                'code': (account.code or '').strip(),
+                'name': account.name,
+                'initial': round(initial, 2),
+                'initial_total_debit': round(initial_debit, 2),
+                'initial_total_credit': round(initial_credit, 2),
+                'debit': round(current_debit, 2),
+                'credit': round(current_credit, 2),
+                'total_debit': round(current_debit, 2),
+                'total_credit': round(current_credit, 2),
+            }
+            total_debit = current_debit
+            total_credit = current_credit
+            for index, totals in enumerate(period_totals[:-1], start=1):
+                debit, credit = totals.get(account.id, (0.0, 0.0))
+                row['dynamic_total_debit_%s' % index] = round(debit, 2)
+                row['dynamic_total_credit_%s' % index] = round(credit, 2)
+                total_debit += debit
+                total_credit += credit
+            balance = initial + total_debit - total_credit
+            final_debit = balance if balance > 0 else 0.0
+            final_credit = -balance if balance < 0 else 0.0
+            row.update({
+                'balance': round(balance, 2),
+                'final_debit': round(final_debit, 2),
+                'final_credit': round(final_credit, 2),
+                'end_total_debit': round(final_debit, 2),
+                'end_total_credit': round(final_credit, 2),
+            })
+            if comparison:
+                row['dynamic_date_num'] = dynamic_labels
+            rows.append(row)
+
+        rows = self._consolidate_by_level(rows, accounts, level)
+        return self._filter_report_lines(rows, display_account)
+
+    # ---------------------------------------------------------------------
+    # Report entry points
+    # ---------------------------------------------------------------------
+    @api.model
+    def view_report(self, display_account='movement', puc_level='0',
+                    account_from_code='', account_to_code='',
+                    analytic=None, analytic_filter_mode='all'):
+        """Generate the initial Trial Balance for the current month."""
+        today = fields.Date.today()
+        start_date, end_date = get_month(today)
+        rows = self._build_report(
+            start_date, end_date, 0, None, [], analytic or [], None, {},
+            display_account, puc_level, account_from_code, account_to_code,
+            analytic_filter_mode)
+        journal = {
+            'journal_ids': self.env['account.journal'].search_read(
+                [], ['name']),
+            'analytic_ids': self.env['account.analytic.account'].search_read(
+                [], ['name']),
+        }
+        return rows, journal
 
     @api.model
     def get_filter_values(self, start_date, end_date, comparison_number,
                           comparison_type, journal_list, analytic, options,
-                          method, display_account=None):
-        """
-        Retrieves and calculates filtered values for generating a financial
-        report.
-        Retrieves and processes account movement data based on the provided
-        filters. Calculates initial, dynamic, and end total debit and credit
-        amounts for each account,considering date range, comparison type, and
-        other filter criteria.
+                          method, display_account=None, puc_level=None,
+                          account_from_code=None, account_to_code=None,
+                          analytic_filter_mode=None):
+        """Return the Trial Balance rows for the selected filters."""
+        return self._build_report(
+            start_date, end_date, comparison_number, comparison_type,
+            journal_list, analytic, options, method, display_account,
+            puc_level, account_from_code, account_to_code,
+            analytic_filter_mode)
 
-        :param str start_date: Start date of the reporting period.
-        :param str end_date: End date of the reporting period.
-        :param int comparison_number: Number of periods for comparison.
-        :param str comparison_type: Type of comparison (month, year, quarter).
-        :param list[int] journal_list: List of selected journal IDs.
-        :param list[int] analytic: List of selected analytic line IDs.
-        :param dict options: Additional filtering options (e.g., 'draft').
-        :param dict method: Find the method.
-        :param str display_account: Display Accounts option ('all', 'movement'
-            or 'not_zero').
-        :return: List of dictionaries representing the financial report.
-        :rtype: list
-        """
-
-        if options == {}:
-            options = None
-        if options is None:
-            option_domain = ['posted']
-        elif 'draft' in options:
-            option_domain = ['posted', 'draft']
-        if method == {}:
-            method = None
-        dynamic_total_debit = {}
-        dynamic_date_num = {}
-        dynamic_total_credit = {}
-        account_ids = self.env['account.move.line'].search([]).mapped(
-            'account_id')
-        move_line_list = []
-        start_date_first = \
-            get_fiscal_year(datetime.strptime(start_date, "%Y-%m-%d").date())[
-                0] if comparison_type == 'year' else datetime.strptime(
-                start_date, "%Y-%m-%d").date()
-        end_date_first = \
-            get_fiscal_year(datetime.strptime(end_date, "%Y-%m-%d").date())[
-                1] if comparison_type == 'year' else datetime.strptime(end_date,
-                                                                       "%Y-%m-%d").date()
-        for account_id in account_ids:
-            start_date = start_date_first
-            end_date = end_date_first
-            if comparison_number:
-                if comparison_type == 'month':
-                    initial_start_date = subtract(start_date, months=int(
-                        comparison_number))
-                elif comparison_type == 'year':
-                    initial_start_date = subtract(start_date, years=int(
-                        comparison_number))
-                else:
-                    initial_start_date = subtract(start_date, months=int(
-                        comparison_number) * 3)
-            else:
-                initial_start_date = start_date
-            domain = [('date', '<', initial_start_date),
-                      ('account_id', '=', account_id.id),
-                      ('parent_state', 'in', option_domain), ]
-            if journal_list:
-                domain.append(
-                    ('journal_id', 'in', journal_list), )
-            if analytic:
-                domain.append(
-                    ('analytic_line_ids', 'in', analytic))
-            if method is not None and 'cash' in method:
-                domain.append(('journal_id', 'in',
-                               self.env.company.tax_cash_basis_journal_id.ids))
-            initial_move_line_ids = self.env['account.move.line'].search(
-                domain)
-            initial_total_debit = round(
-                sum(initial_move_line_ids.mapped('debit')), 2)
-            initial_total_credit = round(
-                sum(initial_move_line_ids.mapped('credit')), 2)
-            if comparison_number:
-                if comparison_type == 'year':
-                    for i in range(1, int(comparison_number) + 1):
-                        com_start_date = subtract(start_date, years=i)
-                        com_end_date = subtract(end_date, years=i)
-                        domain = [('date', '>=', com_start_date),
-                                  ('account_id', '=', account_id.id),
-                                  ('date', '<=', com_end_date),
-                                  ('parent_state', 'in', option_domain), ]
-                        if journal_list:
-                            domain.append(
-                                ('journal_id', 'in', journal_list), )
-                        if analytic:
-                            domain.append(
-                                ('analytic_line_ids', 'in', analytic))
-                        if method is not None and 'cash' in method:
-                            domain.append(('journal_id', 'in',
-                                           self.env.company.tax_cash_basis_journal_id.ids))
-                        move_lines = self.env['account.move.line'].search(
-                            domain)
-                        dynamic_total_debit[
-                            f"dynamic_total_debit_{i}"] = round(
-                            sum(move_lines.mapped('debit')), 2)
-                        dynamic_total_credit[
-                            f"dynamic_total_credit_{i}"] = round(
-                            sum(move_lines.mapped('credit')), 2)
-                if comparison_type == 'month':
-                    dynamic_date_num[
-                        f"dynamic_date_num{0}"] = self.get_month_name(
-                        start_date) + ' ' + str(
-                        start_date.year)
-                    for i in range(1, int(comparison_number) + 1):
-                        com_start_date = subtract(start_date, months=i)
-                        com_end_date = subtract(end_date, months=i)
-                        domain = [('date', '>=', com_start_date),
-                                  ('account_id', '=', account_id.id),
-                                  ('date', '<=', com_end_date),
-                                  ('parent_state', 'in', option_domain)]
-                        if journal_list:
-                            domain.append(
-                                ('journal_id', 'in', journal_list), )
-                        if analytic:
-                            domain.append(
-                                ('analytic_line_ids', 'in', analytic))
-                        if method is not None and 'cash' in method:
-                            domain.append(('journal_id', 'in',
-                                           self.env.company.tax_cash_basis_journal_id.ids), )
-                        move_lines = self.env['account.move.line'].search(
-                            domain)
-                        dynamic_date_num[
-                            f"dynamic_date_num{i}"] = self.get_month_name(
-                            com_start_date) + ' ' + str(
-                            com_start_date.year)
-                        dynamic_total_debit[
-                            f"dynamic_total_debit_{i}"] = round(
-                            sum(move_lines.mapped('debit')), 2)
-                        dynamic_total_credit[
-                            f"dynamic_total_credit_{i}"] = round(
-                            sum(move_lines.mapped('credit')), 2)
-                if comparison_type == 'quarter':
-                    dynamic_date_num[
-                        f"dynamic_date_num{0}"] = 'Q' + ' ' + str(
-                        get_quarter_number(start_date)) + ' ' + str(
-                        start_date.year)
-                    for i in range(1, int(comparison_number) + 1):
-                        com_start_date = subtract(start_date, months=i * 3)
-                        com_end_date = subtract(end_date, months=i * 3)
-                        domain = [('date', '>=', com_start_date),
-                                  ('account_id', '=', account_id.id),
-                                  ('date', '<=', com_end_date),
-                                  ('parent_state', 'in', option_domain), ]
-                        if journal_list:
-                            domain.append(
-                                ('journal_id', 'in', journal_list))
-                        if analytic:
-                            domain.append(
-                                ('analytic_line_ids', 'in', analytic))
-                        if method is not None and 'cash' in method:
-                            domain.append(('journal_id', 'in',
-                                           self.env.company.tax_cash_basis_journal_id.ids))
-                        move_lines = self.env['account.move.line'].search(domain)
-                        dynamic_date_num[
-                            f"dynamic_date_num{i}"] = 'Q' + ' ' + str(
-                            get_quarter_number(com_start_date)) + ' ' + str(
-                            com_start_date.year)
-                        dynamic_total_debit[
-                            f"dynamic_total_debit_{i}"] = round(
-                            sum(move_lines.mapped('debit')), 2)
-                        dynamic_total_credit[
-                            f"dynamic_total_credit_{i}"] = round(
-                            sum(move_lines.mapped('credit')), 2)
-            domain = [('date', '>=', start_date),
-                      ('account_id', '=', account_id.id),
-                      ('date', '<=', end_date),
-                      ('parent_state', 'in', option_domain)]
-            if journal_list:
-                domain.append(
-                    ('journal_id', 'in', journal_list), )
-            if analytic:
-                domain.append(
-                    ('analytic_line_ids', 'in', analytic))
-            if method is not None and 'cash' in method:
-                domain.append(('journal_id', 'in',
-                               self.env.company.tax_cash_basis_journal_id.ids))
-            move_line_ids = self.env['account.move.line'].search(domain)
-            total_debit = round(sum(move_line_ids.mapped('debit')), 2)
-            total_credit = round(sum(move_line_ids.mapped('credit')), 2)
-            sum_debit = initial_total_debit + sum(
-                dynamic_total_debit.values()) + total_debit
-            sum_credit = initial_total_credit + sum(
-                dynamic_total_credit.values()) + total_credit
-            diff_credit_debit = sum_debit - sum_credit
-            if diff_credit_debit > 0:
-                end_total_debit = diff_credit_debit
-                end_total_credit = 0.0
-            else:
-                end_total_debit = 0.0
-                end_total_credit = abs(diff_credit_debit)
-            data = {
-                'account': account_id.display_name,
-                'account_id': account_id.id,
-                'journal_ids': self.env['account.journal'].search_read([], [
-                    'name']),
-                'initial_total_debit': initial_total_debit,
-                'initial_total_credit': initial_total_credit,
-                'total_debit': total_debit,
-                'total_credit': total_credit,
-                'end_total_debit': end_total_debit,
-                'end_total_credit': end_total_credit
-            }
-            if comparison_number:
-                if dynamic_date_num:
-                    data['dynamic_date_num'] = dynamic_date_num
-                for i in range(1, int(comparison_number) + 1):
-                    data[f'dynamic_total_debit_{i}'] = dynamic_total_debit.get(
-                        f"dynamic_total_debit_{int(comparison_number) + 1 - i}",
-                        0.0)
-                    data[
-                        f'dynamic_total_credit_{i}'] = dynamic_total_credit.get(
-                        f"dynamic_total_credit_{int(comparison_number) + 1 - i}",
-                        0.0)
-            move_line_list.append(data)
-        return self._filter_report_lines(move_line_list, display_account)
-
-    @api.model
-    def get_month_name(self, date):
-        """
-        Retrieve the abbreviated name of the month for a given date.
-        :param date: The date for which to retrieve the month's abbreviated name.
-        :type date: datetime.date
-        :return: Abbreviated name of the month (e.g., 'Jan', 'Feb', ..., 'Dec').
-        :rtype: str
-        """
-        month_names = calendar.month_abbr
-        return month_names[date.month]
-
+    # ---------------------------------------------------------------------
+    # XLSX
+    # ---------------------------------------------------------------------
     @api.model
     def get_xlsx_report(self, data, response, report_name, report_action):
-        """
-        Generate an XLSX report based on provided data and response stream.
-        Generates an Excel workbook with specified report format, including
-        subheadings,column headers, and row data for the given financial report
-        data.
-        :param str data: JSON-encoded data for the report.
-        :param response: Response object to stream the generated report.
-        :param str report_name: Name of the financial report.
-        """
+        """Generate the Trial Balance XLSX file."""
         data = json.loads(data)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -411,9 +412,7 @@ class AccountTrialBalance(models.TransientModel):
         txt_name.set_indent(2)
         sheet.set_column(0, 0, 30)
         sheet.set_column(1, 1, 20)
-        sheet.set_column(2, 2, 15)
-        sheet.set_column(3, 3, 15)
-        col = 0
+        sheet.set_column(2, 12, 15)
         sheet.write('A1:b1', report_name, head)
         sheet.write('B3:b4', 'Date Range', filter_head)
         sheet.write('B4:b4', 'Comparison', filter_head)
@@ -421,6 +420,9 @@ class AccountTrialBalance(models.TransientModel):
         sheet.write('B6:b4', 'Account', filter_head)
         sheet.write('B7:b4', 'Option', filter_head)
         sheet.write('B8:b4', 'Display Accounts', filter_head)
+        sheet.write('B9:b4', 'PUC Level', filter_head)
+        sheet.write('B10:b4', 'PUC Range', filter_head)
+        sheet.write('B11:b4', 'Analytic', filter_head)
         if start_date or end_date:
             sheet.merge_range('C3:G3', f"{start_date} to {end_date}",
                               filter_body)
@@ -450,98 +452,88 @@ class AccountTrialBalance(models.TransientModel):
         }
         sheet.merge_range('C8:G8', display_account_labels.get(
             display_account, 'With Movements'), filter_body)
-        sheet.write(9, col, '', sub_heading)
-        # sheet.merge_range(9, col + 1, 9, col + 2, 'Initial Balance',
-        #                   sub_heading)
-        i = 1  # starting offset
+        puc_labels = {
+            '0': 'Full detail',
+            '1': 'Class (1 digit)',
+            '2': 'Group (2 digits)',
+            '4': 'Account (4 digits)',
+            '6': 'Subaccount (6 digits)',
+        }
+        puc_level = data['filters'].get('puc_level', '0')
+        sheet.merge_range('C9:G9', puc_labels.get(str(puc_level), 'Full detail'),
+                          filter_body)
+        sheet.merge_range(
+            'C10:G10', '%s to %s' % (
+                data['filters'].get('account_from_code') or '...',
+                data['filters'].get('account_to_code') or '...'), filter_body)
+        sheet.merge_range(
+            'C11:G11', '%s (%s)' % (
+                data['filters'].get('analytics_label') or 'All',
+                data['filters'].get('analytic_filter_label') or 'All lines'),
+            filter_body)
 
-        # Initial Balance header
-        sheet.merge_range(9, col + i, 9, col + i + 1, 'Initial Balance', sub_heading)
-        sheet.write(10, col + i, 'Debit', sub_heading)
-        sheet.write(10, col + i + 1, 'Credit', sub_heading)
-        i += 2
-
-        # Dynamic date headers (safely)
-        dynamic_dates = {}
-        if data.get('data') and len(data['data']) > 0 and len(data['data'][0]) > 0:
-            dynamic_dates = data['data'][0][0].get('dynamic_date_num', {})
-
-        if data.get('apply_comparison') and dynamic_dates:
-            for key, display in dynamic_dates.items():
-                sheet.merge_range(9, col + i, 9, col + i + 1, display, sub_heading)
-                sheet.write(10, col + i, 'Debit', sub_heading)
-                sheet.write(10, col + i + 1, 'Credit', sub_heading)
-                i += 2
-        else:
-            for date_view in data.get('date_viewed', []):
-                sheet.merge_range(9, col + i, 9, col + i + 1, date_view, sub_heading)
-                sheet.write(10, col + i, 'Debit', sub_heading)
-                sheet.write(10, col + i + 1, 'Credit', sub_heading)
-                i += 2
-
-        # End Balance header
-        sheet.merge_range(9, col + i, 9, col + i + 1, 'End Balance', sub_heading)
-        sheet.write(10, col + i, 'Debit', sub_heading)
-        sheet.write(10, col + i + 1, 'Credit', sub_heading)
+        period_columns = data.get('period_columns') or [{
+            'label': (data.get('date_viewed') or [''])[-1],
+            'debitKey': 'total_debit',
+            'creditKey': 'total_credit',
+        }]
+        col = 0
+        sheet.merge_range(12, col, 13, col, 'Account', sub_heading)
+        sheet.merge_range(12, col + 1, 13, col + 1, 'Initial Balance',
+                          sub_heading)
+        i = 2
+        for period_column in period_columns:
+            sheet.merge_range(
+                12, col + i, 12, col + i + 1,
+                period_column.get('label') or '', sub_heading)
+            sheet.write(13, col + i, 'Debit', sub_heading)
+            sheet.write(13, col + i + 1, 'Credit', sub_heading)
+            i += 2
+        sheet.merge_range(
+            12, col + i, 12, col + i + 1, 'End Balance', sub_heading)
+        sheet.write(13, col + i, 'Debit', sub_heading)
+        sheet.write(13, col + i + 1, 'Credit', sub_heading)
 
         if data:
             if report_action == 'dynamic_accounts_report.action_trial_balance':
-                row = 11
+                row = 14
                 for move_line in data['data'][0]:
                     sheet.write(row, col, move_line['account'],
                                 side_heading_sub)
-                    sheet.write(row, col + 1, move_line['initial_total_debit'],
+                    sheet.write(row, col + 1, move_line.get('initial', 0.0),
                                 txt_name)
-                    sheet.write(row, col + 2,
-                                move_line['initial_total_credit'], txt_name)
-                    j = 3
-                    if data['apply_comparison']:
-                        number_of_periods = data['comparison_number_range']
-                        for num in number_of_periods:
-                            sheet.write(row, col + j, move_line[
-                                'dynamic_total_debit_' + str(num)], txt_name)
-                            sheet.write(row, col + j + 1, move_line[
-                                'dynamic_total_credit_' + str(num)], txt_name)
-                            j += 2
-                    sheet.write(row, col + j, move_line['total_debit'],
-                                txt_name)
-                    sheet.write(row, col + j + 1, move_line['total_credit'],
-                                txt_name)
-                    sheet.write(row, col + j + 2, move_line['end_total_debit'],
-                                txt_name)
-                    sheet.write(row, col + j + 3,
-                                move_line['end_total_credit'], txt_name)
+                    j = 2
+                    for period_column in period_columns:
+                        sheet.write(
+                            row, col + j,
+                            move_line.get(
+                                period_column.get('debitKey'), 0.0), txt_name)
+                        sheet.write(
+                            row, col + j + 1,
+                            move_line.get(
+                                period_column.get('creditKey'), 0.0), txt_name)
+                        j += 2
+                    sheet.write(row, col + j,
+                                move_line.get('final_debit', 0.0), txt_name)
+                    sheet.write(row, col + j + 1,
+                                move_line.get('final_credit', 0.0), txt_name)
                     row += 1
                 totals = data.get('totals') or {}
                 row += 1
                 sheet.write(row, col, 'Total', side_heading_sub)
-                sheet.write(row, col + 1,
-                            totals.get('initial_total_debit', 0.0),
+                sheet.write(row, col + 1, totals.get('initial', 0.0),
                             total_format)
-                sheet.write(row, col + 2,
-                            totals.get('initial_total_credit', 0.0),
+                j = 2
+                for period_column in period_columns:
+                    sheet.write(row, col + j, totals.get(
+                        period_column.get('debitKey'), 0.0), total_format)
+                    sheet.write(row, col + j + 1, totals.get(
+                        period_column.get('creditKey'), 0.0), total_format)
+                    j += 2
+                sheet.write(row, col + j, totals.get('final_debit', 0.0),
                             total_format)
-                j = 3
-                if data['apply_comparison']:
-                    number_of_periods = data['comparison_number_range']
-                    for num in number_of_periods:
-                        sheet.write(
-                            row, col + j,
-                            totals.get('dynamic_total_debit_' + str(num),
-                                       0.0), total_format)
-                        sheet.write(
-                            row, col + j + 1,
-                            totals.get('dynamic_total_credit_' + str(num),
-                                       0.0), total_format)
-                        j += 2
-                sheet.write(row, col + j,
-                            totals.get('total_debit', 0.0), total_format)
-                sheet.write(row, col + j + 1,
-                            totals.get('total_credit', 0.0), total_format)
-                sheet.write(row, col + j + 2,
-                            totals.get('end_total_debit', 0.0), total_format)
-                sheet.write(row, col + j + 3,
-                            totals.get('end_total_credit', 0.0), total_format)
+                sheet.write(row, col + j + 1, totals.get('final_credit', 0.0),
+                            total_format)
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())

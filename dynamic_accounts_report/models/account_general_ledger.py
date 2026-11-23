@@ -74,6 +74,8 @@ class AccountGeneralLedger(models.TransientModel):
                     ['date', 'name', 'move_name', 'debit', 'credit',
                      'partner_id', 'account_id', 'journal_id', 'move_id',
                      'analytic_line_ids'])
+                move_line_data[0]['partner_vat'] = (
+                    move_line.partner_id.vat or '')
                 move_line_list.append(move_line_data)
             account_dict[account.display_name] = move_line_list
             currency_id = self.env.company.currency_id.symbol
@@ -200,6 +202,8 @@ class AccountGeneralLedger(models.TransientModel):
                     ['date', 'name', 'move_name', 'debit', 'credit',
                      'partner_id', 'account_id', 'journal_id', 'move_id',
                      'analytic_line_ids'])
+                move_line_data[0]['partner_vat'] = (
+                    move_line.partner_id.vat or '')
                 move_line_list.append(move_line_data)
             account_dict[account.display_name] = move_line_list
             currency_id = self.env.company.currency_id.symbol
@@ -290,9 +294,10 @@ class AccountGeneralLedger(models.TransientModel):
                 sheet.write(8, col + 1, 'Date', sub_heading)
                 sheet.merge_range('C9:E9', 'Communication', sub_heading)
                 sheet.merge_range('F9:G9', 'Partner', sub_heading)
-                sheet.merge_range('H9:I9', 'Debit', sub_heading)
-                sheet.merge_range('J9:K9', 'Credit', sub_heading)
-                sheet.merge_range('L9:M9', 'Balance', sub_heading)
+                sheet.merge_range('H9:I9', 'Partner ID', sub_heading)
+                sheet.merge_range('J9:K9', 'Debit', sub_heading)
+                sheet.merge_range('L9:M9', 'Credit', sub_heading)
+                sheet.merge_range('N9:O9', 'Balance', sub_heading)
                 row = 8
                 if data['account']:
                     for account in data['account']:
@@ -302,13 +307,15 @@ class AccountGeneralLedger(models.TransientModel):
                         sheet.merge_range(row, col + 2, row, col + 4, ' ', txt_name)
                         sheet.merge_range(row, col + 5, row, col + 6, ' ',
                                           txt_name)
-                        sheet.merge_range(row, col + 7, row, col + 8,
-                                          data['total'][account]['total_debit_display'],
+                        sheet.merge_range(row, col + 7, row, col + 8, ' ',
                                           txt_name)
                         sheet.merge_range(row, col + 9, row, col + 10,
-                                          data['total'][account]['total_credit_display'],
+                                          data['total'][account]['total_debit_display'],
                                           txt_name)
                         sheet.merge_range(row, col + 11, row, col + 12,
+                                          data['total'][account]['total_credit_display'],
+                                          txt_name)
+                        sheet.merge_range(row, col + 13, row, col + 14,
                                           data['total'][account]['balance_display'],
                                           txt_name)
                         for rec in data['data'][account]:
@@ -322,22 +329,25 @@ class AccountGeneralLedger(models.TransientModel):
                             sheet.merge_range(row, col + 5, row, col + 6, name,
                                               txt_name)
                             sheet.merge_range(row, col + 7, row, col + 8,
-                                              rec[0]['debit'],
+                                              rec[0].get('partner_vat', ''),
                                               txt_name)
                             sheet.merge_range(row, col + 9, row, col + 10,
+                                              rec[0]['debit'],
+                                              txt_name)
+                            sheet.merge_range(row, col + 11, row, col + 12,
                                               rec[0]['credit'], txt_name)
-                            sheet.merge_range(row, col + 11, row, col + 12, ' ',
+                            sheet.merge_range(row, col + 13, row, col + 14, ' ',
                                               txt_name)
                     row += 1
-                    sheet.merge_range(row, col, row, col + 6, 'Total',
-                                      filter_head)
-                    sheet.merge_range(row, col + 7, row, col + 8,
-                                      data['grand_total']['total_debit_display'],
+                    sheet.merge_range(row, col, row, col + 7, 'Total',
                                       filter_head)
                     sheet.merge_range(row, col + 9, row, col + 10,
-                                      data['grand_total']['total_credit_display'],
+                                      data['grand_total']['total_debit_display'],
                                       filter_head)
                     sheet.merge_range(row, col + 11, row, col + 12,
+                                      data['grand_total']['total_credit_display'],
+                                      filter_head)
+                    sheet.merge_range(row, col + 13, row, col + 14,
                                       float(data['grand_total']['total_debit']) -
                                       float(data['grand_total']['total_credit']),
                                       filter_head)
