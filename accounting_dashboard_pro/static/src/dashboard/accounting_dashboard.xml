@@ -64,6 +64,15 @@
                 <button class="adp-btn" t-on-click="onRefresh">Retry</button>
             </div>
 
+            <!-- MIXED CURRENCY WARNING -->
+            <div t-if="state.mixedCurrency and !state.loading" class="adp-warning-banner">
+                <i class="fa fa-exclamation-triangle"/>
+                <span>
+                    Multiple currencies selected. Showing only companies using the reporting currency
+                    (<t t-esc="state.excludedCompanies.length"/> excluded).
+                </span>
+            </div>
+
             <!-- MAIN CONTENT -->
             <div t-if="!state.loading and !state.error" class="adp-content">
 

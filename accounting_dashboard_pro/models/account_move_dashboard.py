@@ -107,11 +107,46 @@ class AccountMoveDashboard(models.Model):
 
     @api.model
     def _dashboard_company_ids(self, company_ids=None):
-        """Return company IDs to filter on."""
+        """Return company IDs to filter on.
+
+        Amounts stored by Odoo are expressed in each company's currency. To
+        avoid adding different currencies together, when the selected
+        companies use more than one currency only the active company and the
+        companies sharing its currency are kept.
+        """
         if company_ids:
             allowed = self.env.companies.ids
-            return [cid for cid in company_ids if cid in allowed]
-        return self.env.companies.ids
+            company_ids = [cid for cid in company_ids if cid in allowed]
+        else:
+            company_ids = self.env.companies.ids
+        companies = self.env['res.company'].browse(company_ids)
+        currencies = companies.mapped('currency_id')
+        if len(currencies) > 1:
+            reporting_currency = self.env.company.currency_id
+            same_currency = companies.filtered(
+                lambda company: company.currency_id == reporting_currency)
+            company_ids = (same_currency or self.env.company).ids
+        return company_ids
+
+    @api.model
+    def _dashboard_currency_info(self, company_ids=None):
+        """Return whether the requested scope mixes currencies."""
+        if company_ids:
+            allowed = self.env.companies.ids
+            company_ids = [cid for cid in company_ids if cid in allowed]
+        else:
+            company_ids = self.env.companies.ids
+        companies = self.env['res.company'].browse(company_ids)
+        reporting_company = self.env.company
+        mixed = len(companies.mapped('currency_id')) > 1
+        excluded = companies.filtered(
+            lambda company: company.currency_id != reporting_company.currency_id
+        ) if mixed else self.env['res.company']
+        return {
+            'mixed_currency': mixed,
+            'reporting_currency_id': reporting_company.currency_id.id,
+            'excluded_company_ids': excluded.ids,
+        }
 
     @api.model
     def _dashboard_user_groups(self):
@@ -152,6 +187,26 @@ class AccountMoveDashboard(models.Model):
               )
         """, (as_of_date, company_ids))
         return self.env.cr.fetchone()[0]
+
+    @api.model
+    def _dashboard_net_move_amount(self, company_ids, move_types, date_from,
+                                   date_to, expense=False):
+        """Return the net untaxed amount for the given move types.
+
+        Refunds have the opposite sign of invoices, so summing the signed
+        amount gives the net revenue/expense. Bill amounts are negative in
+        Odoo, hence the ``expense`` flag to return a positive amount.
+        """
+        self.env.cr.execute("""
+            SELECT COALESCE(SUM(amount_untaxed_signed), 0)
+            FROM account_move
+            WHERE state = 'posted'
+              AND move_type IN %s
+              AND date BETWEEN %s AND %s
+              AND company_id = ANY(%s)
+        """, (tuple(move_types), date_from, date_to, company_ids))
+        amount = self.env.cr.fetchone()[0]
+        return -amount if expense else amount
 
     @api.model
     def _dashboard_open_move_total(self, company_ids, move_type, as_of_date):
@@ -203,6 +258,7 @@ class AccountMoveDashboard(models.Model):
         user_groups = self._dashboard_user_groups()
         can_view_financials = self._dashboard_can_view_financials(user_groups)
         result = {'user_groups': user_groups}
+        result.update(self._dashboard_currency_info(params.get('company_ids')))
         # --- Invoice summary (current period) ---
         self.env.cr.execute("""
             SELECT move_type, state,
@@ -281,39 +337,17 @@ class AccountMoveDashboard(models.Model):
 
         # --- Financial KPIs (readonly+ users) ---
         if can_view_financials:
-            # Revenue (current + prev)
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(amount_untaxed_signed), 0)
-                FROM account_move
-                WHERE state = 'posted' AND move_type = 'out_invoice'
-                  AND date BETWEEN %s AND %s AND company_id = ANY(%s)
-            """, (date_from, date_to, company_ids))
-            revenue = self.env.cr.fetchone()[0]
-
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(amount_untaxed_signed), 0)
-                FROM account_move
-                WHERE state = 'posted' AND move_type = 'out_invoice'
-                  AND date BETWEEN %s AND %s AND company_id = ANY(%s)
-            """, (prev_from, prev_to, company_ids))
-            prev_revenue = self.env.cr.fetchone()[0]
-
-            # Expenses (current + prev)
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(amount_untaxed_signed), 0)
-                FROM account_move
-                WHERE state = 'posted' AND move_type = 'in_invoice'
-                  AND date BETWEEN %s AND %s AND company_id = ANY(%s)
-            """, (date_from, date_to, company_ids))
-            expenses = abs(self.env.cr.fetchone()[0])
-
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(amount_untaxed_signed), 0)
-                FROM account_move
-                WHERE state = 'posted' AND move_type = 'in_invoice'
-                  AND date BETWEEN %s AND %s AND company_id = ANY(%s)
-            """, (prev_from, prev_to, company_ids))
-            prev_expenses = abs(self.env.cr.fetchone()[0])
+            # Revenue / expenses are net of credit notes.
+            revenue = self._dashboard_net_move_amount(
+                company_ids, ('out_invoice', 'out_refund'), date_from, date_to)
+            prev_revenue = self._dashboard_net_move_amount(
+                company_ids, ('out_invoice', 'out_refund'), prev_from, prev_to)
+            expenses = self._dashboard_net_move_amount(
+                company_ids, ('in_invoice', 'in_refund'), date_from, date_to,
+                expense=True)
+            prev_expenses = self._dashboard_net_move_amount(
+                company_ids, ('in_invoice', 'in_refund'), prev_from, prev_to,
+                expense=True)
 
             net_profit = revenue - expenses
             prev_net_profit = prev_revenue - prev_expenses
@@ -500,7 +534,7 @@ class AccountMoveDashboard(models.Model):
                 COALESCE(SUM(amount_untaxed_signed), 0) AS total
             FROM account_move
             WHERE state = 'posted'
-              AND move_type IN ('out_invoice', 'in_invoice')
+              AND move_type IN ('out_invoice', 'out_refund', 'in_invoice', 'in_refund')
               AND date >= %s
               AND company_id = ANY(%s)
             GROUP BY to_char(date, 'YYYY-MM'), move_type
@@ -514,8 +548,14 @@ class AccountMoveDashboard(models.Model):
             months.append(d.strftime('%Y-%m'))
             d += relativedelta(months=1)
 
-        revenue_map = {r['month']: r['total'] for r in rows if r['move_type'] == 'out_invoice'}
-        expense_map = {r['month']: abs(r['total']) for r in rows if r['move_type'] == 'in_invoice'}
+        revenue_map = {}
+        expense_map = {}
+        for row in rows:
+            month = row['month']
+            if row['move_type'] in ('out_invoice', 'out_refund'):
+                revenue_map[month] = revenue_map.get(month, 0) + row['total']
+            else:
+                expense_map[month] = expense_map.get(month, 0) - row['total']
 
         return {
             'labels': months,
@@ -648,7 +688,7 @@ class AccountMoveDashboard(models.Model):
         self.env.cr.execute("""
             SELECT
                 COALESCE(aa.name->>%(lang)s, aa.name->>'en_US', aa.name::text, 'Unknown') AS account_name,
-                COALESCE(SUM(ABS(aml.balance)), 0) AS total
+                COALESCE(SUM(aml.balance), 0) AS total
             FROM account_move_line aml
             JOIN account_account aa ON aa.id = aml.account_id
             JOIN account_move am ON am.id = aml.move_id
@@ -657,6 +697,7 @@ class AccountMoveDashboard(models.Model):
               AND am.date BETWEEN %(date_from)s AND %(date_to)s
               AND aml.company_id = ANY(%(company_ids)s)
             GROUP BY aa.name
+            HAVING COALESCE(SUM(aml.balance), 0) > 0
             ORDER BY total DESC
             LIMIT %(limit)s
         """, {'lang': lang, 'date_from': date_from, 'date_to': date_to,
@@ -683,7 +724,12 @@ class AccountMoveDashboard(models.Model):
             SELECT
                 CASE WHEN am.move_type IN ('out_invoice', 'out_refund') THEN 'collected'
                      ELSE 'paid' END AS direction,
-                COALESCE(SUM(ABS(aml.balance)), 0) AS total
+                COALESCE(SUM(
+                    CASE WHEN am.move_type IN ('out_invoice', 'out_refund')
+                         THEN -aml.balance
+                         ELSE aml.balance
+                    END
+                ), 0) AS total
             FROM account_move_line aml
             JOIN account_move am ON am.id = aml.move_id
             JOIN account_account aa ON aa.id = aml.account_id
@@ -755,7 +801,7 @@ class AccountMoveDashboard(models.Model):
         self.env.cr.execute("""
             SELECT ap.id, am.name,
                    rp.name AS partner_name,
-                   ap.amount AS amount,
+                   ABS(ap.amount_company_currency_signed) AS amount,
                    ap.date, ap.payment_type,
                    COALESCE(aj.name->>%(lang)s, aj.name->>'en_US', aj.name::text) AS journal_name
             FROM account_payment ap
@@ -1026,7 +1072,7 @@ class AccountMoveDashboard(models.Model):
         self.env.cr.execute("""
             SELECT
                 COALESCE(aa.name->>%(lang)s, aa.name->>'en_US', aa.name::text, 'Other') AS account_name,
-                COALESCE(SUM(ABS(aml.balance)), 0) AS total
+                COALESCE(SUM(aml.balance), 0) AS total
             FROM account_move_line aml
             JOIN account_move am ON am.id = aml.move_id
             JOIN account_account aa ON aa.id = aml.account_id
@@ -1035,7 +1081,9 @@ class AccountMoveDashboard(models.Model):
               AND am.date BETWEEN %(date_from)s AND %(date_to)s
               AND am.company_id = ANY(%(company_ids)s)
               AND aml.display_type = 'product'
+              AND aa.account_type = 'expense'
             GROUP BY aa.name
+            HAVING COALESCE(SUM(aml.balance), 0) > 0
             ORDER BY total DESC
             LIMIT 10
         """, {'lang': lang, 'date_from': date_from, 'date_to': date_to,
@@ -1105,7 +1153,7 @@ class AccountMoveDashboard(models.Model):
             SELECT
                 to_char(ap.date, 'YYYY-MM') AS month,
                 ap.payment_type,
-                COALESCE(SUM(ap.amount), 0) AS total
+                COALESCE(SUM(ABS(ap.amount_company_currency_signed)), 0) AS total
             FROM account_payment ap
             JOIN account_move am ON am.id = ap.move_id
             WHERE am.state = 'posted'
@@ -1145,21 +1193,11 @@ class AccountMoveDashboard(models.Model):
 
         # Opening cash balance (cash journal balances up to day before date_from)
         opening_date = date_from - relativedelta(days=1)
-        self.env.cr.execute("""
-            SELECT COALESCE(SUM(aml.balance), 0)
-            FROM account_move_line aml
-            JOIN account_journal aj ON aj.default_account_id = aml.account_id
-            JOIN account_move am ON am.id = aml.move_id
-            WHERE aj.type IN ('bank', 'cash')
-              AND aml.parent_state = 'posted'
-              AND am.date <= %s
-              AND aml.company_id = ANY(%s)
-        """, (opening_date, company_ids))
-        opening = self.env.cr.fetchone()[0]
+        opening = self._dashboard_cash_balance(company_ids, opening_date)
 
-        # Inflows in period (inbound payments)
+        # Inflows / outflows in period, in company currency
         self.env.cr.execute("""
-            SELECT COALESCE(SUM(ap.amount), 0)
+            SELECT COALESCE(SUM(ABS(ap.amount_company_currency_signed)), 0)
             FROM account_payment ap
             JOIN account_move am ON am.id = ap.move_id
             WHERE am.state = 'posted'
@@ -1169,9 +1207,8 @@ class AccountMoveDashboard(models.Model):
         """, (date_from, date_to, company_ids))
         inflows = self.env.cr.fetchone()[0]
 
-        # Outflows in period (outbound payments)
         self.env.cr.execute("""
-            SELECT COALESCE(SUM(ap.amount), 0)
+            SELECT COALESCE(SUM(ABS(ap.amount_company_currency_signed)), 0)
             FROM account_payment ap
             JOIN account_move am ON am.id = ap.move_id
             WHERE am.state = 'posted'
@@ -1181,12 +1218,26 @@ class AccountMoveDashboard(models.Model):
         """, (date_from, date_to, company_ids))
         outflows = self.env.cr.fetchone()[0]
 
-        closing = opening + inflows - outflows
+        # Closing is the real ledger balance, not just payments. Differences
+        # (transfers, bank fees, FX, manual entries, ...) are shown as Other.
+        closing = self._dashboard_cash_balance(company_ids, date_to)
+        other = closing - (opening + inflows - outflows)
+
+        labels = ['Opening', 'Cash In', 'Cash Out']
+        values = [opening, inflows, -outflows]
+        types = ['total', 'increase', 'decrease']
+        if abs(other) > 0.005:
+            labels.append('Other')
+            values.append(other)
+            types.append('increase' if other > 0 else 'decrease')
+        labels.append('Closing')
+        values.append(closing)
+        types.append('total')
 
         return {
-            'labels': ['Opening', 'Cash In', 'Cash Out', 'Closing'],
-            'values': [opening, inflows, -outflows, closing],
-            'types': ['total', 'increase', 'decrease', 'total'],
+            'labels': labels,
+            'values': values,
+            'types': types,
         }
 
     # ------------------------------------------------------------------
@@ -1262,7 +1313,7 @@ class AccountMoveDashboard(models.Model):
                 'journal_id': journal.id,
                 'journal_name': journal_name,
                 'journal_type': journal.type,
-                'currency': journal.currency_id.symbol or journal.company_id.currency_id.symbol,
+                'currency': journal.company_id.currency_id.symbol,
                 'labels': months,
                 'balances': balances,
                 'current_balance': balances[-1] if balances else 0,

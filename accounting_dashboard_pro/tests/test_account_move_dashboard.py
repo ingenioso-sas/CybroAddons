@@ -171,6 +171,60 @@ class TestAccountMoveDashboard(TransactionCase):
         with self.assertRaises(AccessError):
             self.env['account.move'].with_user(user).get_account_journal_ids(params)
 
+    def _create_invoice(self, move_type, amount, invoice_date=None):
+        partner = self.env['res.partner'].create({'name': 'ADP Test Partner'})
+        invoice_date = invoice_date or fields.Date.context_today(self.move_model)
+        move = self.env['account.move'].create({
+            'move_type': move_type,
+            'partner_id': partner.id,
+            'invoice_date': invoice_date,
+            'date': invoice_date,
+            'invoice_line_ids': [(0, 0, {
+                'name': 'ADP test line',
+                'quantity': 1,
+                'price_unit': amount,
+            })],
+        })
+        move.action_post()
+        return move
+
+    def test_revenue_and_expenses_are_net_of_refunds(self):
+        """KPIs and the monthly chart must subtract credit notes."""
+        params = {'period': 'this_month', 'company_ids': [self.company.id]}
+        before_kpi = self.move_model.get_dashboard_kpi_data(params)
+        before_chart = self.move_model.get_dashboard_chart_data(params)
+
+        self._create_invoice('out_invoice', 100)
+        self._create_invoice('out_refund', 25)
+        self._create_invoice('in_invoice', 200)
+        self._create_invoice('in_refund', 50)
+
+        after_kpi = self.move_model.get_dashboard_kpi_data(params)
+        after_chart = self.move_model.get_dashboard_chart_data(params)
+
+        self.assertAlmostEqual(
+            after_kpi['revenue']['amount'] - before_kpi['revenue']['amount'],
+            75.0, places=2)
+        self.assertAlmostEqual(
+            after_kpi['expenses']['amount'] - before_kpi['expenses']['amount'],
+            150.0, places=2)
+        self.assertAlmostEqual(
+            after_chart['revenue'][-1] - before_chart['revenue'][-1],
+            75.0, places=2)
+        self.assertAlmostEqual(
+            after_chart['expenses'][-1] - before_chart['expenses'][-1],
+            150.0, places=2)
+
+    def test_cashflow_waterfall_closing_is_ledger_balance(self):
+        """The waterfall closing must match the real cash balance."""
+        params = {'period': 'this_month', 'company_ids': [self.company.id]}
+        date_from, date_to = self.move_model._dashboard_get_period('this_month')
+        data = self.move_model.get_dashboard_cashflow_waterfall(params)
+        expected = self.move_model._dashboard_cash_balance(
+            [self.company.id], date_to)
+        self.assertEqual(data['labels'][-1], 'Closing')
+        self.assertAlmostEqual(data['values'][-1], expected, places=2)
+
     def test_account_invoice_analysis_action_exists(self):
         """The dashboard uses the standard Invoice Analysis action."""
         action = self.env.ref(

@@ -186,6 +186,8 @@ export class AccountingDashboard extends Component {
             journalCharts: [],
             chartInfoKey: null,
             userGroups: {},
+            mixedCurrency: false,
+            excludedCompanies: [],
             error: null,
             showKpiSettings: false,
             hiddenKpis: [],
@@ -305,6 +307,8 @@ export class AccountingDashboard extends Component {
 
             this.state.kpiData = kpiData;
             this.state.userGroups = kpiData.user_groups || {};
+            this.state.mixedCurrency = Boolean(kpiData.mixed_currency);
+            this.state.excludedCompanies = kpiData.excluded_company_ids || [];
             this.state.listsData = listsData;
             this.state.alerts = alerts;
             this.state.account_journal_ids = account_journal_ids
