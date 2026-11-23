@@ -68,7 +68,10 @@ Cola única de WhatsApp
   *Fallo permanente* y no se reintentan solos.
 * Un fallo del servicio en modo *Enviar ahora* (Cloud/Evolution) también
   deja el mensaje en la cola para reintentarlo, en lugar de perderlo.
-* Prueba de conexión: botones por proveedor en Ajustes > WhatsApp.
+* Prueba de conexión: botones por proveedor en Ajustes > WhatsApp. Los
+  canales deshabilitados aparecen en *Canales habilitados* para poder
+  activarlos; probar uno deshabilitado muestra un aviso amigable, no un
+  error técnico.
 
 Seguridad y permisos
 ====================

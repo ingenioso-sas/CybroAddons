@@ -1,5 +1,17 @@
 # Release Notes
 
+## 19.0.1.3.1 — 2026-11-23
+
+### Proveedores
+- En Ajustes → WhatsApp → *Canales habilitados* se muestran también los
+  canales deshabilitados (``active_test=False``), de modo que se pueden
+  activar desde esa misma lista.
+- Probar un canal deshabilitado muestra un aviso amigable (notificación de
+  advertencia) en lugar de un error técnico RPC. No se registra como prueba
+  fallida porque no se intenta ningún envío.
+- La prueba de conexión y los proveedores por defecto se limitan a la
+  compañía actual, evitando usar registros de otra compañía.
+
 ## 19.0.1.3.0 — 2026-11-17
 
 ### Mantenimiento

@@ -9,7 +9,8 @@
                 <app data-string="WhatsApp" string="WhatsApp" name="all_in_one_whatsapp_integration">
                     <block title="Proveedores" name="whatsapp_providers">
                         <setting string="Canales habilitados" help="Solo los proveedores habilitados aparecen en el asistente de envío y son procesados por la cola.">
-                            <field name="provider_ids" nolabel="1">
+                            <field name="provider_ids" nolabel="1"
+                                   context="{'active_test': False}">
                                 <list editable="top">
                                     <field name="name" readonly="1"/>
                                     <field name="code" readonly="1"/>

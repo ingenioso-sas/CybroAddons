@@ -32,26 +32,48 @@ class ResConfigSettings(models.TransientModel):
     @api.model
     def _default_providers(self):
         return self.env["whatsapp.provider"].with_context(
-            active_test=False).search([])
+            active_test=False).search([
+                ("company_id", "=", self.env.company.id),
+            ])
 
-    def _run_provider_test(self, code):
-        self.ensure_one()
-        provider = self.env["whatsapp.provider"].sudo().with_context(
-            active_test=False).search([("code", "=", code)], limit=1)
-        if not provider:
-            raise ValidationError(_("Proveedor desconocido: %s") % code)
-        provider.run_test((self.whatsapp_test_phone or "").strip())
+    @staticmethod
+    def _provider_test_notification(title, message, notif_type="success"):
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
-                "title": _("Prueba OK"),
-                "message": _("Mensaje de prueba enviado por %s.")
-                % provider.name,
-                "type": "success",
+                "title": title,
+                "message": message,
+                "type": notif_type,
                 "sticky": False,
             },
         }
+
+    def _run_provider_test(self, code):
+        self.ensure_one()
+        provider = self.env["whatsapp.provider"].sudo().with_context(
+            active_test=False).search([
+                ("code", "=", code),
+                ("company_id", "=", self.env.company.id),
+            ], limit=1)
+        if not provider:
+            raise ValidationError(
+                _("Proveedor desconocido o de otra compañía: %s") % code)
+        if not provider.active:
+            # Alerta amigable: no es un fallo del envío, solo falta
+            # habilitar el canal. No se muestra el error técnico.
+            return self._provider_test_notification(
+                _("Canal deshabilitado"),
+                _("El canal '%s' está deshabilitado. Actívelo en «Canales "
+                  "habilitados» (en esta misma página) y vuelva a probar "
+                  "la conexión.") % provider.name,
+                "warning",
+            )
+        provider.run_test((self.whatsapp_test_phone or "").strip())
+        return self._provider_test_notification(
+            _("Prueba OK"),
+            _("Mensaje de prueba enviado por %s.") % provider.name,
+        )
 
     def action_test_twilio(self):
         return self._run_provider_test("twilio")
