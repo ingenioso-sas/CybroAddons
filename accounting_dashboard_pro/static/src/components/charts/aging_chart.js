@@ -27,6 +27,12 @@ export class AgingChart extends Component {
         onWillUnmount(() => this.destroyChart());
     }
 
+    get hasData() {
+        const receivable = this.props.receivableData?.data || [];
+        const payable = this.props.payableData?.data || [];
+        return receivable.some((value) => value) || payable.some((value) => value);
+    }
+
     destroyChart() {
         if (this.chart) {
             this.chart.destroy();

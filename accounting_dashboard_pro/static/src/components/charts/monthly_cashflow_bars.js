@@ -24,6 +24,10 @@ export class MonthlyCashflowBars extends Component {
         onWillUnmount(() => this.destroyChart());
     }
 
+    get hasData() {
+        return Boolean(this.props.data?.labels?.length);
+    }
+
     destroyChart() {
         if (this.chart) {
             this.chart.destroy();

@@ -32,6 +32,7 @@ A comprehensive accounting dashboard module that overcomes the limitations
 of Odoo's native journal-centric kanban dashboard.
 
 Key Features:
+
 - Role-based dashboard views (Billing Clerk, Jr. Accountant, Auditor, Accountant, CFO)
 - Real-time KPI cards (Revenue, Expenses, Net Profit, Cash Balance, AR, AP)
 - Interactive Chart.js charts (Revenue vs Expense, Cash Flow Forecast, Aging Analysis)
@@ -39,10 +40,12 @@ Key Features:
 - Budget vs Actual tracking (when budget module is installed)
 - Quick action buttons based on user role
 - Smart alerts feed for overdue items, unreconciled entries, and tax deadlines
-- Multi-company consolidated view for managers
-- User-customizable layout with period/company filters
-- Sub-200ms load with caching, lazy loading, and parallel API calls
-- Modern UI with glassmorphism, micro-animations, and dark mode support
+- Multi-company view for managers (same-currency companies; mixed currencies
+  are flagged instead of being added together)
+- User-customizable KPI/chart visibility and company/period filters
+- Lazy-loaded charts and parallel API calls
+- Modern UI with glassmorphism, micro-animations, dark mode and ES/ES_CO
+  translations
     """,
     'author': 'Cybrosys Techno Solutions',
     'company': 'Cybrosys Techno Solutions',

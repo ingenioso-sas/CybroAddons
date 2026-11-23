@@ -222,7 +222,7 @@ class TestAccountMoveDashboard(TransactionCase):
         data = self.move_model.get_dashboard_cashflow_waterfall(params)
         expected = self.move_model._dashboard_cash_balance(
             [self.company.id], date_to)
-        self.assertEqual(data['labels'][-1], 'Closing')
+        self.assertEqual(data['types'][-1], 'total')
         self.assertAlmostEqual(data['values'][-1], expected, places=2)
 
     def test_account_invoice_analysis_action_exists(self):

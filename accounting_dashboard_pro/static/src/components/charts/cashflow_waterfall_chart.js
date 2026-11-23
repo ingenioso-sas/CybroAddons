@@ -24,6 +24,10 @@ export class CashflowWaterfallChart extends Component {
         onWillUnmount(() => this.destroyChart());
     }
 
+    get hasData() {
+        return Boolean(this.props.data?.values?.length);
+    }
+
     destroyChart() {
         if (this.chart) {
             this.chart.destroy();

@@ -1,0 +1,876 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* accounting_dashboard_pro
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: es_CO\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "%(count)s bills overdue"
+msgstr "%(count)s facturas de proveedor vencidas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "%(count)s invoices overdue"
+msgstr "%(count)s facturas vencidas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "%(posted)s posted, %(draft)s draft"
+msgstr "%(posted)s publicadas, %(draft)s en borrador"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "%d bills due today"
+msgstr "%d facturas de proveedor vencen hoy"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "%d draft invoices/bills"
+msgstr "%d facturas y facturas de proveedor en borrador"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "%d invoices overdue by 30+ days"
+msgstr "%d facturas vencidas por más de 30 días"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "%d unreconciled bank statement lines"
+msgstr "%d líneas bancarias sin conciliar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "(Revenue − Costs) / Revenue"
+msgstr "(Ingresos − Costos) / Ingresos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Accounting Dashboard"
+msgstr "Panel de contabilidad"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model,name:accounting_dashboard_pro.model_account_dashboard_config
+msgid "Accounting Dashboard User Configuration"
+msgstr "Configuración del panel de contabilidad del usuario"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Aging Analysis"
+msgstr "Análisis de vencimientos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "All clear — no alerts!"
+msgstr "Todo en orden — ¡sin alertas!"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "All open bills"
+msgstr "Todas las facturas de proveedor abiertas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "All open invoices"
+msgstr "Todas las facturas de cliente abiertas"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__amount_format
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__amount_format
+msgid "Amount Format"
+msgstr "Formato de importes"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Amount format"
+msgstr "Formato de importes"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Avg collection period"
+msgstr "Periodo medio de cobro"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Avg daily spend"
+msgstr "Gasto diario medio"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Avg payment period"
+msgstr "Periodo medio de pago"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Awaiting confirmation"
+msgstr "Pendiente de confirmación"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Bank & Cash Journals"
+msgstr "Diarios de banco y efectivo"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Bank Matching"
+msgstr "Conciliación bancaria"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__amount_format__b
+msgid "Billions (B)"
+msgstr "Miles de millones (B)"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Bills"
+msgstr "Facturas de proveedor"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "Budget module not installed"
+msgstr "Módulo de presupuestos no instalado"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Budget vs Actual"
+msgstr "Presupuesto vs real"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Cash Balance"
+msgstr "Saldo de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Cash Flow Forecast"
+msgstr "Previsión de flujo de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "Cash Flow Forecast (90 days)"
+msgstr "Previsión de flujo de caja (90 días)"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Cash Inflow / Outflow"
+msgstr "Entradas / salidas de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Cash − Payables"
+msgstr "Caja − Cuentas por pagar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Cashflow Waterfall"
+msgstr "Cascada de flujo de caja"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__chart_order
+msgid "Chart Order"
+msgstr "Orden de gráficas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Chart information"
+msgstr "Información de la gráfica"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Charts"
+msgstr "Gráficas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Close settings"
+msgstr "Cerrar ajustes"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__company_ids
+msgid "Companies"
+msgstr "Compañías"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__company_ids
+msgid "Companies to include in dashboard data"
+msgstr "Compañías incluidas en los datos del panel"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Configure Settings"
+msgstr "Configurar ajustes"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__create_date
+msgid "Created on"
+msgstr "Creado el"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "Current Balance:"
+msgstr "Saldo actual:"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__custom
+msgid "Custom Range"
+msgstr "Rango personalizado"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "DPO"
+msgstr "DPO"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "DSO"
+msgstr "DSO"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Daily Burn Rate"
+msgstr "Tasa de consumo diario"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__theme__dark
+msgid "Dark"
+msgstr "Oscuro"
+
+#. module: accounting_dashboard_pro
+#: model:ir.actions.client,name:accounting_dashboard_pro.action_accounting_dashboard_pro
+msgid "Dashboard"
+msgstr "Panel"
+
+#. module: accounting_dashboard_pro
+#: model:ir.ui.menu,name:accounting_dashboard_pro.menu_accounting_dashboard_pro
+msgid "Dashboard Pro"
+msgstr "Panel Pro"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Dashboard Settings"
+msgstr "Ajustes del panel"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Days of cash left"
+msgstr "Días de caja disponibles"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__default_period
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__default_period
+msgid "Default Period"
+msgstr "Periodo predeterminado"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__display_name
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_move__display_name
+msgid "Display Name"
+msgstr "Nombre mostrado"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.constraint,message:accounting_dashboard_pro.constraint_account_dashboard_config_user_uniq
+msgid "Each user can have only one dashboard configuration."
+msgstr "Cada usuario puede tener una sola configuración del panel."
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Expense Breakdown"
+msgstr "Desglose de gastos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Expenses"
+msgstr "Gastos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Export All Data"
+msgstr "Exportar todos los datos"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__date_from
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__date_from
+msgid "From Date"
+msgstr "Fecha desde"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "From date"
+msgstr "Fecha desde"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__amount_format__full
+msgid "Full"
+msgstr "Completo"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Gross Margin"
+msgstr "Margen bruto"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__hidden_charts
+msgid "Hidden Charts"
+msgstr "Gráficas ocultas"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__hidden_kpis
+msgid "Hidden KPIs"
+msgstr "KPIs ocultos"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__id
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_move__id
+msgid "ID"
+msgstr "ID"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Income vs Expense"
+msgstr "Ingresos vs gastos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Invoice Analysis"
+msgstr "Análisis de facturas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Invoices"
+msgstr "Facturas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Journal Entries"
+msgstr "Asientos contables"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model,name:accounting_dashboard_pro.model_account_move
+msgid "Journal Entry"
+msgstr "Asiento contable"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__kpi_order
+msgid "KPI Order"
+msgstr "Orden de KPIs"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "KPI Settings"
+msgstr "Ajustes de KPIs"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/kpi_card/kpi_card.xml:0
+msgid "KPI information"
+msgstr "Información del KPI"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "KPIs"
+msgstr "KPIs"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__last_month
+msgid "Last Month"
+msgstr "Mes pasado"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__last_quarter
+msgid "Last Quarter"
+msgstr "Trimestre pasado"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__write_date
+msgid "Last Updated on"
+msgstr "Última actualización el"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__last_year
+msgid "Last Year"
+msgstr "Año pasado"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__theme__light
+msgid "Light"
+msgstr "Claro"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__hidden_kpis
+msgid "List of KPI keys the user has hidden"
+msgstr "Lista de claves de KPI ocultas por el usuario"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__hidden_charts
+msgid "List of chart keys the user has hidden"
+msgstr "Lista de claves de gráficas ocultas por el usuario"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Lock Journal Entries"
+msgstr "Bloquear asientos contables"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Lock Period"
+msgstr "Bloquear periodo"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__amount_format__m
+msgid "Millions (M)"
+msgstr "Millones (M)"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "Monthly Cash Inflow / Outflow"
+msgstr "Entradas / salidas de caja mensuales"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid ""
+"Multiple currencies selected. Only companies using the reporting currency "
+"are included."
+msgstr ""
+"Se seleccionaron varias monedas. Solo se incluyen las compañías que usan la "
+"moneda de reporte."
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "N/A"
+msgstr "N/D"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Net Cash Position"
+msgstr "Posición neta de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Net Profit"
+msgstr "Utilidad neta"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "New Invoice"
+msgstr "Nueva factura"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "New Journal Entry"
+msgstr "Nuevo asiento contable"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "New Payment"
+msgstr "Nuevo pago"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "No active budgets found"
+msgstr "No se encontraron presupuestos activos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "No data for the selected period"
+msgstr "Sin datos para el periodo seleccionado"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "No overdue invoices!"
+msgstr "¡No hay facturas vencidas!"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "No recent payments"
+msgstr "No hay pagos recientes"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "No upcoming bills this week"
+msgstr "No hay facturas próximas esta semana"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Open Vendor Bills"
+msgstr "Facturas de proveedor abiertas"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__kpi_order
+msgid "Ordered list of KPI keys for display order"
+msgstr "Lista ordenada de claves de KPI para el orden de visualización"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__chart_order
+msgid "Ordered list of chart keys for display order"
+msgstr "Lista ordenada de claves de gráficas para el orden de visualización"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "Overdue Invoices"
+msgstr "Facturas vencidas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Overdue Payable"
+msgstr "Cuentas por pagar vencidas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Overdue Receivable"
+msgstr "Cuentas por cobrar vencidas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+msgid "P&L Trend (12 months)"
+msgstr "Tendencia de pérdidas y ganancias (12 meses)"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "P&L Trend (12mo)"
+msgstr "Tendencia P&G (12 meses)"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Pending reconciliation"
+msgstr "Pendiente de conciliación"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Period"
+msgstr "Periodo"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Quick Actions"
+msgstr "Acciones rápidas"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Receivable + Cash − Payable"
+msgstr "Cuentas por cobrar + Caja − Cuentas por pagar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "Recent Payments"
+msgstr "Pagos recientes"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Reconcile Bank"
+msgstr "Conciliar banco"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Refresh"
+msgstr "Actualizar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Retry"
+msgstr "Reintentar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Revenue"
+msgstr "Ingresos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Revenue vs Expenses"
+msgstr "Ingresos vs gastos"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Review and schedule payments"
+msgstr "Revise y programe pagos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Runway"
+msgstr "Autonomía de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/quick_actions/action_buttons.xml:0
+msgid "Smart Alerts"
+msgstr "Alertas inteligentes"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__theme
+msgid "Theme"
+msgstr "Tema"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__theme
+msgid "Theme Mode"
+msgstr "Modo de tema"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__this_month
+msgid "This Month"
+msgstr "Este mes"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__this_quarter
+msgid "This Quarter"
+msgstr "Este trimestre"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__default_period__this_year
+msgid "This Year"
+msgstr "Este año"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields.selection,name:accounting_dashboard_pro.selection__account_dashboard_config__amount_format__k
+msgid "Thousands (K)"
+msgstr "Miles (K)"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__date_to
+#: model:ir.model.fields,help:accounting_dashboard_pro.field_account_dashboard_config__date_to
+msgid "To Date"
+msgstr "Fecha hasta"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "To date"
+msgstr "Fecha hasta"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Toggle Theme"
+msgstr "Cambiar tema"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/charts/charts.xml:0
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Top Expenses"
+msgstr "Principales gastos"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Total Payable"
+msgstr "Total por pagar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Total Receivable"
+msgstr "Total por cobrar"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Total: %s"
+msgstr "Total: %s"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "Unreconciled Items"
+msgstr "Partidas sin conciliar"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "Upcoming Bills"
+msgstr "Facturas de proveedor próximas"
+
+#. module: accounting_dashboard_pro
+#: model:ir.model.fields,field_description:accounting_dashboard_pro.field_account_dashboard_config__user_id
+msgid "User"
+msgstr "Usuario"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.js:0
+msgid "Working Capital"
+msgstr "Capital de trabajo"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "You do not have access to this dashboard data."
+msgstr "No tiene acceso a los datos de este panel."
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "days"
+msgstr "días"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/dashboard/accounting_dashboard.xml:0
+msgid "excluded)"
+msgstr "excluidas)"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/lists/lists.xml:0
+msgid "in"
+msgstr "en"
+
+#. module: accounting_dashboard_pro
+#. odoo-javascript
+#: code:addons/accounting_dashboard_pro/static/src/components/kpi_card/kpi_card.xml:0
+msgid "vs prev:"
+msgstr "vs anterior:"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Opening"
+msgstr "Apertura"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Cash In"
+msgstr "Entradas de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Cash Out"
+msgstr "Salidas de caja"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Other"
+msgstr "Otros"
+
+#. module: accounting_dashboard_pro
+#. odoo-python
+#: code:addons/accounting_dashboard_pro/models/account_move_dashboard.py:0
+msgid "Closing"
+msgstr "Cierre"

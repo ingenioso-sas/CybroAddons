@@ -40,6 +40,10 @@ export class JournalBalanceChart extends Component {
         this.renderChart();
     }
 
+    get hasData() {
+        return Boolean(this.selectedJournal?.labels?.length);
+    }
+
     destroyChart() {
         if (this.chart) {
             this.chart.destroy();

@@ -1,10 +1,11 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onMounted, onWillStart, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
 import { _t } from "@web/core/l10n/translation";
+import { formatCurrency as formatCurrencyCore } from "@web/core/currency";
 import { KpiCard } from "../components/kpi_card/kpi_card";
 import { RevenueExpenseChart } from "../components/charts/revenue_expense_chart";
 import { CashflowForecast } from "../components/charts/cashflow_forecast";
@@ -23,71 +24,71 @@ import { QuickActions, AlertsFeed } from "../components/quick_actions/action_but
 // Master KPI definitions
 const KPI_DEFS = [
     {
-        key: "invoices", title: "Invoices", icon: "fa-file-text-o", color: "blue", group: null, action: "view_invoices",
+        key: "invoices", title: _t("Invoices"), icon: "fa-file-text-o", color: "blue", group: null, action: "view_invoices",
         info: "Total posted customer invoices in the selected period.\nFormula: SUM(posted out_invoice amounts)\nSource: account.move (move_type = out_invoice)"
     },
     {
-        key: "bills", title: "Bills", icon: "fa-money", color: "orange", group: null, action: "view_bills",
+        key: "bills", title: _t("Bills"), icon: "fa-money", color: "orange", group: null, action: "view_bills",
         info: "Total posted vendor bills in the selected period.\nFormula: SUM(posted in_invoice amounts)\nSource: account.move (move_type = in_invoice)"
     },
     {
-        key: "overdue_receivable", title: "Overdue Receivable", icon: "fa-exclamation-triangle", color: "red", group: null, action: "overdue_invoices",
+        key: "overdue_receivable", title: _t("Overdue Receivable"), icon: "fa-exclamation-triangle", color: "red", group: null, action: "overdue_invoices",
         info: "Unpaid customer invoices past their due date.\nFormula: SUM(amount_residual) WHERE due_date < today\nSource: account.move (posted, not_paid/partial)"
     },
     {
-        key: "overdue_payable", title: "Overdue Payable", icon: "fa-clock-o", color: "yellow", group: null, action: "overdue_bills",
+        key: "overdue_payable", title: _t("Overdue Payable"), icon: "fa-clock-o", color: "yellow", group: null, action: "overdue_bills",
         info: "Unpaid vendor bills past their due date.\nFormula: SUM(amount_residual) WHERE due_date < today\nSource: account.move (posted vendor bills)"
     },
     {
-        key: "revenue", title: "Revenue", icon: "fa-line-chart", color: "green", group: "is_readonly,is_manager", action: "revenue",
+        key: "revenue", title: _t("Revenue"), icon: "fa-line-chart", color: "green", group: "is_readonly,is_manager", action: "revenue",
         info: "Total revenue from posted customer invoices (untaxed).\nFormula: SUM(amount_untaxed_signed) for out_invoices\nSource: account.move"
     },
     {
-        key: "expenses", title: "Expenses", icon: "fa-arrow-down", color: "pink", group: "is_readonly,is_manager", action: "expense",
+        key: "expenses", title: _t("Expenses"), icon: "fa-arrow-down", color: "pink", group: "is_readonly,is_manager", action: "expense",
         info: "Total expenses from posted vendor bills (untaxed).\nFormula: SUM(amount_untaxed_signed) for in_invoices\nSource: account.move"
     },
     {
-        key: "net_profit", title: "Net Profit", icon: "fa-trophy", color: "green", group: "is_readonly,is_manager",
+        key: "net_profit", title: _t("Net Profit"), icon: "fa-trophy", color: "green", group: "is_readonly,is_manager",
         info: "Profit after subtracting expenses from revenue.\nFormula: Revenue − Expenses\nGreen if positive, red if negative."
     },
     {
-        key: "cash_balance", title: "Cash Balance", icon: "fa-university", color: "indigo", group: "is_basic,is_readonly,is_manager", action: "cash_balance",
+        key: "cash_balance", title: _t("Cash Balance"), icon: "fa-university", color: "indigo", group: "is_basic,is_readonly,is_manager", action: "cash_balance",
         info: "Current balance across all bank and cash journals.\nFormula: SUM(balance) of posted entries in bank/cash accounts\nSource: account.move.line + account.journal"
     },
     {
-        key: "total_receivable", title: "Total Receivable", icon: "fa-arrow-circle-down", color: "teal", group: "is_basic,is_readonly,is_manager",
+        key: "total_receivable", title: _t("Total Receivable"), icon: "fa-arrow-circle-down", color: "teal", group: "is_basic,is_readonly,is_manager",
         info: "Total outstanding amount from all open customer invoices.\nFormula: SUM(amount_residual) for unpaid/partial out_invoices\nSource: account.move"
     },
     {
-        key: "total_payable", title: "Total Payable", icon: "fa-arrow-circle-up", color: "orange", group: "is_basic,is_readonly,is_manager", action: "total_payable",
+        key: "total_payable", title: _t("Total Payable"), icon: "fa-arrow-circle-up", color: "orange", group: "is_basic,is_readonly,is_manager", action: "total_payable",
         info: "Total outstanding amount owed to vendors.\nFormula: SUM(amount_residual) for unpaid/partial in_invoices\nSource: account.move"
     },
     {
-        key: "net_cash_position", title: "Net Cash Position", icon: "fa-balance-scale", color: "cyan", group: "is_basic,is_readonly,is_manager",
+        key: "net_cash_position", title: _t("Net Cash Position"), icon: "fa-balance-scale", color: "cyan", group: "is_basic,is_readonly,is_manager",
         info: "Cash available after paying all current liabilities.\nFormula: Cash Balance − Total Payable\nGreen if positive, red if negative."
     },
     {
-        key: "working_capital", title: "Working Capital", icon: "fa-cogs", color: "teal", group: "is_basic,is_readonly,is_manager",
+        key: "working_capital", title: _t("Working Capital"), icon: "fa-cogs", color: "teal", group: "is_basic,is_readonly,is_manager",
         info: "Short-term financial health indicator.\nFormula: Total Receivable + Cash Balance − Total Payable\nMeasures ability to cover short-term obligations."
     },
     {
-        key: "gross_margin", title: "Gross Margin", icon: "fa-percent", color: "green", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: "%",
+        key: "gross_margin", title: _t("Gross Margin"), icon: "fa-percent", color: "green", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: "%",
         info: "Gross Margin Percentage — profitability before overhead.\nFormula: (Revenue − Expenses) ÷ Revenue × 100\nHigher is better. Compared as percentage-point change."
     },
     {
-        key: "dso", title: "DSO", icon: "fa-calendar-check-o", color: "blue", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
+        key: "dso", title: _t("DSO"), icon: "fa-calendar-check-o", color: "blue", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days Sales Outstanding — how fast customers pay.\nFormula: (Total Receivable ÷ Revenue) × Period Days\nLower is better. Industry avg: 30–45 days."
     },
     {
-        key: "dpo", title: "DPO", icon: "fa-calendar-minus-o", color: "orange", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
+        key: "dpo", title: _t("DPO"), icon: "fa-calendar-minus-o", color: "orange", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days Payables Outstanding — how fast you pay vendors.\nFormula: (Total Payable ÷ Expenses) × Period Days\nHigher means better cash retention, but watch relationships."
     },
     {
-        key: "cash_burn_rate", title: "Daily Burn Rate", icon: "fa-fire", color: "pink", group: "is_basic,is_readonly,is_manager",
+        key: "cash_burn_rate", title: _t("Daily Burn Rate"), icon: "fa-fire", color: "pink", group: "is_basic,is_readonly,is_manager",
         info: "Average daily spending rate.\nFormula: Total Expenses ÷ Number of Days in Period\nUsed to calculate Runway Days."
     },
     {
-        key: "runway_days", title: "Runway", icon: "fa-road", color: "purple", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
+        key: "runway_days", title: _t("Runway"), icon: "fa-road", color: "purple", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days of cash remaining at current burn rate.\nFormula: Cash Balance ÷ Daily Burn Rate\nCritical for cash planning. Below 90 days = high risk."
     },
 ];
@@ -95,43 +96,43 @@ const KPI_DEFS = [
 // Master Chart definitions
 const CHART_DEFS = [
     {
-        key: "revenue_expense", title: "Revenue vs Expenses", icon: "fa-line-chart", component: "RevenueExpenseChart", dataKey: "chartData", group: "is_readonly,is_manager",
+        key: "revenue_expense", title: _t("Revenue vs Expenses"), icon: "fa-line-chart", component: "RevenueExpenseChart", dataKey: "chartData", group: "is_readonly,is_manager",
         info: "Monthly comparison of revenue (invoices) and expenses (bills) over the selected period. Shows trends in profitability."
     },
     {
-        key: "cashflow_forecast", title: "Cash Flow Forecast", icon: "fa-area-chart", component: "CashflowForecast", dataKey: "cashflowData", group: "is_readonly,is_manager",
+        key: "cashflow_forecast", title: _t("Cash Flow Forecast"), icon: "fa-area-chart", component: "CashflowForecast", dataKey: "cashflowData", group: "is_readonly,is_manager",
         info: "90-day forward projection of cash position based on open invoices, pending bills, and recurring patterns."
     },
     {
-        key: "aging", title: "Aging Analysis", icon: "fa-bar-chart", component: "AgingChart", dataKey: "_aging", group: "is_basic,is_readonly,is_manager",
+        key: "aging", title: _t("Aging Analysis"), icon: "fa-bar-chart", component: "AgingChart", dataKey: "_aging", group: "is_basic,is_readonly,is_manager",
         info: "Receivable and payable balances grouped by aging buckets: Current, 1–30, 31–60, 61–90, 90+ days. Helps identify collection risks."
     },
     {
-        key: "profit_trend", title: "P&L Trend (12mo)", icon: "fa-line-chart", component: "ProfitTrendChart", dataKey: "profitTrend", group: "is_user,is_manager,is_readonly",
+        key: "profit_trend", title: _t("P&L Trend (12mo)"), icon: "fa-line-chart", component: "ProfitTrendChart", dataKey: "profitTrend", group: "is_user,is_manager,is_readonly",
         info: "12-month rolling Profit & Loss trend. Shows Revenue, Expenses, and Net Profit lines. Data: posted account.move entries."
     },
     {
-        key: "monthly_cashflow", title: "Cash Inflow / Outflow", icon: "fa-exchange", component: "MonthlyCashflowBars", dataKey: "monthlyCashflow", group: "is_readonly,is_manager",
+        key: "monthly_cashflow", title: _t("Cash Inflow / Outflow"), icon: "fa-exchange", component: "MonthlyCashflowBars", dataKey: "monthlyCashflow", group: "is_readonly,is_manager",
         info: "Monthly stacked bars showing cash inflows (customer payments) and outflows (vendor payments). Data: account.payment records."
     },
     {
-        key: "top_expenses", title: "Top Expenses", icon: "fa-pie-chart", component: "TopExpensesChart", dataKey: "topExpenses", group: "is_readonly,is_manager",
+        key: "top_expenses", title: _t("Top Expenses"), icon: "fa-pie-chart", component: "TopExpensesChart", dataKey: "topExpenses", group: "is_readonly,is_manager",
         info: "Top expense categories by amount in the selected period. Helps identify biggest cost drivers."
     },
     {
-        key: "expense_breakdown", title: "Expense Breakdown", icon: "fa-pie-chart", component: "ExpenseBreakdownChart", dataKey: "expenseBreakdown", group: "is_readonly,is_manager",
+        key: "expense_breakdown", title: _t("Expense Breakdown"), icon: "fa-pie-chart", component: "ExpenseBreakdownChart", dataKey: "expenseBreakdown", group: "is_readonly,is_manager",
         info: "Doughnut chart of expenses grouped by account name. Shows proportion of each expense category."
     },
     {
-        key: "income_expense_pie", title: "Income vs Expense", icon: "fa-pie-chart", component: "IncomeExpensePie", dataKey: "_pie", group: "is_readonly,is_manager",
+        key: "income_expense_pie", title: _t("Income vs Expense"), icon: "fa-pie-chart", component: "IncomeExpensePie", dataKey: "_pie", group: "is_readonly,is_manager",
         info: "Simple pie showing the ratio of total income to total expenses. Quick visual indicator of profitability."
     },
     {
-        key: "budget_vs_actual", title: "Budget vs Actual", icon: "fa-bar-chart", component: "BudgetVsActualChart", dataKey: "budgetVsActual", group: "is_readonly,is_manager",
+        key: "budget_vs_actual", title: _t("Budget vs Actual"), icon: "fa-bar-chart", component: "BudgetVsActualChart", dataKey: "budgetVsActual", group: "is_readonly,is_manager",
         info: "Compares budgeted amounts vs actual spending per budget line. Requires the Budget module (account_budget)."
     },
     {
-        key: "cashflow_waterfall", title: "Cashflow Waterfall", icon: "fa-bar-chart", component: "CashflowWaterfallChart", dataKey: "cashflowWaterfall", group: "is_readonly,is_manager",
+        key: "cashflow_waterfall", title: _t("Cashflow Waterfall"), icon: "fa-bar-chart", component: "CashflowWaterfallChart", dataKey: "cashflowWaterfall", group: "is_readonly,is_manager",
         info: "Waterfall chart: Opening Cash → +Inflows → −Outflows → Closing Cash. Visual summary of where cash went during the period."
     },
 ];
@@ -188,6 +189,7 @@ export class AccountingDashboard extends Component {
             userGroups: {},
             mixedCurrency: false,
             excludedCompanies: [],
+            companyIds: user.activeCompanies.map((company) => company.id),
             error: null,
             showKpiSettings: false,
             hiddenKpis: [],
@@ -202,22 +204,32 @@ export class AccountingDashboard extends Component {
         this.allChartDefs = CHART_DEFS;
 
         this.periodOptions = [
-            { value: "this_month", label: "This Month" },
-            { value: "last_month", label: "Last Month" },
-            { value: "this_quarter", label: "This Quarter" },
-            { value: "last_quarter", label: "Last Quarter" },
-            { value: "this_year", label: "This Year" },
-            { value: "last_year", label: "Last Year" },
+            { value: "this_month", label: _t("This Month") },
+            { value: "last_month", label: _t("Last Month") },
+            { value: "this_quarter", label: _t("This Quarter") },
+            { value: "last_quarter", label: _t("Last Quarter") },
+            { value: "this_year", label: _t("This Year") },
+            { value: "last_year", label: _t("Last Year") },
+            { value: "custom", label: _t("Custom Range") },
         ];
 
         this.formatOptions = [
-            { value: "full", label: "Full" },
+            { value: "full", label: _t("Full") },
             { value: "K", label: "K" },
             { value: "M", label: "M" },
             { value: "B", label: "B" },
         ];
 
         this.allKpiDefs = KPI_DEFS;
+        this.availableCompanies = user.activeCompanies;
+
+        this._keydownHandler = (ev) => {
+            if (ev.key === "Escape" && this.state.showKpiSettings) {
+                this.closeKpiSettings();
+            }
+        };
+        onMounted(() => document.addEventListener("keydown", this._keydownHandler));
+        onWillUnmount(() => document.removeEventListener("keydown", this._keydownHandler));
 
         onWillStart(async () => {
             await this._loadConfig();
@@ -239,6 +251,15 @@ export class AccountingDashboard extends Component {
             this.state.kpiOrder = config.kpi_order || [];
             this.state.hiddenCharts = config.hidden_charts || [];
             this.state.chartOrder = config.chart_order || [];
+            this.state.date_from = config.date_from || null;
+            this.state.date_to = config.date_to || null;
+            const activeCompanyIds = new Set(
+                user.activeCompanies.map((company) => company.id));
+            const savedCompanies = (config.company_ids || []).filter(
+                (companyId) => activeCompanyIds.has(companyId));
+            this.state.companyIds = savedCompanies.length
+                ? savedCompanies
+                : [...activeCompanyIds];
             if (config.default_period) {
                 this.state.period = config.default_period;
             }
@@ -288,7 +309,9 @@ export class AccountingDashboard extends Component {
             period: this.state.period,
             date_from: this.state.date_from,
             date_to: this.state.date_to,
-            company_ids: user.activeCompanies.map((c) => c.id),
+            company_ids: this.state.companyIds.length
+                ? this.state.companyIds
+                : user.activeCompanies.map((c) => c.id),
         };
     }
 
@@ -416,19 +439,43 @@ export class AccountingDashboard extends Component {
     getKpiSubtitle(kpi) {
         const data = this.state.kpiData[kpi.key];
         if (!data) return "";
-        if (kpi.key === "invoices") return `${data.posted_count || 0} posted, ${data.draft_count || 0} draft`;
-        if (kpi.key === "bills") return `${data.posted_count || 0} posted, ${data.draft_count || 0} draft`;
-        if (kpi.key === "overdue_receivable") return `${data.count || 0} invoices overdue`;
-        if (kpi.key === "overdue_payable") return `${data.count || 0} bills overdue`;
-        if (kpi.key === "total_receivable") return "All open invoices";
-        if (kpi.key === "total_payable") return "All open bills";
-        if (kpi.key === "net_cash_position") return "Cash − Payables";
-        if (kpi.key === "working_capital") return "Receivable + Cash − Payable";
-        if (kpi.key === "gross_margin") return "(Revenue − Costs) / Revenue";
-        if (kpi.key === "dso") return "Avg collection period";
-        if (kpi.key === "dpo") return "Avg payment period";
-        if (kpi.key === "cash_burn_rate") return "Avg daily spend";
-        if (kpi.key === "runway_days") return "Days of cash left";
+        if (kpi.key === "invoices" || kpi.key === "bills") {
+            return _t("%(posted)s posted, %(draft)s draft", {
+                posted: data.posted_count || 0,
+                draft: data.draft_count || 0,
+            });
+        }
+        if (kpi.key === "overdue_receivable") {
+            return _t("%(count)s invoices overdue", { count: data.count || 0 });
+        }
+        if (kpi.key === "overdue_payable") {
+            return _t("%(count)s bills overdue", { count: data.count || 0 });
+        }
+        if (kpi.key === "total_receivable") return _t("All open invoices");
+        if (kpi.key === "total_payable") return _t("All open bills");
+        if (kpi.key === "net_cash_position") return _t("Cash − Payables");
+        if (kpi.key === "working_capital") return _t("Receivable + Cash − Payable");
+        if (kpi.key === "gross_margin") return _t("(Revenue − Costs) / Revenue");
+        if (kpi.key === "dso") return _t("Avg collection period");
+        if (kpi.key === "dpo") return _t("Avg payment period");
+        if (kpi.key === "cash_burn_rate") return _t("Avg daily spend");
+        if (kpi.key === "runway_days") return _t("Days of cash left");
+        return "";
+    }
+
+    getKpiDisplay(kpi) {
+        const data = this.state.kpiData[kpi.key];
+        if (kpi.key === "runway_days" && data?.is_unlimited) {
+            return _t("N/A");
+        }
+        return "";
+    }
+
+    getKpiPrevDisplay(kpi) {
+        const data = this.state.kpiData[kpi.key];
+        if (kpi.key === "runway_days" && data?.prev_is_unlimited) {
+            return _t("N/A");
+        }
         return "";
     }
 
@@ -456,6 +503,12 @@ export class AccountingDashboard extends Component {
 
     closeKpiSettings() {
         this.state.showKpiSettings = false;
+    }
+
+    toggleChartInfo(chartKey) {
+        this.state.chartInfoKey = this.state.chartInfoKey === chartKey
+            ? null
+            : chartKey;
     }
 
     switchSettingsTab(tab) {
@@ -607,7 +660,46 @@ export class AccountingDashboard extends Component {
 
     async onPeriodChange(ev) {
         this.state.period = ev.target.value;
-        this._saveConfig({ default_period: this.state.period });
+        if (this.state.period === "custom") {
+            if (!this.state.date_from || !this.state.date_to) {
+                const today = this._todayISO();
+                this.state.date_from = this.state.date_from || today.slice(0, 8) + "01";
+                this.state.date_to = this.state.date_to || today;
+            }
+            this._saveConfig({
+                default_period: this.state.period,
+                date_from: this.state.date_from,
+                date_to: this.state.date_to,
+            });
+        } else {
+            this._saveConfig({ default_period: this.state.period });
+        }
+        await this.loadDashboardData();
+    }
+
+    async onCustomDateChange() {
+        if (!this.state.date_from || !this.state.date_to) {
+            return;
+        }
+        this._saveConfig({
+            date_from: this.state.date_from,
+            date_to: this.state.date_to,
+        });
+        await this.loadDashboardData();
+    }
+
+    async toggleCompany(companyId) {
+        const selected = new Set(this.state.companyIds);
+        if (selected.has(companyId)) {
+            if (selected.size === 1) {
+                return;
+            }
+            selected.delete(companyId);
+        } else {
+            selected.add(companyId);
+        }
+        this.state.companyIds = [...selected];
+        this._saveConfig({ company_ids: this.state.companyIds });
         await this.loadDashboardData();
     }
 
@@ -668,6 +760,10 @@ export class AccountingDashboard extends Component {
             case "last_year":
                 dateFrom = new Date(year - 1, 0, 1);
                 dateTo = new Date(year - 1, 11, 31);
+                break;
+            case "custom":
+                dateFrom = this.state.date_from ? new Date(this.state.date_from) : null;
+                dateTo = this.state.date_to ? new Date(this.state.date_to) : null;
                 break;
             default:
                 break;
@@ -934,25 +1030,23 @@ export class AccountingDashboard extends Component {
 
     formatCurrency(amount) {
         if (amount === null || amount === undefined) return "—";
-        const symbol = this.state.kpiData.currency_symbol || "$";
+        const currencyId = this.state.kpiData.currency_id;
         const fmt = this.state.amountFormat;
-        let formatted;
-
-        const abs = Math.abs(amount);
-        if (fmt === "B") {
-            formatted = (abs / 1e9).toFixed(2) + "B";
-        } else if (fmt === "M") {
-            formatted = (abs / 1e6).toFixed(2) + "M";
-        } else if (fmt === "K") {
-            formatted = (abs / 1e3).toFixed(1) + "K";
-        } else {
-            formatted = abs.toLocaleString(undefined, {
+        if (!currencyId) {
+            return Number(amount).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
             });
         }
-
-        return amount < 0 ? `-${symbol} ${formatted}` : `${symbol} ${formatted}`;
+        if (fmt === "full") {
+            return formatCurrencyCore(amount, currencyId);
+        }
+        const divisor = { K: 1e3, M: 1e6, B: 1e9 }[fmt] || 1;
+        const scaled = amount / divisor;
+        const formatted = formatCurrencyCore(scaled, currencyId, {
+            digits: [69, fmt === "K" ? 1 : 2],
+        });
+        return `${formatted}${fmt}`;
     }
 
     formatCompact(amount) {

@@ -27,6 +27,10 @@ export class IncomeExpensePie extends Component {
         onWillUnmount(() => this.destroyChart());
     }
 
+    get hasData() {
+        return Boolean(this.props.revenue || this.props.expenses);
+    }
+
     destroyChart() {
         if (this.chart) {
             this.chart.destroy();

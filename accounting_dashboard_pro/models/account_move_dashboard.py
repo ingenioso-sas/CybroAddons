@@ -401,27 +401,31 @@ class AccountMoveDashboard(models.Model):
                 burn_rate = expenses / period_days if period_days else 0
             else:
                 self.env.cr.execute("""
-                    SELECT COALESCE(SUM(ABS(amount_untaxed_signed)), 0)
+                    SELECT COALESCE(SUM(amount_untaxed_signed), 0)
                     FROM account_move
-                    WHERE state = 'posted' AND move_type = 'in_invoice'
+                    WHERE state = 'posted'
+                      AND move_type IN ('in_invoice', 'in_refund')
                       AND date BETWEEN %s AND %s AND company_id = ANY(%s)
                 """, (date_from, date_to, company_ids))
-                expenses_for_burn = self.env.cr.fetchone()[0]
+                expenses_for_burn = -self.env.cr.fetchone()[0]
                 burn_rate = expenses_for_burn / period_days
 
             # Previous burn rate
             prev_period_days = max((prev_to - prev_from).days, 1)
             self.env.cr.execute("""
-                SELECT COALESCE(SUM(ABS(amount_untaxed_signed)), 0)
+                SELECT COALESCE(SUM(amount_untaxed_signed), 0)
                 FROM account_move
-                WHERE state = 'posted' AND move_type = 'in_invoice'
+                WHERE state = 'posted'
+                  AND move_type IN ('in_invoice', 'in_refund')
                   AND date BETWEEN %s AND %s AND company_id = ANY(%s)
             """, (prev_from, prev_to, company_ids))
-            prev_burn_rate = self.env.cr.fetchone()[0] / prev_period_days
+            prev_burn_rate = -self.env.cr.fetchone()[0] / prev_period_days
 
             # Runway Days = Cash Balance / Burn Rate
-            runway_days = round(cash_balance / burn_rate) if burn_rate > 0 else 999
-            prev_runway = round(prev_cash_balance / prev_burn_rate) if prev_burn_rate > 0 else 999
+            runway_unlimited = burn_rate <= 0
+            prev_runway_unlimited = prev_burn_rate <= 0
+            runway_days = round(cash_balance / burn_rate) if not runway_unlimited else 999
+            prev_runway = round(prev_cash_balance / prev_burn_rate) if not prev_runway_unlimited else 999
 
             result['total_receivable'] = {
                 'amount': total_receivable,
@@ -446,7 +450,10 @@ class AccountMoveDashboard(models.Model):
             result['runway_days'] = {
                 'amount': runway_days,
                 'prev_amount': prev_runway,
-                'change_pct': self._safe_change_pct(runway_days, prev_runway),
+                'change_pct': 0 if runway_unlimited or prev_runway_unlimited
+                else self._safe_change_pct(runway_days, prev_runway),
+                'is_unlimited': runway_unlimited,
+                'prev_is_unlimited': prev_runway_unlimited,
             }
 
             # ------ NEW CFO KPIs ------
@@ -1223,14 +1230,14 @@ class AccountMoveDashboard(models.Model):
         closing = self._dashboard_cash_balance(company_ids, date_to)
         other = closing - (opening + inflows - outflows)
 
-        labels = ['Opening', 'Cash In', 'Cash Out']
+        labels = [_('Opening'), _('Cash In'), _('Cash Out')]
         values = [opening, inflows, -outflows]
         types = ['total', 'increase', 'decrease']
         if abs(other) > 0.005:
-            labels.append('Other')
+            labels.append(_('Other'))
             values.append(other)
             types.append('increase' if other > 0 else 'decrease')
-        labels.append('Closing')
+        labels.append(_('Closing'))
         values.append(closing)
         types.append('total')
 

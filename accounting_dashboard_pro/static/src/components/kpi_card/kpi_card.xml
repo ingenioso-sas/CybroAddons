@@ -9,6 +9,11 @@
                     <span class="adp-kpi-label" t-esc="props.title"/>
                     <div class="adp-kpi-top-right">
                         <span t-if="props.info" class="adp-info-btn"
+                              role="button" tabindex="0"
+                              aria-label="KPI information"
+                              t-on-click="toggleInfo"
+                              t-on-focus="onInfoEnter"
+                              t-on-blur="onInfoLeave"
                               t-on-mouseenter="onInfoEnter"
                               t-on-mouseleave="onInfoLeave">
                             <i class="fa fa-info-circle"/>

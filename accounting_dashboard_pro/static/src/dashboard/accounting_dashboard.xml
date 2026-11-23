@@ -14,7 +14,8 @@
                 </div>
                 <div class="adp-header-right">
                     <!-- Period -->
-                    <select class="adp-select" t-on-change="onPeriodChange">
+                    <select class="adp-select" t-on-change="onPeriodChange"
+                            aria-label="Period">
                         <t t-foreach="periodOptions" t-as="opt" t-key="opt.value">
                             <option t-att-value="opt.value"
                                     t-att-selected="opt.value === state.period ? 'selected' : undefined">
@@ -22,8 +23,20 @@
                             </option>
                         </t>
                     </select>
+                    <!-- Custom date range -->
+                    <t t-if="state.period === 'custom'">
+                        <input type="date" class="adp-select adp-select-date"
+                               t-model="state.date_from"
+                               t-on-change="onCustomDateChange"
+                               aria-label="From date"/>
+                        <input type="date" class="adp-select adp-select-date"
+                               t-model="state.date_to"
+                               t-on-change="onCustomDateChange"
+                               aria-label="To date"/>
+                    </t>
                     <!-- Amount Format -->
-                    <select class="adp-select adp-select-sm" t-on-change="onFormatChange">
+                    <select class="adp-select adp-select-sm" t-on-change="onFormatChange"
+                            aria-label="Amount format">
                         <t t-foreach="formatOptions" t-as="fmt" t-key="fmt.value">
                             <option t-att-value="fmt.value"
                                     t-att-selected="fmt.value === state.amountFormat ? 'selected' : undefined">
@@ -32,15 +45,18 @@
                         </t>
                     </select>
                     <!-- KPI Settings -->
-                    <button class="adp-settings-btn" t-on-click="toggleKpiSettings" title="KPI Settings">
+                    <button class="adp-settings-btn" t-on-click="toggleKpiSettings"
+                            title="KPI Settings" aria-label="KPI Settings">
                         <i class="fa fa-cog"/>
                     </button>
                     <!-- Theme Toggle -->
-                    <button class="adp-theme-btn" t-on-click="toggleTheme" title="Toggle Theme">
+                    <button class="adp-theme-btn" t-on-click="toggleTheme"
+                            title="Toggle Theme" aria-label="Toggle Theme">
                         <i t-att-class="'fa ' + themeIcon"/>
                     </button>
                     <!-- Refresh -->
-                    <button class="adp-btn" t-on-click="onRefresh" title="Refresh">
+                    <button class="adp-btn" t-on-click="onRefresh"
+                            title="Refresh" aria-label="Refresh">
                         <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.loading }"/>
                     </button>
                 </div>
@@ -67,10 +83,8 @@
             <!-- MIXED CURRENCY WARNING -->
             <div t-if="state.mixedCurrency and !state.loading" class="adp-warning-banner">
                 <i class="fa fa-exclamation-triangle"/>
-                <span>
-                    Multiple currencies selected. Showing only companies using the reporting currency
-                    (<t t-esc="state.excludedCompanies.length"/> excluded).
-                </span>
+                <span>Multiple currencies selected. Only companies using the reporting currency are included.</span>
+                <span>(<t t-esc="state.excludedCompanies.length"/> excluded)</span>
             </div>
 
             <!-- MAIN CONTENT -->
@@ -92,6 +106,8 @@
                             useRaw="kpi.useRaw || false"
                             rawSuffix="kpi.rawSuffix || ''"
                             info="kpi.info || ''"
+                            display="getKpiDisplay(kpi)"
+                            prevDisplay="getKpiPrevDisplay(kpi)"
                         />
                     </t>
                 </div>
@@ -102,6 +118,9 @@
                         <div class="adp-chart-wrapper">
                             <!-- Chart Info Button (hover) -->
                             <span t-if="chart.info" class="adp-chart-info-btn"
+                                  role="button" tabindex="0"
+                                  aria-label="Chart information"
+                                  t-on-click="() => this.toggleChartInfo(chart.key)"
                                   t-on-mouseenter="() => this.state.chartInfoKey = chart.key"
                                   t-on-mouseleave="() => this.state.chartInfoKey = null">
                                 <i class="fa fa-info-circle"/>
@@ -221,10 +240,12 @@
             <!-- SETTINGS PANEL (KPIs + Charts tabs) -->
             <t t-if="state.showKpiSettings">
                 <div class="adp-settings-overlay" t-on-click="closeKpiSettings"/>
-                <div class="adp-settings-panel">
+                <div class="adp-settings-panel" role="dialog" aria-modal="true"
+                     aria-label="Dashboard Settings">
                     <div class="adp-settings-header">
                         <h3><i class="fa fa-cog"/> Dashboard Settings</h3>
-                        <button class="adp-close-btn" t-on-click="closeKpiSettings">
+                        <button class="adp-close-btn" t-on-click="closeKpiSettings"
+                                aria-label="Close settings">
                             <i class="fa fa-times"/>
                         </button>
                     </div>
@@ -237,6 +258,10 @@
                         <button t-att-class="'adp-tab ' + (state.settingsTab === 'charts' ? 'active' : '')"
                                 t-on-click="() => this.switchSettingsTab('charts')">
                             <i class="fa fa-bar-chart"/> Charts
+                        </button>
+                        <button t-att-class="'adp-tab ' + (state.settingsTab === 'companies' ? 'active' : '')"
+                                t-on-click="() => this.switchSettingsTab('companies')">
+                            <i class="fa fa-building"/> Companies
                         </button>
                     </div>
                     <div class="adp-settings-body">
@@ -286,6 +311,20 @@
                                         <t t-esc="chart.title"/>
                                     </span>
                                 </div>
+                            </t>
+                        </t>
+                        <!-- Companies Tab -->
+                        <t t-if="state.settingsTab === 'companies'">
+                            <t t-foreach="availableCompanies" t-as="company" t-key="company.id">
+                                <label class="adp-settings-item adp-settings-company">
+                                    <input type="checkbox"
+                                           t-att-checked="state.companyIds.includes(company.id)"
+                                           t-on-change="() => this.toggleCompany(company.id)"/>
+                                    <span class="adp-settings-kpi-label">
+                                        <i class="fa fa-building"/>
+                                        <t t-esc="company.name"/>
+                                    </span>
+                                </label>
                             </t>
                         </t>
                     </div>

@@ -17,6 +17,8 @@ export class KpiCard extends Component {
         useRaw: { type: Boolean, optional: true },
         rawSuffix: { type: String, optional: true },
         info: { type: String, optional: true },
+        display: { type: String, optional: true },
+        prevDisplay: { type: String, optional: true },
     };
 
     setup() {
@@ -44,9 +46,18 @@ export class KpiCard extends Component {
         this.infoState.show = false;
     }
 
+    toggleInfo(ev) {
+        ev.stopPropagation();
+        this.infoState.show = !this.infoState.show;
+    }
+
     animateCount() {
         const el = this.amountRef.el;
         if (!el) return;
+        if (this.props.display) {
+            el.textContent = this.props.display;
+            return;
+        }
         const target = this.props.amount || 0;
         const duration = 700;
         const start = performance.now();
@@ -74,6 +85,9 @@ export class KpiCard extends Component {
     }
 
     get formattedAmount() {
+        if (this.props.display) {
+            return this.props.display;
+        }
         if (this.props.useRaw) {
             const value = this.props.amount ?? 0;
             const text = Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -83,6 +97,9 @@ export class KpiCard extends Component {
     }
 
     get formattedPrevAmount() {
+        if (this.props.prevDisplay) {
+            return this.props.prevDisplay;
+        }
         if (this.props.prevAmount === undefined || this.props.prevAmount === null) {
             return "";
         }

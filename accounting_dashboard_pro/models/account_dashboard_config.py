@@ -36,11 +36,6 @@ class AccountDashboardConfig(models.Model):
         ondelete='cascade',
         index=True,
     )
-    layout_config = fields.Json(
-        string='Layout Configuration',
-        default=dict,
-        help='Widget positions, sizes and arrangement (persisted layout)',
-    )
     default_period = fields.Selection(
         selection=[
             ('this_month', 'This Month'),
@@ -73,11 +68,6 @@ class AccountDashboardConfig(models.Model):
         string='Companies',
         default=lambda self: self.env.company,
         help='Companies to include in dashboard data',
-    )
-    collapsed_widgets = fields.Json(
-        string='Collapsed Widgets',
-        default=list,
-        help='List of widget IDs the user has collapsed',
     )
     hidden_kpis = fields.Json(
         string='Hidden KPIs',
@@ -127,12 +117,10 @@ class AccountDashboardConfig(models.Model):
             'date_from': config.date_from,
             'date_to': config.date_to,
             'company_ids': config.company_ids.ids,
-            'collapsed_widgets': config.collapsed_widgets or [],
             'hidden_kpis': config.hidden_kpis or [],
             'kpi_order': config.kpi_order or [],
             'hidden_charts': config.hidden_charts or [],
             'chart_order': config.chart_order or [],
-            'layout_config': config.layout_config or {},
             'theme': config.theme,
         }
 
@@ -141,9 +129,8 @@ class AccountDashboardConfig(models.Model):
         self.ensure_one()
         writable = {}
         for key in ('default_period', 'amount_format', 'date_from', 'date_to',
-                    'collapsed_widgets', 'hidden_kpis', 'kpi_order',
-                    'hidden_charts', 'chart_order',
-                    'layout_config', 'theme'):
+                    'hidden_kpis', 'kpi_order',
+                    'hidden_charts', 'chart_order', 'theme'):
             if key in vals:
                 writable[key] = vals[key]
         if 'company_ids' in vals:
