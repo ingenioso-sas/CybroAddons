@@ -283,49 +283,6 @@
                 </div>
             </t>
 
-            <!-- REPORT SELECTION MODAL -->
-            <t t-if="state.showReportModal">
-                <div class="adp-modal-overlay" t-on-click="() => this.state.showReportModal = false"/>
-                <div class="adp-modal">
-                    <div class="adp-modal-header">
-                        <h3><i class="fa fa-file-text-o"/> Select Accounting Report</h3>
-                        <button class="adp-close-btn" t-on-click="() => this.state.showReportModal = false">
-                            <i class="fa fa-times"/>
-                        </button>
-                    </div>
-                    <div class="adp-modal-search">
-                        <i class="fa fa-search search-icon"/>
-                        <input type="text"
-                               class="adp-modal-search-input"
-                               placeholder="Search reports..."
-                               t-model="state.searchReportQuery"/>
-                        <button t-if="state.searchReportQuery" 
-                                class="clear-btn" 
-                                t-on-click="() => this.state.searchReportQuery = ''">
-                            <i class="fa fa-times"/>
-                        </button>
-                    </div>
-                    <div class="adp-modal-body">
-                        <div class="adp-report-list">
-                            <t t-if="!filteredReports.length">
-                                <div class="adp-report-empty">
-                                    <i class="fa fa-folder-open-o"/>
-                                    <span>No matching reports found</span>
-                                </div>
-                            </t>
-                            <t t-foreach="filteredReports" t-as="report" t-key="report.id">
-                                <div class="adp-report-item" t-on-click="() => this.openReport(report.id, report.name)">
-                                    <div class="adp-report-icon-wrapper">
-                                        <i class="fa fa-bar-chart"/>
-                                    </div>
-                                    <span class="adp-report-name" t-esc="report.name"/>
-                                    <i class="fa fa-chevron-right adp-report-arrow"/>
-                                </div>
-                            </t>
-                        </div>
-                    </div>
-                </div>
-            </t>
         </div>
     </t>
 

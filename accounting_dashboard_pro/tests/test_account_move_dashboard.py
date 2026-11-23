@@ -171,6 +171,12 @@ class TestAccountMoveDashboard(TransactionCase):
         with self.assertRaises(AccessError):
             self.env['account.move'].with_user(user).get_account_journal_ids(params)
 
+    def test_account_invoice_analysis_action_exists(self):
+        """The dashboard uses the standard Invoice Analysis action."""
+        action = self.env.ref(
+            'account.action_account_invoice_report_all', raise_if_not_found=False)
+        self.assertTrue(action, "account.action_account_invoice_report_all is missing")
+
     def test_safe_change_pct(self):
         """Test safe percentage change calculation."""
         pct = self.move_model._safe_change_pct(150, 100)

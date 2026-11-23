@@ -195,9 +195,6 @@ export class AccountingDashboard extends Component {
             chartOrder: [],
             settingsTab: "kpis",
             configId: null,
-            showReportModal: false,
-            availableReports: [],
-            searchReportQuery: "",
         });
 
         this.allChartDefs = CHART_DEFS;
@@ -808,6 +805,18 @@ export class AccountingDashboard extends Component {
                 views: [[false, "list"], [false, "form"], [false, "pivot"]],
                 domain: this._mergeDomain([["move_type", "=", "in_invoice"], ["state", "=", "posted"]]),
             },
+            total_payable: {
+                type: "ir.actions.act_window",
+                name: _t("Open Vendor Bills"),
+                res_model: "account.move",
+                view_mode: "list,form",
+                views: [[false, "list"], [false, "form"], [false, "pivot"]],
+                domain: this._mergeDomain([
+                    ["move_type", "=", "in_invoice"],
+                    ["state", "=", "posted"],
+                    ["payment_state", "in", ["not_paid", "partial"]],
+                ]),
+            },
             cash_balance: {
                 type: "ir.actions.act_window",
                 name: "Cash Balance",
@@ -879,11 +888,7 @@ export class AccountingDashboard extends Component {
                     ...this._draftFilterDomain(),
                 ],
             },
-            generate_reports: {
-                type: "ir.actions.client",
-                tag: "account_report",
-                name: "Financial Reports",
-            },
+            invoice_analysis: "account.action_account_invoice_report_all",
             configure_settings: {
                 type: "ir.actions.act_window",
                 name: "Configure Settings",
@@ -902,77 +907,9 @@ export class AccountingDashboard extends Component {
             },
         };
 
-        if (actionName === 'generate_reports') {
-            if (!this.state.userGroups.is_user && !this.state.userGroups.is_manager) {
-                console.warn("Unauthorized report access attempt.");
-                return;
-            }
-            this.onGenerateReportsClick();
-            return;
-        }
-
-        if (actionName === 'total_payable') {
-            (async () => {
-                try {
-                    const resId = await this.orm.call("ir.model.data", "_xmlid_to_res_id", ["account_reports.aged_payable_report"]);
-                    if (resId) {
-                        this.action.doAction({
-                            type: "ir.actions.client",
-                            tag: "account_report",
-                            name: "Aged Payable",
-                            context: { report_id: resId }
-                        });
-                    } else {
-                        throw new Error("XML ID account_reports.aged_payable_report not found");
-                    }
-                } catch (e) {
-                    console.warn("Failed to resolve Aged Payable report via XML ID, fallback to report_id 9:", e);
-                    this.action.doAction({
-                        type: "ir.actions.client",
-                        tag: "account_report",
-                        name: "Aged Payable",
-                        context: { report_id: 9 }
-                    });
-                }
-            })();
-            return;
-        }
-
         if (actionMap[actionName]) {
             this.action.doAction(actionMap[actionName]);
         }
-    }
-
-    async onGenerateReportsClick() {
-        if (!this.state.availableReports || this.state.availableReports.length === 0) {
-            try {
-                const reports = await this.orm.searchRead("account.report", [], ["id", "name"]);
-                this.state.availableReports = reports || [];
-            } catch (e) {
-                console.error("Failed to load accounting reports:", e);
-            }
-        }
-        this.state.showReportModal = true;
-    }
-
-    get filteredReports() {
-        const query = (this.state.searchReportQuery || "").toLowerCase().trim();
-        if (!query) {
-            return this.state.availableReports || [];
-        }
-        return (this.state.availableReports || []).filter(r =>
-            (r.name || "").toLowerCase().includes(query)
-        );
-    }
-
-    openReport(reportId, reportName) {
-        this.state.showReportModal = false;
-        this.action.doAction({
-            type: "ir.actions.client",
-            tag: "account_report",
-            name: reportName,
-            context: { report_id: reportId }
-        });
     }
 
     onKpiClick(actionName) {

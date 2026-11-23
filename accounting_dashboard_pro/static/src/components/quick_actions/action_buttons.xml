@@ -30,14 +30,14 @@
                     </button>
                 </t>
                 <!-- Accountant & higher -->
-                <t t-if="props.userGroups.is_user">
+                <t t-if="props.userGroups.is_user or props.userGroups.is_manager">
                     <button class="adp-action-btn adp-action-blue" t-on-click="() => props.onAction('lock_date')">
                         <i class="fa fa-lock"/>
                         <span>Lock Period</span>
                     </button>
-                    <button class="adp-action-btn adp-action-green" t-on-click="() => props.onAction('generate_reports')">
+                    <button class="adp-action-btn adp-action-green" t-on-click="() => props.onAction('invoice_analysis')">
                         <i class="fa fa-file-text-o"/>
-                        <span>Generate Reports</span>
+                        <span>Invoice Analysis</span>
                     </button>
                 </t>
                 <!-- CFO & higher -->
