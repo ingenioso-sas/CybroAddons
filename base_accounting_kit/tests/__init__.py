@@ -12,3 +12,4 @@ from . import test_reports
 from . import test_report_xlsx
 from . import test_partner_statement
 from . import test_misc
+from . import test_qif_import

@@ -79,12 +79,11 @@ Key Features
 
 Installation
 ------------
-This module uses the external Python packages ``openpyxl``, ``ofxparse``,
-``qifparse`` and ``xlsxwriter``. Install them before installing the module::
+This module uses the external Python packages ``openpyxl``, ``ofxparse``
+and ``xlsxwriter``. Install them before installing the module::
 
     pip install openpyxl
     pip install ofxparse
-    pip install qifparse
     pip install xlsxwriter
 
 Configuration

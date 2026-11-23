@@ -30,7 +30,7 @@ from io import BytesIO
 from odoo import fields, models, _
 from odoo.exceptions import ValidationError
 from ofxparse import OfxParser
-from qifparse.parser import QifParser
+from .qif_parser import parse_qif
 
 
 class ImportBankStatement(models.TransientModel):
@@ -392,45 +392,43 @@ class ImportBankStatement(models.TransientModel):
             elif split_tup[1] == '.qif':
                 try:
                     file_data = base64.b64decode(self.attachment)
-                    file_string = file_data.decode('utf-8-sig')
-                    qif = QifParser().parse(io.StringIO(file_string))
+                    transactions = parse_qif(file_data)
                 except Exception as e:
                     raise ValidationError(_("Error parsing QIF file: %s") % str(e))
 
                 statement_id = False
-                for account in qif.get_accounts():
-                    for transaction in qif.get_transactions(account):
-                        amount = self._parse_float(transaction.amount)
-                        if amount == 0:
-                            continue
-                            
-                        date = self._parse_date(transaction.date)
-                        label = (transaction.payee or transaction.memo or 'qif transaction').strip()
-                        payee_name = transaction.payee.strip() if transaction.payee else False
-                        
-                        partner = False
+                for transaction in transactions:
+                    amount = self._parse_float(transaction.amount)
+                    if amount == 0:
+                        continue
+
+                    date = self._parse_date(transaction.date)
+                    label = (transaction.payee or transaction.memo or 'qif transaction').strip()
+                    payee_name = transaction.payee.strip() if transaction.payee else False
+
+                    partner = False
+                    if payee_name:
+                        if payee_name.lower() in ('bank', 'cash', 'main', 'demo', 'yourcompany'):
+                            payee_name = False
                         if payee_name:
-                            if payee_name.lower() in ('bank', 'cash', 'main', 'demo', 'yourcompany'):
-                                payee_name = False
-                            if payee_name:
-                                partner = self.env['res.partner'].search([('name', '=', payee_name)], limit=1)
-                        
-                        statement = self.env['account.bank.statement'].create({
-                            'name': label,
-                            'journal_id': self.journal_id.id,
-                            'company_id': self.journal_id.company_id.id,
+                            partner = self.env['res.partner'].search([('name', '=', payee_name)], limit=1)
+
+                    statement = self.env['account.bank.statement'].create({
+                        'name': label,
+                        'journal_id': self.journal_id.id,
+                        'company_id': self.journal_id.company_id.id,
+                        'date': date,
+                        'balance_start': 0.0,
+                        'balance_end_real': amount,
+                        'line_ids': [(0, 0, {
                             'date': date,
-                            'balance_start': 0.0,
-                            'balance_end_real': amount,
-                            'line_ids': [(0, 0, {
-                                'date': date,
-                                'payment_ref': label,
-                                'partner_id': partner.id if partner else False,
-                                'journal_id': self.journal_id.id,
-                                'amount': amount,
-                            })],
-                        })
-                        statement_id = statement.id
+                            'payment_ref': label,
+                            'partner_id': partner.id if partner else False,
+                            'journal_id': self.journal_id.id,
+                            'amount': amount,
+                        })],
+                    })
+                    statement_id = statement.id
 
                 if not statement_id:
                     raise ValidationError(_("No valid transactions found in the QIF file."))
