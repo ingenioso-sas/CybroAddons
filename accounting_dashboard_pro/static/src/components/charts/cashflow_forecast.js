@@ -8,6 +8,7 @@ export class CashflowForecast extends Component {
     static props = {
         data: { type: Object },
         formatCurrency: { type: Function },
+        theme: { type: String, optional: true },
     };
 
     setup() {
@@ -18,7 +19,7 @@ export class CashflowForecast extends Component {
         });
         onMounted(() => this.renderChart());
         onWillUpdateProps((next) => {
-            if (next.data !== this.props.data) {
+            if (next.data !== this.props.data || next.theme !== this.props.theme) {
                 this.destroyChart();
                 this.props = next;
                 this.renderChart();
@@ -39,7 +40,7 @@ export class CashflowForecast extends Component {
         if (!canvas || !this.props.data?.labels?.length) return;
         const ctx = canvas.getContext("2d");
 
-        const isDark = document.querySelector('.adp-dark') !== null;
+        const isDark = (this.props.theme || "dark") === "dark";
         const textColor = isDark ? '#94a3b8' : '#64748b';
         const gridColor = isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(0, 0, 0, 0.06)';
 

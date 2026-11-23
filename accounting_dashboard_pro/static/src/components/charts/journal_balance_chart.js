@@ -1,11 +1,11 @@
 /** @odoo-module **/
 
-import { Component, useRef, onMounted, onWillUnmount, onWillStart, useState } from "@odoo/owl";
+import { Component, useRef, onMounted, onWillUpdateProps, onWillUnmount, onWillStart, useState } from "@odoo/owl";
 import { loadBundle } from "@web/core/assets";
 
 export class JournalBalanceChart extends Component {
     static template = "accounting_dashboard_pro.JournalBalanceChart";
-    static props = { journals: { type: Array }, formatCurrency: Function };
+    static props = { journals: { type: Array }, formatCurrency: Function, theme: { type: String, optional: true } };
 
     setup() {
         this.canvasRef = useRef("canvas");
@@ -15,6 +15,18 @@ export class JournalBalanceChart extends Component {
             await loadBundle("web.chartjs_lib");
         });
         onMounted(() => this.renderChart());
+        onWillUpdateProps((next) => {
+            if (next.journals !== this.props.journals
+                || next.theme !== this.props.theme
+                || next.formatCurrency !== this.props.formatCurrency) {
+                this.destroyChart();
+                this.props = next;
+                if (this.state.selectedIndex >= (next.journals || []).length) {
+                    this.state.selectedIndex = 0;
+                }
+                this.renderChart();
+            }
+        });
         onWillUnmount(() => this.destroyChart());
     }
 
@@ -42,7 +54,7 @@ export class JournalBalanceChart extends Component {
         if (!el) return;
         const ctx = el.getContext("2d");
 
-        const isDark = el.closest(".adp-dark") !== null;
+        const isDark = (this.props.theme || "dark") === "dark";
         const textColor = isDark ? "#cbd5e1" : "#475569";
         const gridColor = isDark ? "rgba(148,163,184,.12)" : "rgba(0,0,0,.06)";
         const isBank = data.journal_type === "bank";

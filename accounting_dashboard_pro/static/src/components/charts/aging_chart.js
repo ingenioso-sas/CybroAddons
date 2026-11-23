@@ -9,6 +9,7 @@ export class AgingChart extends Component {
         receivableData: { type: Object },
         payableData: { type: Object },
         formatCurrency: { type: Function },
+        theme: { type: String, optional: true },
     };
 
     setup() {
@@ -37,7 +38,7 @@ export class AgingChart extends Component {
         const canvas = this.chartRef.el;
         if (!canvas) return;
 
-        const isDark = document.querySelector('.adp-dark') !== null;
+        const isDark = (this.props.theme || "dark") === "dark";
         const textColor = isDark ? '#94a3b8' : '#64748b';
         const gridColor = isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(0, 0, 0, 0.06)';
 

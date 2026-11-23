@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, onMounted, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onPatched, onWillUpdateProps, useRef, useState } from "@odoo/owl";
 
 export class KpiCard extends Component {
     static template = "accounting_dashboard_pro.KpiCard";
@@ -22,7 +22,17 @@ export class KpiCard extends Component {
     setup() {
         this.amountRef = useRef("amount");
         this.infoState = useState({ show: false });
+        this._animateNext = false;
         onMounted(() => this.animateCount());
+        onWillUpdateProps((next) => {
+            this._animateNext = next.amount !== this.props.amount;
+        });
+        onPatched(() => {
+            if (this._animateNext) {
+                this._animateNext = false;
+                this.animateCount();
+            }
+        });
     }
 
     onInfoEnter(ev) {
@@ -48,7 +58,10 @@ export class KpiCard extends Component {
             const current = target * eased;
 
             if (this.props.useRaw) {
-                el.textContent = Math.round(current) + (this.props.rawSuffix || '');
+                const value = Math.abs(current) < 10
+                    ? current.toFixed(1)
+                    : Math.round(current);
+                el.textContent = `${value}${this.props.rawSuffix || ''}`;
             } else {
                 el.textContent = this.props.formatCurrency(current);
             }
@@ -58,6 +71,27 @@ export class KpiCard extends Component {
             }
         };
         requestAnimationFrame(step);
+    }
+
+    get formattedAmount() {
+        if (this.props.useRaw) {
+            const value = this.props.amount ?? 0;
+            const text = Number.isInteger(value) ? String(value) : value.toFixed(1);
+            return `${text}${this.props.rawSuffix || ''}`;
+        }
+        return this.props.formatCurrency(this.props.amount || 0);
+    }
+
+    get formattedPrevAmount() {
+        if (this.props.prevAmount === undefined || this.props.prevAmount === null) {
+            return "";
+        }
+        if (this.props.useRaw) {
+            const value = this.props.prevAmount;
+            const text = Number.isInteger(value) ? String(value) : value.toFixed(1);
+            return `${text}${this.props.rawSuffix || ''}`;
+        }
+        return this.props.formatCurrency(this.props.prevAmount);
     }
 
     get changeClass() {

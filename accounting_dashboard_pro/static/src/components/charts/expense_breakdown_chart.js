@@ -5,7 +5,7 @@ import { loadBundle } from "@web/core/assets";
 
 export class ExpenseBreakdownChart extends Component {
     static template = "accounting_dashboard_pro.ExpenseBreakdownChart";
-    static props = { data: { type: Object, optional: true }, formatCurrency: Function };
+    static props = { data: { type: Object, optional: true }, formatCurrency: Function, theme: { type: String, optional: true } };
 
     setup() {
         this.canvasRef = useRef("canvas");
@@ -15,7 +15,7 @@ export class ExpenseBreakdownChart extends Component {
         });
         onMounted(() => this.renderChart());
         onWillUpdateProps((next) => {
-            if (next.data !== this.props.data) {
+            if (next.data !== this.props.data || next.theme !== this.props.theme) {
                 this.destroyChart();
                 this.props = next;
                 this.renderChart();
@@ -38,7 +38,7 @@ export class ExpenseBreakdownChart extends Component {
         if (!el) return;
         const ctx = el.getContext("2d");
 
-        const isDark = el.closest(".adp-dark") !== null;
+        const isDark = (this.props.theme || "dark") === "dark";
         const textColor = isDark ? "#cbd5e1" : "#475569";
 
         const palette = [

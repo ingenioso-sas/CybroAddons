@@ -9,6 +9,7 @@ export class IncomeExpensePie extends Component {
         revenue: { type: Number },
         expenses: { type: Number },
         formatCurrency: { type: Function },
+        theme: { type: String, optional: true },
     };
 
     setup() {
@@ -37,7 +38,7 @@ export class IncomeExpensePie extends Component {
         const canvas = this.chartRef.el;
         if (!canvas) return;
 
-        const isDark = document.querySelector('.adp-dark') !== null;
+        const isDark = (this.props.theme || "dark") === "dark";
         const revenue = this.props.revenue || 0;
         const expenses = this.props.expenses || 0;
 

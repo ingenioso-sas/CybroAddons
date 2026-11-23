@@ -113,6 +113,7 @@
                                 <AgingChart
                                     receivableData="state.agingReceivable"
                                     payableData="state.agingPayable"
+                                    theme="state.theme"
                                     formatCurrency="formatCurrency.bind(this)"
                                 />
                             </t>
@@ -121,6 +122,7 @@
                                 <IncomeExpensePie
                                     revenue="state.kpiData.revenue?.amount || 0"
                                     expenses="state.kpiData.expenses?.amount || 0"
+                                    theme="state.theme"
                                     formatCurrency="formatCurrency.bind(this)"
                                 />
                             </t>
@@ -128,6 +130,7 @@
                             <t t-else="">
                                 <t t-component="getChartComponent(chart)"
                                    data="getChartData(chart)"
+                                   theme="state.theme"
                                    formatCurrency="formatCurrency.bind(this)"/>
                             </t>
                         </div>
@@ -141,6 +144,7 @@
                     </h2>
                     <JournalBalanceChart
                         journals="state.journalCharts"
+                        theme="state.theme"
                         formatCurrency="formatCurrency.bind(this)"
                     />
                 </div>
