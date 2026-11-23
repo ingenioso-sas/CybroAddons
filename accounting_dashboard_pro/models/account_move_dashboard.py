@@ -222,6 +222,25 @@ class AccountMoveDashboard(models.Model):
         """, (move_type, as_of_date, company_ids))
         return self.env.cr.fetchone()[0]
 
+    @api.model
+    def _dashboard_months(self, date_from, date_to):
+        """Return the list of YYYY-MM labels between two dates."""
+        months = []
+        current = date_from
+        while current <= date_to:
+            months.append(current.strftime('%Y-%m'))
+            current += relativedelta(months=1)
+        return months
+
+    @staticmethod
+    def _dashboard_cap_param(value, default, maximum):
+        """Return a bounded positive integer from an RPC parameter."""
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return default
+        return max(1, min(value, maximum))
+
     @staticmethod
     def _safe_change_pct(current, previous):
         """Calculate percentage change safely."""
@@ -549,11 +568,7 @@ class AccountMoveDashboard(models.Model):
         """, (date_from, company_ids))
         rows = self.env.cr.dictfetchall()
 
-        months = []
-        d = date_from
-        while d <= today:
-            months.append(d.strftime('%Y-%m'))
-            d += relativedelta(months=1)
+        months = self._dashboard_months(date_from, today)
 
         revenue_map = {}
         expense_map = {}
@@ -576,7 +591,7 @@ class AccountMoveDashboard(models.Model):
         self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
-        days = params.get('days', 90)
+        days = self._dashboard_cap_param(params.get('days', 90), 90, 365)
         today = fields.Date.context_today(self)
         end_date = today + timedelta(days=days)
 
@@ -644,6 +659,7 @@ class AccountMoveDashboard(models.Model):
         a_type = params.get('type', 'receivable')
         today = fields.Date.context_today(self)
         account_type = 'asset_receivable' if a_type == 'receivable' else 'liability_payable'
+        direction = 1 if a_type == 'receivable' else -1
 
         self.env.cr.execute("""
             SELECT
@@ -654,7 +670,7 @@ class AccountMoveDashboard(models.Model):
                     WHEN %s - COALESCE(aml.date_maturity, aml.date) BETWEEN 61 AND 90 THEN '61_90'
                     ELSE '90_plus'
                 END AS bucket,
-                COALESCE(SUM(ABS(aml.amount_residual)), 0) AS total
+                GREATEST(COALESCE(SUM(aml.amount_residual * %s), 0), 0) AS total
             FROM account_move_line aml
             JOIN account_account aa ON aa.id = aml.account_id
             WHERE aa.account_type = %s
@@ -663,7 +679,7 @@ class AccountMoveDashboard(models.Model):
               AND aml.amount_residual != 0
               AND aml.company_id = ANY(%s)
             GROUP BY bucket
-        """, (today, today, today, today, account_type, company_ids))
+        """, (today, today, today, today, direction, account_type, company_ids))
         rows = self.env.cr.dictfetchall()
         bucket_map = {r['bucket']: r['total'] for r in rows}
 
@@ -689,7 +705,7 @@ class AccountMoveDashboard(models.Model):
         date_from, date_to = self._dashboard_get_period(
             period, params.get('date_from'), params.get('date_to')
         )
-        limit = params.get('limit', 10)
+        limit = self._dashboard_cap_param(params.get('limit', 10), 10, 50)
 
         lang = self.env.lang or 'en_US'
         self.env.cr.execute("""
@@ -766,7 +782,7 @@ class AccountMoveDashboard(models.Model):
         self._dashboard_check_group(['account.group_account_invoice', 'account.group_account_readonly', 'account.group_account_basic', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
-        limit = params.get('limit', 10)
+        limit = self._dashboard_cap_param(params.get('limit', 10), 10, 50)
         today = fields.Date.context_today(self)
         result = {}
 
@@ -946,72 +962,6 @@ class AccountMoveDashboard(models.Model):
 
         return alerts
 
-    def compute_period_dates(self, period):
-        """
-        Returns dict:
-        {
-            'date_from': 'YYYY-MM-DD',
-            'date_to': 'YYYY-MM-DD'
-        }
-        """
-
-        today = date.today()
-        year = today.year
-        month = today.month  # 1-12
-
-        date_from = None
-        date_to = None
-
-        def end_of_month(y, m):
-            """m = 1 to 12"""
-            if m == 12:
-                return date(y, 12, 31)
-            return date(y, m + 1, 1) - timedelta(days=1)
-
-        if period == "this_month":
-            date_from = date(year, month, 1)
-            date_to = today
-
-        elif period == "last_month":
-            if month == 1:
-                y = year - 1
-                m = 12
-            else:
-                y = year
-                m = month - 1
-
-            date_from = date(y, m, 1)
-            date_to = end_of_month(y, m)
-
-        elif period == "this_quarter":
-            quarter_start_month = ((month - 1) // 3) * 3 + 1
-            date_from = date(year, quarter_start_month, 1)
-            date_to = today
-
-        elif period == "last_quarter":
-            quarter_start_month = ((month - 1) // 3) * 3 + 1
-
-            # previous day of current quarter start = last quarter end
-            last_quarter_end = date(year, quarter_start_month, 1) - timedelta(days=1)
-
-            last_q_month = ((last_quarter_end.month - 1) // 3) * 3 + 1
-            date_from = date(last_quarter_end.year, last_q_month, 1)
-            date_to = last_quarter_end
-
-        elif period == "this_year":
-            date_from = date(year, 1, 1)
-            date_to = today
-
-        elif period == "last_year":
-            date_from = date(year - 1, 1, 1)
-            date_to = date(year - 1, 12, 31)
-
-        return {
-            "date_from": date_from.isoformat() if date_from else None,
-            "date_to": date_to.isoformat() if date_to else None,
-        }
-
-
     # ------------------------------------------------------------------
     # P&L Trend (12 months) — Revenue, Expenses, Net Profit lines
     # ------------------------------------------------------------------
@@ -1037,11 +987,7 @@ class AccountMoveDashboard(models.Model):
         """, (date_from, company_ids))
         rows = self.env.cr.dictfetchall()
 
-        months = []
-        d = date_from
-        while d <= today:
-            months.append(d.strftime('%Y-%m'))
-            d += relativedelta(months=1)
+        months = self._dashboard_months(date_from, today)
 
         revenue_map = {}
         expense_map = {}
@@ -1112,7 +1058,7 @@ class AccountMoveDashboard(models.Model):
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
 
         # Check if the budget module is installed
-        if 'budget.analytic' not in self.env:
+        if 'budget.analytic' not in self.env or 'budget.line' not in self.env:
             return {'available': False, 'labels': [], 'budgeted': [], 'actual': []}
 
         today = fields.Date.context_today(self)
@@ -1171,11 +1117,7 @@ class AccountMoveDashboard(models.Model):
         """, (date_from, company_ids))
         rows = self.env.cr.dictfetchall()
 
-        months = []
-        d = date_from
-        while d <= today:
-            months.append(d.strftime('%Y-%m'))
-            d += relativedelta(months=1)
+        months = self._dashboard_months(date_from, today)
 
         inflow_map = {r['month']: r['total'] for r in rows if r['payment_type'] == 'inbound'}
         outflow_map = {r['month']: r['total'] for r in rows if r['payment_type'] == 'outbound'}
@@ -1268,11 +1210,7 @@ class AccountMoveDashboard(models.Model):
 
         # 12-month range
         date_from = today - relativedelta(months=11, day=1)
-        months = []
-        d = date_from
-        while d <= today:
-            months.append(d.strftime('%Y-%m'))
-            d += relativedelta(months=1)
+        months = self._dashboard_months(date_from, today)
 
         result = []
         for journal in journals:
@@ -1313,12 +1251,9 @@ class AccountMoveDashboard(models.Model):
             for m in months:
                 running += month_rows.get(m, 0)
                 balances.append(round(running, 2))
-            journal_name = journal.name
-            if isinstance(journal_name, dict):
-                journal_name = journal_name.get('en_US', journal_name.get('en', str(journal.id)))
             result.append({
                 'journal_id': journal.id,
-                'journal_name': journal_name,
+                'journal_name': journal.name,
                 'journal_type': journal.type,
                 'currency': journal.company_id.currency_id.symbol,
                 'labels': months,

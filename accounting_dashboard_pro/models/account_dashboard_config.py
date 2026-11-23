@@ -20,6 +20,8 @@
 #
 ########################################################################################
 
+from psycopg2 import IntegrityError
+
 from odoo import api, fields, models
 
 
@@ -109,7 +111,14 @@ class AccountDashboardConfig(models.Model):
         """Get the current user's dashboard config, creating one if needed."""
         config = self.search([('user_id', '=', self.env.user.id)], limit=1)
         if not config:
-            config = self.create({'user_id': self.env.user.id})
+            try:
+                # Two concurrent first loads can race on the unique
+                # constraint; the savepoint keeps the transaction usable.
+                with self.env.cr.savepoint():
+                    config = self.create({'user_id': self.env.user.id})
+            except IntegrityError:
+                config = self.search(
+                    [('user_id', '=', self.env.user.id)], limit=1)
         return {
             'id': config.id,
             'default_period': config.default_period,

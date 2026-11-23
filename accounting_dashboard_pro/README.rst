@@ -1,10 +1,11 @@
 For OPL-1:
+
 .. image:: https://img.shields.io/badge/license-OPL--1-red.svg
-    :target: https://www.odoo.com/documentation/19.0/legal/licenses.html#odoo-apps
-    :alt: License: OPL-1
+   :target: https://www.odoo.com/documentation/19.0/legal/licenses.html#odoo-apps
+   :alt: License: OPL-1
 
 Advanced Accounting Dashboard
-============
+=============================
 * Enterprise-grade, role-aware accounting dashboard with dynamic KPIs, charts, and smart alerts for Odoo 19
 
 Installation

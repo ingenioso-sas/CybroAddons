@@ -72,15 +72,15 @@ const KPI_DEFS = [
         info: "Short-term financial health indicator.\nFormula: Total Receivable + Cash Balance − Total Payable\nMeasures ability to cover short-term obligations."
     },
     {
-        key: "gross_margin", title: _t("Gross Margin"), icon: "fa-percent", color: "green", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: "%",
+        key: "gross_margin", title: _t("Gross Margin"), icon: "fa-percent", color: "green", group: "is_readonly,is_manager", useRaw: true, rawSuffix: "%",
         info: "Gross Margin Percentage — profitability before overhead.\nFormula: (Revenue − Expenses) ÷ Revenue × 100\nHigher is better. Compared as percentage-point change."
     },
     {
-        key: "dso", title: _t("DSO"), icon: "fa-calendar-check-o", color: "blue", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
+        key: "dso", title: _t("DSO"), icon: "fa-calendar-check-o", color: "blue", group: "is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days Sales Outstanding — how fast customers pay.\nFormula: (Total Receivable ÷ Revenue) × Period Days\nLower is better. Industry avg: 30–45 days."
     },
     {
-        key: "dpo", title: _t("DPO"), icon: "fa-calendar-minus-o", color: "orange", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
+        key: "dpo", title: _t("DPO"), icon: "fa-calendar-minus-o", color: "orange", group: "is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days Payables Outstanding — how fast you pay vendors.\nFormula: (Total Payable ÷ Expenses) × Period Days\nHigher means better cash retention, but watch relationships."
     },
     {
@@ -97,7 +97,7 @@ const KPI_DEFS = [
 const CHART_DEFS = [
     {
         key: "revenue_expense", title: _t("Revenue vs Expenses"), icon: "fa-line-chart", component: "RevenueExpenseChart", dataKey: "chartData", group: "is_readonly,is_manager",
-        info: "Monthly comparison of revenue (invoices) and expenses (bills) over the selected period. Shows trends in profitability."
+        info: "Monthly comparison of revenue (invoices) and expenses (bills) over the last 12 months. Shows trends in profitability."
     },
     {
         key: "cashflow_forecast", title: _t("Cash Flow Forecast"), icon: "fa-area-chart", component: "CashflowForecast", dataKey: "cashflowData", group: "is_readonly,is_manager",
@@ -816,12 +816,6 @@ export class AccountingDashboard extends Component {
         return [...baseDomain, ...this._buildFilterDomain(dateField)];
     }
 
-    _getDateBefore(days) {
-        const d = new Date();
-        d.setDate(d.getDate() - days);
-        return d.toISOString().split("T")[0];
-    }
-
     onAction(actionName, smart = false) {
         const today = this._todayISO();
 
@@ -974,7 +968,9 @@ export class AccountingDashboard extends Component {
                     ["move_type", "=", "in_invoice"],
                     ["state", "=", "posted"],
                     ["payment_state", "in", ["not_paid", "partial"]],
-                    ["invoice_date_due", "=", today]]
+                    ["invoice_date_due", "=", today],
+                    ...this._draftFilterDomain(),
+                ],
             },
             draft_moves: {
                 type: "ir.actions.act_window",
@@ -1047,13 +1043,6 @@ export class AccountingDashboard extends Component {
             digits: [69, fmt === "K" ? 1 : 2],
         });
         return `${formatted}${fmt}`;
-    }
-
-    formatCompact(amount) {
-        if (Math.abs(amount) >= 1e9) return (amount / 1e9).toFixed(1) + "B";
-        if (Math.abs(amount) >= 1e6) return (amount / 1e6).toFixed(1) + "M";
-        if (Math.abs(amount) >= 1e3) return (amount / 1e3).toFixed(1) + "K";
-        return amount.toFixed(0);
     }
 }
 
