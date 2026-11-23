@@ -39,55 +39,55 @@ const KPI_DEFS = [
         info: "Unpaid vendor bills past their due date.\nFormula: SUM(amount_residual) WHERE due_date < today\nSource: account.move (posted vendor bills)"
     },
     {
-        key: "revenue", title: "Revenue", icon: "fa-line-chart", color: "green", group: "is_readonly", action: "revenue",
+        key: "revenue", title: "Revenue", icon: "fa-line-chart", color: "green", group: "is_readonly,is_manager", action: "revenue",
         info: "Total revenue from posted customer invoices (untaxed).\nFormula: SUM(amount_untaxed_signed) for out_invoices\nSource: account.move"
     },
     {
-        key: "expenses", title: "Expenses", icon: "fa-arrow-down", color: "pink", group: "is_readonly", action: "expense",
+        key: "expenses", title: "Expenses", icon: "fa-arrow-down", color: "pink", group: "is_readonly,is_manager", action: "expense",
         info: "Total expenses from posted vendor bills (untaxed).\nFormula: SUM(amount_untaxed_signed) for in_invoices\nSource: account.move"
     },
     {
-        key: "net_profit", title: "Net Profit", icon: "fa-trophy", color: "green", group: "is_readonly",
+        key: "net_profit", title: "Net Profit", icon: "fa-trophy", color: "green", group: "is_readonly,is_manager",
         info: "Profit after subtracting expenses from revenue.\nFormula: Revenue − Expenses\nGreen if positive, red if negative."
     },
     {
-        key: "cash_balance", title: "Cash Balance", icon: "fa-university", color: "indigo", group: "is_basic,is_readonly", action: "cash_balance",
+        key: "cash_balance", title: "Cash Balance", icon: "fa-university", color: "indigo", group: "is_basic,is_readonly,is_manager", action: "cash_balance",
         info: "Current balance across all bank and cash journals.\nFormula: SUM(balance) of posted entries in bank/cash accounts\nSource: account.move.line + account.journal"
     },
     {
-        key: "total_receivable", title: "Total Receivable", icon: "fa-arrow-circle-down", color: "teal", group: "is_basic,is_readonly",
+        key: "total_receivable", title: "Total Receivable", icon: "fa-arrow-circle-down", color: "teal", group: "is_basic,is_readonly,is_manager",
         info: "Total outstanding amount from all open customer invoices.\nFormula: SUM(amount_residual) for unpaid/partial out_invoices\nSource: account.move"
     },
     {
-        key: "total_payable", title: "Total Payable", icon: "fa-arrow-circle-up", color: "orange", group: "is_basic,is_readonly", action: "total_payable",
+        key: "total_payable", title: "Total Payable", icon: "fa-arrow-circle-up", color: "orange", group: "is_basic,is_readonly,is_manager", action: "total_payable",
         info: "Total outstanding amount owed to vendors.\nFormula: SUM(amount_residual) for unpaid/partial in_invoices\nSource: account.move"
     },
     {
-        key: "net_cash_position", title: "Net Cash Position", icon: "fa-balance-scale", color: "cyan", group: "is_basic,is_readonly",
+        key: "net_cash_position", title: "Net Cash Position", icon: "fa-balance-scale", color: "cyan", group: "is_basic,is_readonly,is_manager",
         info: "Cash available after paying all current liabilities.\nFormula: Cash Balance − Total Payable\nGreen if positive, red if negative."
     },
     {
-        key: "working_capital", title: "Working Capital", icon: "fa-cogs", color: "teal", group: "is_basic,is_readonly",
+        key: "working_capital", title: "Working Capital", icon: "fa-cogs", color: "teal", group: "is_basic,is_readonly,is_manager",
         info: "Short-term financial health indicator.\nFormula: Total Receivable + Cash Balance − Total Payable\nMeasures ability to cover short-term obligations."
     },
     {
-        key: "gross_margin", title: "Gross Margin", icon: "fa-percent", color: "green", group: "is_basic,is_readonly", useRaw: true, rawSuffix: "%",
+        key: "gross_margin", title: "Gross Margin", icon: "fa-percent", color: "green", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: "%",
         info: "Gross Margin Percentage — profitability before overhead.\nFormula: (Revenue − Expenses) ÷ Revenue × 100\nHigher is better. Compared as percentage-point change."
     },
     {
-        key: "dso", title: "DSO", icon: "fa-calendar-check-o", color: "blue", group: "is_basic,is_readonly", useRaw: true, rawSuffix: " days",
+        key: "dso", title: "DSO", icon: "fa-calendar-check-o", color: "blue", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days Sales Outstanding — how fast customers pay.\nFormula: (Total Receivable ÷ Revenue) × Period Days\nLower is better. Industry avg: 30–45 days."
     },
     {
-        key: "dpo", title: "DPO", icon: "fa-calendar-minus-o", color: "orange", group: "is_basic,is_readonly", useRaw: true, rawSuffix: " days",
+        key: "dpo", title: "DPO", icon: "fa-calendar-minus-o", color: "orange", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days Payables Outstanding — how fast you pay vendors.\nFormula: (Total Payable ÷ Expenses) × Period Days\nHigher means better cash retention, but watch relationships."
     },
     {
-        key: "cash_burn_rate", title: "Daily Burn Rate", icon: "fa-fire", color: "pink", group: "is_basic,is_readonly",
+        key: "cash_burn_rate", title: "Daily Burn Rate", icon: "fa-fire", color: "pink", group: "is_basic,is_readonly,is_manager",
         info: "Average daily spending rate.\nFormula: Total Expenses ÷ Number of Days in Period\nUsed to calculate Runway Days."
     },
     {
-        key: "runway_days", title: "Runway", icon: "fa-road", color: "purple", group: "is_basic,is_readonly", useRaw: true, rawSuffix: " days",
+        key: "runway_days", title: "Runway", icon: "fa-road", color: "purple", group: "is_basic,is_readonly,is_manager", useRaw: true, rawSuffix: " days",
         info: "Days of cash remaining at current burn rate.\nFormula: Cash Balance ÷ Daily Burn Rate\nCritical for cash planning. Below 90 days = high risk."
     },
 ];
@@ -95,43 +95,43 @@ const KPI_DEFS = [
 // Master Chart definitions
 const CHART_DEFS = [
     {
-        key: "revenue_expense", title: "Revenue vs Expenses", icon: "fa-line-chart", component: "RevenueExpenseChart", dataKey: "chartData", group: "is_readonly",
+        key: "revenue_expense", title: "Revenue vs Expenses", icon: "fa-line-chart", component: "RevenueExpenseChart", dataKey: "chartData", group: "is_readonly,is_manager",
         info: "Monthly comparison of revenue (invoices) and expenses (bills) over the selected period. Shows trends in profitability."
     },
     {
-        key: "cashflow_forecast", title: "Cash Flow Forecast", icon: "fa-area-chart", component: "CashflowForecast", dataKey: "cashflowData", group: "is_readonly",
+        key: "cashflow_forecast", title: "Cash Flow Forecast", icon: "fa-area-chart", component: "CashflowForecast", dataKey: "cashflowData", group: "is_readonly,is_manager",
         info: "90-day forward projection of cash position based on open invoices, pending bills, and recurring patterns."
     },
     {
-        key: "aging", title: "Aging Analysis", icon: "fa-bar-chart", component: "AgingChart", dataKey: "_aging", group: "is_basic,is_readonly",
+        key: "aging", title: "Aging Analysis", icon: "fa-bar-chart", component: "AgingChart", dataKey: "_aging", group: "is_basic,is_readonly,is_manager",
         info: "Receivable and payable balances grouped by aging buckets: Current, 1–30, 31–60, 61–90, 90+ days. Helps identify collection risks."
     },
     {
-        key: "profit_trend", title: "P&L Trend (12mo)", icon: "fa-line-chart", component: "ProfitTrendChart", dataKey: "profitTrend", group: "is_user,is_manager",
+        key: "profit_trend", title: "P&L Trend (12mo)", icon: "fa-line-chart", component: "ProfitTrendChart", dataKey: "profitTrend", group: "is_user,is_manager,is_readonly",
         info: "12-month rolling Profit & Loss trend. Shows Revenue, Expenses, and Net Profit lines. Data: posted account.move entries."
     },
     {
-        key: "monthly_cashflow", title: "Cash Inflow / Outflow", icon: "fa-exchange", component: "MonthlyCashflowBars", dataKey: "monthlyCashflow", group: "is_readonly",
+        key: "monthly_cashflow", title: "Cash Inflow / Outflow", icon: "fa-exchange", component: "MonthlyCashflowBars", dataKey: "monthlyCashflow", group: "is_readonly,is_manager",
         info: "Monthly stacked bars showing cash inflows (customer payments) and outflows (vendor payments). Data: account.payment records."
     },
     {
-        key: "top_expenses", title: "Top Expenses", icon: "fa-pie-chart", component: "TopExpensesChart", dataKey: "topExpenses", group: "is_readonly",
+        key: "top_expenses", title: "Top Expenses", icon: "fa-pie-chart", component: "TopExpensesChart", dataKey: "topExpenses", group: "is_readonly,is_manager",
         info: "Top expense categories by amount in the selected period. Helps identify biggest cost drivers."
     },
     {
-        key: "expense_breakdown", title: "Expense Breakdown", icon: "fa-pie-chart", component: "ExpenseBreakdownChart", dataKey: "expenseBreakdown", group: "is_readonly",
+        key: "expense_breakdown", title: "Expense Breakdown", icon: "fa-pie-chart", component: "ExpenseBreakdownChart", dataKey: "expenseBreakdown", group: "is_readonly,is_manager",
         info: "Doughnut chart of expenses grouped by account name. Shows proportion of each expense category."
     },
     {
-        key: "income_expense_pie", title: "Income vs Expense", icon: "fa-pie-chart", component: "IncomeExpensePie", dataKey: "_pie", group: "is_readonly",
+        key: "income_expense_pie", title: "Income vs Expense", icon: "fa-pie-chart", component: "IncomeExpensePie", dataKey: "_pie", group: "is_readonly,is_manager",
         info: "Simple pie showing the ratio of total income to total expenses. Quick visual indicator of profitability."
     },
     {
-        key: "budget_vs_actual", title: "Budget vs Actual", icon: "fa-bar-chart", component: "BudgetVsActualChart", dataKey: "budgetVsActual", group: "is_readonly",
+        key: "budget_vs_actual", title: "Budget vs Actual", icon: "fa-bar-chart", component: "BudgetVsActualChart", dataKey: "budgetVsActual", group: "is_readonly,is_manager",
         info: "Compares budgeted amounts vs actual spending per budget line. Requires the Budget module (account_budget)."
     },
     {
-        key: "cashflow_waterfall", title: "Cashflow Waterfall", icon: "fa-bar-chart", component: "CashflowWaterfallChart", dataKey: "cashflowWaterfall", group: "is_readonly",
+        key: "cashflow_waterfall", title: "Cashflow Waterfall", icon: "fa-bar-chart", component: "CashflowWaterfallChart", dataKey: "cashflowWaterfall", group: "is_readonly,is_manager",
         info: "Waterfall chart: Opening Cash → +Inflows → −Outflows → Closing Cash. Visual summary of where cash went during the period."
     },
 ];

@@ -49,7 +49,7 @@ Key Features:
     'maintainer': 'Cybrosys Techno Solutions',
     'website': 'https://www.cybrosys.com',
     'depends': [
-        'accountant',
+        'account',
         'web',
     ],
     'data': [

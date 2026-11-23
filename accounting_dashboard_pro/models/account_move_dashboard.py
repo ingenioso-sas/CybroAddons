@@ -114,6 +114,27 @@ class AccountMoveDashboard(models.Model):
         return self.env.companies.ids
 
     @api.model
+    def _dashboard_user_groups(self):
+        """Return the dashboard capabilities of the current user."""
+        user = self.env.user
+        return {
+            'is_invoicing': user.has_group('account.group_account_invoice'),
+            'is_basic': user.has_group('account.group_account_basic'),
+            'is_readonly': user.has_group('account.group_account_readonly'),
+            'is_user': user.has_group('account.group_account_user'),
+            'is_manager': user.has_group('account.group_account_manager'),
+        }
+
+    @staticmethod
+    def _dashboard_can_view_financials(groups):
+        """Financial KPIs are available to readonly accountants and managers.
+
+        In a stock Odoo 19 database ``group_account_manager`` only implies
+        ``group_account_invoice``; it must therefore be handled explicitly.
+        """
+        return bool(groups.get('is_readonly') or groups.get('is_manager'))
+
+    @api.model
     def _dashboard_cash_balance(self, company_ids, as_of_date):
         """Return the accumulated cash balance at the end of ``as_of_date``."""
         self.env.cr.execute("""
@@ -163,7 +184,12 @@ class AccountMoveDashboard(models.Model):
         Return KPI card data with previous period comparison.
         Access: group_account_invoice+
         """
-        self._dashboard_check_group(['account.group_account_invoice', 'account.group_account_readonly', 'account.group_account_basic'])
+        self._dashboard_check_group([
+            'account.group_account_invoice',
+            'account.group_account_readonly',
+            'account.group_account_basic',
+            'account.group_account_manager',
+        ])
 
         period = params.get('period', 'this_month')
         date_from, date_to = self._dashboard_get_period(
@@ -174,15 +200,9 @@ class AccountMoveDashboard(models.Model):
             date_from, date_to, period)
         today = fields.Date.context_today(self)
 
-        result = {
-            'user_groups': {
-                'is_invoicing': self.env.user.has_group('account.group_account_invoice'),
-                'is_basic': self.env.user.has_group('account.group_account_basic'),
-                'is_readonly': self.env.user.has_group('account.group_account_readonly'),
-                'is_user': self.env.user.has_group('account.group_account_user'),
-                'is_manager': self.env.user.has_group('account.group_account_manager'),
-            },
-        }
+        user_groups = self._dashboard_user_groups()
+        can_view_financials = self._dashboard_can_view_financials(user_groups)
+        result = {'user_groups': user_groups}
         # --- Invoice summary (current period) ---
         self.env.cr.execute("""
             SELECT move_type, state,
@@ -260,7 +280,7 @@ class AccountMoveDashboard(models.Model):
         }
 
         # --- Financial KPIs (readonly+ users) ---
-        if result['user_groups']['is_readonly']:
+        if can_view_financials:
             # Revenue (current + prev)
             self.env.cr.execute("""
                 SELECT COALESCE(SUM(amount_untaxed_signed), 0)
@@ -314,7 +334,7 @@ class AccountMoveDashboard(models.Model):
             }
 
         # --- Cash Balance (basic+ users or readonly users) ---
-        if result['user_groups']['is_basic'] or result['user_groups']['is_readonly']:
+        if user_groups['is_basic'] or can_view_financials:
             # Current and previous cash balance are both accumulated balances.
             cash_balance = self._dashboard_cash_balance(company_ids, date_to)
             prev_cash_balance = self._dashboard_cash_balance(company_ids, prev_to)
@@ -343,7 +363,7 @@ class AccountMoveDashboard(models.Model):
 
             # Cash Burn Rate (avg daily expenses in current period)
             period_days = max((date_to - date_from).days, 1)
-            if result['user_groups']['is_readonly']:
+            if can_view_financials:
                 burn_rate = expenses / period_days if period_days else 0
             else:
                 self.env.cr.execute("""
@@ -407,7 +427,7 @@ class AccountMoveDashboard(models.Model):
             }
             # Gross Margin % = (Revenue - COGS) / Revenue * 100
             # COGS approximated by expenses for bill product lines in period
-            if result['user_groups']['is_readonly'] and revenue:
+            if can_view_financials and revenue:
                 gross_margin = round((revenue - expenses) / revenue * 100, 1)
                 prev_gross = round((prev_revenue - prev_expenses) / prev_revenue * 100, 1) if prev_revenue else 0
             else:
@@ -419,7 +439,7 @@ class AccountMoveDashboard(models.Model):
                 'change_pct': round(gross_margin - prev_gross, 1),  # pp change
             }
             # DSO = (Receivable / Revenue) * Period Days
-            if result['user_groups']['is_readonly'] and revenue:
+            if can_view_financials and revenue:
                 dso = round(total_receivable / revenue * period_days, 1)
                 prev_dso = round(prev_receivable / prev_revenue * prev_period_days, 1) if prev_revenue else 0
             else:
@@ -432,7 +452,7 @@ class AccountMoveDashboard(models.Model):
             }
 
             # DPO = (Payable / Expenses) * Period Days
-            if result['user_groups']['is_readonly'] and expenses:
+            if can_view_financials and expenses:
                 dpo = round(total_payable / expenses * period_days, 1)
                 prev_dpo = round(prev_payable / prev_expenses * prev_period_days, 1) if prev_expenses else 0
             else:
@@ -445,7 +465,7 @@ class AccountMoveDashboard(models.Model):
             }
 
         # --- Unreconciled count (basic+ users or readonly users) ---
-        if result['user_groups']['is_basic'] or result['user_groups']['is_readonly']:
+        if user_groups['is_basic'] or can_view_financials:
             self.env.cr.execute("""
                 SELECT COUNT(*)
                 FROM account_bank_statement_line
@@ -467,7 +487,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_chart_data(self, params):
         """Revenue vs Expense monthly chart data. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         today = fields.Date.context_today(self)
@@ -506,7 +526,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_cashflow(self, params):
         """Cash flow forecast for next N days. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         days = params.get('days', 90)
@@ -571,7 +591,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_aging(self, params):
         """Aging analysis. Access: group_account_basic+"""
-        self._dashboard_check_group(['account.group_account_basic', 'account.group_account_readonly', 'account.group_account_invoice'])
+        self._dashboard_check_group(['account.group_account_basic', 'account.group_account_readonly', 'account.group_account_invoice', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         a_type = params.get('type', 'receivable')
@@ -615,7 +635,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_top_expenses(self, params):
         """Top expenses by category. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         period = params.get('period', 'this_month')
@@ -651,7 +671,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_tax_summary(self, params):
         """Tax summary. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         period = params.get('period', 'this_month')
@@ -690,7 +710,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_lists(self, params):
         """Get overdue invoices, upcoming bills, recent payments. Access: group_account_invoice+"""
-        self._dashboard_check_group(['account.group_account_invoice', 'account.group_account_readonly', 'account.group_account_basic'])
+        self._dashboard_check_group(['account.group_account_invoice', 'account.group_account_readonly', 'account.group_account_basic', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         limit = params.get('limit', 10)
@@ -748,8 +768,9 @@ class AccountMoveDashboard(models.Model):
         """, {'lang': lang, 'company_ids': company_ids, 'limit': limit})
         result['recent_payments'] = self.env.cr.dictfetchall()
 
-        # --- Unreconciled bank statement lines (basic+ users) ---
-        if self.env.user.has_group('account.group_account_basic'):
+        # --- Unreconciled bank statement lines (basic+ / financial users) ---
+        groups = self._dashboard_user_groups()
+        if groups['is_basic'] or self._dashboard_can_view_financials(groups):
             lang = self.env.lang or 'en_US'
             self.env.cr.execute("""
                 SELECT absl.id,
@@ -776,17 +797,27 @@ class AccountMoveDashboard(models.Model):
 
     @api.model
     def get_account_journal_ids(self, params):
-        """ Get default journal Ids """
-        return self.env["account.journal"].search([
-            ("type", "in", ["bank", "cash"])
-        ]).mapped("default_account_id").ids
+        """Return default accounts of the bank/cash journals for the companies."""
+        self._dashboard_check_group([
+            'account.group_account_invoice',
+            'account.group_account_basic',
+            'account.group_account_readonly',
+            'account.group_account_manager',
+        ])
+        company_ids = self._dashboard_company_ids(params.get('company_ids'))
+        journals = self.env["account.journal"].search([
+            ("type", "in", ["bank", "cash"]),
+            ("company_id", "in", company_ids),
+        ])
+        return journals.mapped("default_account_id").ids
 
     @api.model
     def get_dashboard_alerts(self, params):
         """Smart alerts feed. Access: group_account_invoice+"""
-        self._dashboard_check_group(['account.group_account_invoice', 'account.group_account_readonly', 'account.group_account_basic'])
+        self._dashboard_check_group(['account.group_account_invoice', 'account.group_account_readonly', 'account.group_account_basic', 'account.group_account_manager'])
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
+        groups = self._dashboard_user_groups()
         today = fields.Date.context_today(self)
         alerts = []
         self.env.cr.execute("""
@@ -808,7 +839,7 @@ class AccountMoveDashboard(models.Model):
                 'action': 'overdue_invoices',
             })
 
-        if self.env.user.has_group('account.group_account_basic'):
+        if groups['is_basic'] or self._dashboard_can_view_financials(groups):
             self.env.cr.execute("""
                 SELECT COUNT(*)
                 FROM account_bank_statement_line
@@ -934,7 +965,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_profit_trend(self, params):
         """Monthly P&L trend for the last 12 months. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         today = fields.Date.context_today(self)
         date_from = today - relativedelta(months=11, day=1)
@@ -985,7 +1016,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_expense_breakdown(self, params):
         """Expense breakdown by account. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         period = params.get('period', 'this_month')
         date_from, date_to = self._dashboard_get_period(
@@ -1022,7 +1053,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_budget_vs_actual(self, params):
         """Budget vs actual for confirmed budgets. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
 
         # Check if the budget module is installed
@@ -1065,7 +1096,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_monthly_cashflow_bars(self, params):
         """Monthly cash inflows vs outflows from payments. Access: group_account_readonly+"""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         today = fields.Date.context_today(self)
         date_from = today - relativedelta(months=11, day=1)
@@ -1106,7 +1137,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_cashflow_waterfall(self, params):
         """Cashflow waterfall for the selected period."""
-        self._dashboard_check_group('account.group_account_readonly')
+        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         period = params.get('period', 'this_month')
         date_from, date_to = self._dashboard_get_period(
@@ -1164,7 +1195,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_journal_balances(self, params):
         """Return monthly balance for each bank/cash journal."""
-        self._dashboard_check_group(['account.group_account_basic', 'account.group_account_readonly'])
+        self._dashboard_check_group(['account.group_account_basic', 'account.group_account_readonly', 'account.group_account_manager'])
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         today = fields.Date.context_today(self)
 

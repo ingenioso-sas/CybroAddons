@@ -127,6 +127,50 @@ class TestAccountMoveDashboard(TransactionCase):
         self.assertIn('currency_symbol', data)
         self.assertIn('period', data)
 
+    def test_dashboard_capabilities(self):
+        """Financial KPIs must be available to readonly users and managers."""
+        self.assertFalse(self.move_model._dashboard_can_view_financials({}))
+        self.assertFalse(self.move_model._dashboard_can_view_financials({
+            'is_invoicing': True, 'is_basic': True,
+        }))
+        self.assertTrue(self.move_model._dashboard_can_view_financials({
+            'is_readonly': True,
+        }))
+        self.assertTrue(self.move_model._dashboard_can_view_financials({
+            'is_manager': True,
+        }))
+
+    def _create_internal_user(self, login, groups):
+        base_group = self.env.ref('base.group_user')
+        group_ids = [base_group.id] + [self.env.ref(xmlid).id for xmlid in groups]
+        return self.env['res.users'].create({
+            'name': login,
+            'login': login,
+            'group_ids': [(6, 0, group_ids)],
+        })
+
+    def test_manager_sees_financial_kpis(self):
+        """A manager must get financial KPI keys even without readonly group."""
+        manager = self._create_internal_user(
+            'adp_manager@example.com', ['account.group_account_manager'])
+        params = {'period': 'this_month', 'company_ids': [self.company.id]}
+        data = self.env['account.move'].with_user(manager).get_dashboard_kpi_data(params)
+        self.assertTrue(data['user_groups']['is_manager'])
+        self.assertIn('revenue', data)
+        self.assertIn('expenses', data)
+        self.assertIn('cash_balance', data)
+        self.assertIn('total_receivable', data)
+        self.assertIn('runway_days', data)
+
+    def test_non_accounting_user_cannot_read_dashboard(self):
+        """A plain internal user must not access dashboard data."""
+        user = self._create_internal_user('adp_plain@example.com', [])
+        params = {'period': 'this_month', 'company_ids': [self.company.id]}
+        with self.assertRaises(AccessError):
+            self.env['account.move'].with_user(user).get_dashboard_kpi_data(params)
+        with self.assertRaises(AccessError):
+            self.env['account.move'].with_user(user).get_account_journal_ids(params)
+
     def test_safe_change_pct(self):
         """Test safe percentage change calculation."""
         pct = self.move_model._safe_change_pct(150, 100)
