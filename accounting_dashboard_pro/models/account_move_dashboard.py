@@ -77,8 +77,29 @@ class AccountMoveDashboard(models.Model):
         return d_from, d_to
 
     @api.model
-    def _dashboard_prev_period(self, date_from, date_to):
-        """Return previous period dates with same length."""
+    def _dashboard_prev_period(self, date_from, date_to, period=None):
+        """Return the comparable previous period.
+
+        Calendar periods are compared with the same calendar period of the
+        previous month/quarter/year (e.g. year-to-date against the same
+        year-to-date of the previous year). Custom ranges fall back to the
+        immediately preceding range of the same length.
+        """
+        if period in ('this_month', 'last_month'):
+            return (
+                date_from - relativedelta(months=1),
+                date_to - relativedelta(months=1),
+            )
+        if period in ('this_quarter', 'last_quarter'):
+            return (
+                date_from - relativedelta(months=3),
+                date_to - relativedelta(months=3),
+            )
+        if period in ('this_year', 'last_year'):
+            return (
+                date_from - relativedelta(years=1),
+                date_to - relativedelta(years=1),
+            )
         delta = (date_to - date_from).days + 1
         prev_to = date_from - timedelta(days=1)
         prev_from = prev_to - timedelta(days=delta - 1)
@@ -91,6 +112,39 @@ class AccountMoveDashboard(models.Model):
             allowed = self.env.companies.ids
             return [cid for cid in company_ids if cid in allowed]
         return self.env.companies.ids
+
+    @api.model
+    def _dashboard_cash_balance(self, company_ids, as_of_date):
+        """Return the accumulated cash balance at the end of ``as_of_date``."""
+        self.env.cr.execute("""
+            SELECT COALESCE(SUM(aml.balance), 0)
+            FROM account_move_line aml
+            JOIN account_move am ON am.id = aml.move_id
+            WHERE aml.parent_state = 'posted'
+              AND am.date <= %s
+              AND aml.company_id = ANY(%s)
+              AND EXISTS (
+                  SELECT 1
+                  FROM account_journal aj
+                  WHERE aj.default_account_id = aml.account_id
+                    AND aj.type IN ('bank', 'cash')
+              )
+        """, (as_of_date, company_ids))
+        return self.env.cr.fetchone()[0]
+
+    @api.model
+    def _dashboard_open_move_total(self, company_ids, move_type, as_of_date):
+        """Return the open residual of ``move_type`` as of ``as_of_date``."""
+        self.env.cr.execute("""
+            SELECT COALESCE(SUM(ABS(amount_residual_signed)), 0)
+            FROM account_move
+            WHERE state = 'posted'
+              AND move_type = %s
+              AND payment_state IN ('not_paid', 'partial')
+              AND date <= %s
+              AND company_id = ANY(%s)
+        """, (move_type, as_of_date, company_ids))
+        return self.env.cr.fetchone()[0]
 
     @staticmethod
     def _safe_change_pct(current, previous):
@@ -116,7 +170,8 @@ class AccountMoveDashboard(models.Model):
             period, params.get('date_from'), params.get('date_to')
         )
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
-        prev_from, prev_to = self._dashboard_prev_period(date_from, date_to)
+        prev_from, prev_to = self._dashboard_prev_period(
+            date_from, date_to, period)
         today = fields.Date.context_today(self)
 
         result = {
@@ -191,9 +246,8 @@ class AccountMoveDashboard(models.Model):
               AND invoice_date_due < %s
               AND move_type IN ('out_invoice', 'in_invoice')
               AND company_id = ANY(%s)
-              AND date BETWEEN %s AND %s
             GROUP BY move_type
-        """, (today, company_ids, date_from, date_to))
+        """, (today, company_ids))
         overdue_data = self.env.cr.dictfetchall()
 
         result['overdue_receivable'] = {
@@ -261,38 +315,9 @@ class AccountMoveDashboard(models.Model):
 
         # --- Cash Balance (basic+ users or readonly users) ---
         if result['user_groups']['is_basic'] or result['user_groups']['is_readonly']:
-            # Current cash balance
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(aml.balance), 0)
-                FROM account_move_line aml
-                WHERE aml.parent_state = 'posted'
-                  AND aml.date BETWEEN %s AND %s
-                  AND aml.company_id = ANY(%s)
-                  AND EXISTS (
-                      SELECT 1
-                      FROM account_journal aj
-                      WHERE aj.default_account_id = aml.account_id
-                        AND aj.type IN ('bank', 'cash')
-                  )
-            """, (date_from, date_to, company_ids))
-
-            cash_balance = self.env.cr.fetchone()[0]
-
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(aml.balance), 0)
-                FROM account_move_line aml
-                JOIN account_move am ON am.id = aml.move_id
-                WHERE aml.parent_state = 'posted'
-                  AND am.date <= %s
-                  AND aml.company_id = ANY(%s)
-                  AND EXISTS (
-                      SELECT 1
-                      FROM account_journal aj
-                      WHERE aj.default_account_id = aml.account_id
-                        AND aj.type IN ('bank', 'cash')
-                  )""", (prev_to, company_ids))
-
-            prev_cash_balance = self.env.cr.fetchone()[0]
+            # Current and previous cash balance are both accumulated balances.
+            cash_balance = self._dashboard_cash_balance(company_ids, date_to)
+            prev_cash_balance = self._dashboard_cash_balance(company_ids, prev_to)
             result['cash_balance'] = {
                 'amount': cash_balance,
                 'prev_amount': prev_cash_balance,
@@ -300,53 +325,17 @@ class AccountMoveDashboard(models.Model):
             }
             # --- CASH FLOW KPIs ---
 
-            # Total Receivable (all open customer invoices)
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(amount_residual_signed), 0)
-                FROM account_move
-                WHERE state = 'posted'
-                  AND move_type = 'out_invoice'
-                  AND date BETWEEN %s AND %s
-                  AND payment_state IN ('not_paid', 'partial')
-                  AND company_id = ANY(%s)
-            """, (date_from, date_to,company_ids,))
-            total_receivable = self.env.cr.fetchone()[0]
+            # Total Receivable (all open customer invoices as of period end)
+            total_receivable = self._dashboard_open_move_total(
+                company_ids, 'out_invoice', date_to)
+            prev_receivable = self._dashboard_open_move_total(
+                company_ids, 'out_invoice', prev_to)
 
-            # Previous receivable (open invoices as of prev_to)
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(amount_residual_signed), 0)
-                FROM account_move
-                WHERE state = 'posted'
-                  AND move_type = 'out_invoice'
-                  AND payment_state IN ('not_paid', 'partial')
-                  AND date <= %s
-                  AND company_id = ANY(%s)
-            """, (prev_to, company_ids))
-            prev_receivable = self.env.cr.fetchone()[0]
-
-            # Total Payable (all open vendor bills)
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(ABS(amount_residual_signed)), 0)
-                FROM account_move
-                WHERE state = 'posted'
-                  AND move_type = 'in_invoice'
-                  AND date BETWEEN %s AND %s
-                  AND payment_state IN ('not_paid', 'partial')
-                  AND company_id = ANY(%s)
-            """, (date_from, date_to, company_ids,))
-            total_payable = self.env.cr.fetchone()[0]
-
-            # Previous payable
-            self.env.cr.execute("""
-                SELECT COALESCE(SUM(ABS(amount_residual_signed)), 0)
-                FROM account_move
-                WHERE state = 'posted'
-                  AND move_type = 'in_invoice'
-                  AND payment_state IN ('not_paid', 'partial')
-                  AND date <= %s
-                  AND company_id = ANY(%s)
-            """, (prev_to, company_ids))
-            prev_payable = self.env.cr.fetchone()[0]
+            # Total Payable (all open vendor bills as of period end)
+            total_payable = self._dashboard_open_move_total(
+                company_ids, 'in_invoice', date_to)
+            prev_payable = self._dashboard_open_move_total(
+                company_ids, 'in_invoice', prev_to)
 
             # Net Cash Position = Cash Balance - Total Payable
             net_cash_position = cash_balance - total_payable
@@ -478,7 +467,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_chart_data(self, params):
         """Revenue vs Expense monthly chart data. Access: group_account_readonly+"""
-        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
+        self._dashboard_check_group('account.group_account_readonly')
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         today = fields.Date.context_today(self)
@@ -517,7 +506,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_cashflow(self, params):
         """Cash flow forecast for next N days. Access: group_account_readonly+"""
-        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
+        self._dashboard_check_group('account.group_account_readonly')
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         days = params.get('days', 90)
@@ -626,7 +615,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_top_expenses(self, params):
         """Top expenses by category. Access: group_account_readonly+"""
-        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
+        self._dashboard_check_group('account.group_account_readonly')
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         period = params.get('period', 'this_month')
@@ -662,7 +651,7 @@ class AccountMoveDashboard(models.Model):
     @api.model
     def get_dashboard_tax_summary(self, params):
         """Tax summary. Access: group_account_readonly+"""
-        self._dashboard_check_group(['account.group_account_readonly', 'account.group_account_manager'])
+        self._dashboard_check_group('account.group_account_readonly')
 
         company_ids = self._dashboard_company_ids(params.get('company_ids'))
         period = params.get('period', 'this_month')

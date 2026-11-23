@@ -87,11 +87,24 @@ class TestAccountMoveDashboard(TransactionCase):
         """Test the _dashboard_prev_period calculation."""
         date_from = date(2023, 2, 1)
         date_to = date(2023, 2, 28)
-        
+
+        # Custom/unknown periods keep the same-length previous range.
         prev_from, prev_to = self.move_model._dashboard_prev_period(date_from, date_to)
-        
         self.assertEqual(prev_to, date(2023, 1, 31))
-        self.assertEqual(prev_from, date(2023, 1, 4)) # 28 days back from 31st
+        self.assertEqual(prev_from, date(2023, 1, 4))
+
+        # Calendar periods compare against the same calendar period.
+        prev_from, prev_to = self.move_model._dashboard_prev_period(
+            date(2023, 11, 1), date(2023, 11, 23), 'this_month')
+        self.assertEqual((prev_from, prev_to), (date(2023, 10, 1), date(2023, 10, 23)))
+
+        prev_from, prev_to = self.move_model._dashboard_prev_period(
+            date(2023, 10, 1), date(2023, 12, 31), 'last_quarter')
+        self.assertEqual((prev_from, prev_to), (date(2023, 7, 1), date(2023, 9, 30)))
+
+        prev_from, prev_to = self.move_model._dashboard_prev_period(
+            date(2023, 1, 1), date(2023, 11, 23), 'this_year')
+        self.assertEqual((prev_from, prev_to), (date(2022, 1, 1), date(2022, 11, 23)))
 
     def test_get_dashboard_kpi_data(self):
         """Test get_dashboard_kpi_data returns correct keys without crashing."""
