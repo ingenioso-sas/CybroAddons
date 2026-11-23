@@ -313,7 +313,7 @@
                                         <th>Partner ID</th>
                                         <th>Debit</th>
                                         <th>Credit</th>
-                                        <th>Balance</th>
+                                        <th>Closing Balance</th>
                                     </tr>
                                 </thead>
                                 <tbody t-ref="tbody">
@@ -346,6 +346,11 @@
                                                                     </span>
                                                                 </t>
                                                             </a>
+                                                            <div style="font-size:11px;font-weight:normal;margin-left:12px;">
+                                                                Initial Balance:
+                                                                <t t-esc="state.account_data.account_totals[account]['currency_id']"/>
+                                                                <t t-esc="state.account_data.account_totals[account]['opening_balance_display'] or '0.00'"/>
+                                                            </div>
                                                         </div>
                                                     </th>
                                                     <th colspan="5">

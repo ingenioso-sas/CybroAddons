@@ -2427,3 +2427,15 @@ msgstr "Grupo"
 #: code:addons/dynamic_accounts_report/static/src/xml/general_ledger_view.xml:0
 msgid "Partner ID"
 msgstr "Identificación del socio"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/general_ledger_view.xml:0
+msgid "Opening Balance"
+msgstr "Saldo inicial"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/general_ledger_view.xml:0
+msgid "Closing Balance"
+msgstr "Saldo de cierre"

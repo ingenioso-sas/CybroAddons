@@ -35,3 +35,10 @@
   queries while keeping the comparison periods.
 - Added the partner VAT/ID column to the General Ledger on screen, PDF and
   XLSX outputs.
+
+#### 23.11.2026
+#### Version 19.0.1.4.0
+#### UPDT
+- Added opening balance and closing balance to the General Ledger, with the
+  opening balance calculated from the same journal, analytic and entry-state
+  filters.

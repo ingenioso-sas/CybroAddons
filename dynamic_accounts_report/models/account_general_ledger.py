@@ -34,6 +34,34 @@ class AccountGeneralLedger(models.TransientModel):
     _name = 'account.general.ledger'
     _description = 'General Ledger Report'
 
+    def _get_start_date(self, date_range):
+        """Return the first date of the selected period, if available."""
+        if not date_range or not isinstance(date_range, dict):
+            if date_range == 'month':
+                return fields.Date.today().replace(day=1)
+            if date_range == 'year':
+                return fields.Date.today().replace(month=1, day=1)
+            if date_range == 'quarter':
+                return date_utils.get_quarter(fields.Date.today())[0]
+            if date_range == 'last-month':
+                return fields.Date.today().replace(
+                    day=1) - relativedelta(months=1)
+            if date_range == 'last-year':
+                return fields.Date.today().replace(
+                    month=1, day=1) - relativedelta(years=1)
+            if date_range == 'last-quarter':
+                quarter_start = date_utils.get_quarter(
+                    fields.Date.today())[0]
+                return quarter_start - relativedelta(months=3)
+            return False
+        start_date = date_range.get('start_date')
+        if not start_date:
+            return False
+        try:
+            return datetime.strptime(start_date, '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            return False
+
     @api.model
     def view_report(self, option, tag, accounts=None):
         """
@@ -79,9 +107,15 @@ class AccountGeneralLedger(models.TransientModel):
                 move_line_list.append(move_line_data)
             account_dict[account.display_name] = move_line_list
             currency_id = self.env.company.currency_id.symbol
+            total_debit = round(sum(move_line_id.mapped('debit')), 2)
+            total_credit = round(sum(move_line_id.mapped('credit')), 2)
             account_totals[account.display_name] = {
-                'total_debit': round(sum(move_line_id.mapped('debit')), 2),
-                'total_credit': round(sum(move_line_id.mapped('credit')), 2),
+                'total_debit': total_debit,
+                'total_credit': total_credit,
+                'opening_debit': 0.0,
+                'opening_credit': 0.0,
+                'opening_balance': 0.0,
+                'closing_balance': round(total_debit - total_credit, 2),
                 'currency_id': currency_id,
                 'account_id': account.id}
             account_dict['account_totals'] = account_totals
@@ -141,6 +175,7 @@ class AccountGeneralLedger(models.TransientModel):
             domain += [('analytic_line_ids', 'in', analytic_line)]
         if accounts:
             domain += [('account_id', 'in', accounts)]
+        base_domain = list(domain)
         if date_range:
             if date_range == 'month':
                 domain += [('date', '>=', today.replace(day=1)),
@@ -186,6 +221,17 @@ class AccountGeneralLedger(models.TransientModel):
                 domain += [('date', '<=', end_date)]
         move_line_ids = self.env['account.move.line'].search(domain)
         account_ids = move_line_ids.mapped('account_id')
+        start_date = self._get_start_date(date_range)
+        opening_totals = {}
+        if start_date and account_ids:
+            opening_groups = self.env['account.move.line']._read_group(
+                list(base_domain) + [('date', '<', start_date)],
+                groupby=['account_id'],
+                aggregates=['debit:sum', 'credit:sum'])
+            opening_totals = {
+                account.id: (debit or 0.0, credit or 0.0)
+                for account, debit, credit in opening_groups
+            }
         account_dict['journal_ids'] = self.env['account.journal'].search_read(
             [], ['name'])
         account_dict['analytic_ids'] = self.env[
@@ -207,9 +253,19 @@ class AccountGeneralLedger(models.TransientModel):
                 move_line_list.append(move_line_data)
             account_dict[account.display_name] = move_line_list
             currency_id = self.env.company.currency_id.symbol
+            total_debit = round(sum(move_line_id.mapped('debit')), 2)
+            total_credit = round(sum(move_line_id.mapped('credit')), 2)
+            opening_debit, opening_credit = opening_totals.get(
+                account.id, (0.0, 0.0))
+            opening_balance = opening_debit - opening_credit
             account_totals[account.display_name] = {
-                'total_debit': round(sum(move_line_id.mapped('debit')), 2),
-                'total_credit': round(sum(move_line_id.mapped('credit')), 2),
+                'total_debit': total_debit,
+                'total_credit': total_credit,
+                'opening_debit': round(opening_debit, 2),
+                'opening_credit': round(opening_credit, 2),
+                'opening_balance': round(opening_balance, 2),
+                'closing_balance': round(
+                    opening_balance + total_debit - total_credit, 2),
                 'currency_id': currency_id,
                 'account_id': account.id}
             account_dict['account_totals'] = account_totals
@@ -297,7 +353,8 @@ class AccountGeneralLedger(models.TransientModel):
                 sheet.merge_range('H9:I9', 'Partner ID', sub_heading)
                 sheet.merge_range('J9:K9', 'Debit', sub_heading)
                 sheet.merge_range('L9:M9', 'Credit', sub_heading)
-                sheet.merge_range('N9:O9', 'Balance', sub_heading)
+                sheet.merge_range('N9:O9', 'Opening Balance', sub_heading)
+                sheet.merge_range('P9:Q9', 'Closing Balance', sub_heading)
                 row = 8
                 if data['account']:
                     for account in data['account']:
@@ -316,6 +373,10 @@ class AccountGeneralLedger(models.TransientModel):
                                           data['total'][account]['total_credit_display'],
                                           txt_name)
                         sheet.merge_range(row, col + 13, row, col + 14,
+                                          data['total'][account].get(
+                                              'opening_balance', 0.0),
+                                          txt_name)
+                        sheet.merge_range(row, col + 15, row, col + 16,
                                           data['total'][account]['balance_display'],
                                           txt_name)
                         for rec in data['data'][account]:
@@ -338,6 +399,8 @@ class AccountGeneralLedger(models.TransientModel):
                                               rec[0]['credit'], txt_name)
                             sheet.merge_range(row, col + 13, row, col + 14, ' ',
                                               txt_name)
+                            sheet.merge_range(row, col + 15, row, col + 16, ' ',
+                                              txt_name)
                     row += 1
                     sheet.merge_range(row, col, row, col + 7, 'Total',
                                       filter_head)
@@ -347,10 +410,17 @@ class AccountGeneralLedger(models.TransientModel):
                     sheet.merge_range(row, col + 11, row, col + 12,
                                       data['grand_total']['total_credit_display'],
                                       filter_head)
+                    opening_total = sum(
+                        value.get('opening_balance', 0.0)
+                        for value in data['total'].values())
+                    closing_total = (
+                        opening_total
+                        + float(data['grand_total']['total_debit'])
+                        - float(data['grand_total']['total_credit']))
                     sheet.merge_range(row, col + 13, row, col + 14,
-                                      float(data['grand_total']['total_debit']) -
-                                      float(data['grand_total']['total_credit']),
-                                      filter_head)
+                                      opening_total, filter_head)
+                    sheet.merge_range(row, col + 15, row, col + 16,
+                                      closing_total, filter_head)
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())

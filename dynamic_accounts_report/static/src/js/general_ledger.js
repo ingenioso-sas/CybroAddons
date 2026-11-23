@@ -86,8 +86,11 @@ class GeneralLedger extends owl.Component {
                         account_list.total_debit_display = this.formatNumberWithSeparators(account_list.total_debit || 0);
                         totalCreditSum += account_list.total_credit || 0;
                         account_list.total_credit_display = this.formatNumberWithSeparators(account_list.total_credit || 0);
-                        let balance = account_list.total_debit - account_list.total_credit;
-                        account_list.balance_display = this.formatNumberWithSeparators(balance);
+                        const closing = account_list.closing_balance !== undefined
+                            ? account_list.closing_balance
+                            : account_list.total_debit - account_list.total_credit;
+                        account_list.balance_display = this.formatNumberWithSeparators(closing);
+                        account_list.opening_balance_display = this.formatNumberWithSeparators(account_list.opening_balance || 0);
                     });
                 }
             }
@@ -332,6 +335,13 @@ class GeneralLedger extends owl.Component {
                 Object.values(account_totals).forEach(account_list => {
                         totalDebitSum += account_list.total_debit || 0;
                         totalCreditSum += account_list.total_credit || 0;
+                        account_list.total_debit_display = this.formatNumberWithSeparators(account_list.total_debit || 0);
+                        account_list.total_credit_display = this.formatNumberWithSeparators(account_list.total_credit || 0);
+                        const closing = account_list.closing_balance !== undefined
+                            ? account_list.closing_balance
+                            : account_list.total_debit - account_list.total_credit;
+                        account_list.balance_display = this.formatNumberWithSeparators(closing);
+                        account_list.opening_balance_display = this.formatNumberWithSeparators(account_list.opening_balance || 0);
                     });
             }
         }
