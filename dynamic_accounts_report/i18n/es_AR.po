@@ -2475,3 +2475,69 @@ msgstr "Solo conciliados"
 #: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
 msgid "Unreconciled Only"
 msgstr "Solo no conciliados"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/trial_balance_view.xml:0
+msgid "Auditar Cifras"
+msgstr "Auditar cifras"
+
+#. module: dynamic_accounts_report
+#: model:ir.model,name:dynamic_accounts_report.model_ai_financial_audit_wizard
+msgid "Financial Audit"
+msgstr "Auditoría financiera"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields,field_description:dynamic_accounts_report.field_ai_financial_audit_wizard__audit_type
+msgid "Analysis Type"
+msgstr "Tipo de análisis"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields.selection,name:dynamic_accounts_report.selection__ai_financial_audit_wizard__audit_type__static
+msgid "Static Analysis (Accounting Rules)"
+msgstr "Análisis estático (reglas contables)"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields.selection,name:dynamic_accounts_report.selection__ai_financial_audit_wizard__audit_type__ai
+msgid "Intelligent AI Analysis"
+msgstr "Análisis inteligente con IA"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields.selection,name:dynamic_accounts_report.selection__ai_financial_audit_wizard__audit_type__none
+msgid "No analysis types enabled"
+msgstr "No hay tipos de análisis habilitados"
+
+#. module: dynamic_accounts_report
+#: model_terms:ir.ui.view,arch_db:dynamic_accounts_report.view_ai_financial_audit_wizard_form
+msgid "Run Analysis"
+msgstr "Ejecutar análisis"
+
+#. module: dynamic_accounts_report
+#: model_terms:ir.ui.view,arch_db:dynamic_accounts_report.res_config_settings_view_form_dynamic_audit
+msgid "Dynamic Reports Audit"
+msgstr "Auditoría de reportes dinámicos"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields,field_description:dynamic_accounts_report.field_res_config_settings__enable_static_audit
+msgid "Enable Static Audit"
+msgstr "Habilitar auditoría estática"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields,field_description:dynamic_accounts_report.field_res_config_settings__enable_ai_audit
+msgid "Enable AI Audit"
+msgstr "Habilitar auditoría con IA"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields,field_description:dynamic_accounts_report.field_res_config_settings__lm_studio_api_url
+msgid "AI Server URL"
+msgstr "URL del servidor de IA"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields,field_description:dynamic_accounts_report.field_res_config_settings__lm_studio_api_key
+msgid "AI API Key"
+msgstr "Token o API Key de IA"
+
+#. module: dynamic_accounts_report
+#: model:ir.model.fields,field_description:dynamic_accounts_report.field_res_config_settings__lm_studio_model
+msgid "AI Model"
+msgstr "Modelo de IA"

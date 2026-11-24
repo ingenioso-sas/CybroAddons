@@ -637,6 +637,23 @@ class TrialBalance extends owl.Component {
             error: (error) => self.call('crash_manager', 'rpc_error', error),
         });
     }
+    async audit_report(ev) {
+        ev?.preventDefault && ev.preventDefault();
+        return this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: 'Auditoría Financiera',
+            res_model: 'ai.financial.audit.wizard',
+            view_mode: 'form',
+            views: [[false, 'form']],
+            target: 'new',
+            context: {
+                report_type: 'trial_balance',
+                date_from: this.start_date.el.value || false,
+                date_to: this.end_date.el.value || false,
+                journal_ids: this.state.selected_journal_list || [],
+            },
+        });
+    }
     async show_gl(ev) {
     /**
     * Shows the General Ledger view by triggering an action.

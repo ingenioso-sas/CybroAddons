@@ -21,7 +21,7 @@
 ################################################################################
 {
     'name': 'Odoo19 Dynamic Accounting Reports',
-    'version': '19.0.1.5.0',
+    'version': '19.0.1.6.0',
     'category': 'Accounting',
     'summary': "Odoo 19 Accounting Financial Reports,Dynamic Accounting Reports, Dynamic Financial Reports,Dynamic Report Odoo18, Odoo18,Financial Reports, Odoo18 Accounting,Accounting, Odoo Apps",
     'description': "This module creates dynamic Accounting General Ledger, Trial"
@@ -35,6 +35,8 @@
     'depends': ['base_accounting_kit','cybrosys_support_client'],
     'data': [
         'security/ir.model.access.csv',
+        'wizard/financial_audit_view.xml',
+        'wizard/res_config_settings_view.xml',
         'views/accounting_report_views.xml',
         'views/hide_bak_report_menus.xml',
         'report/trial_balance.xml',

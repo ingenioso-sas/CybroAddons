@@ -173,6 +173,54 @@ class GeneralLedger extends owl.Component {
             error: (error) => self.call('crash_manager', 'rpc_error', error),
         });
     }
+    getAuditDateRange() {
+        const range = this.state.date_range;
+        const today = new Date();
+        const fmt = (date) => date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : false;
+        if (range && typeof range === 'object') {
+            return {date_from: range.start_date || false, date_to: range.end_date || false};
+        }
+        if (range === 'month') {
+            return {date_from: fmt(new Date(today.getFullYear(), today.getMonth(), 1)), date_to: fmt(today)};
+        }
+        if (range === 'year') {
+            return {date_from: fmt(new Date(today.getFullYear(), 0, 1)), date_to: fmt(new Date(today.getFullYear(), 11, 31))};
+        }
+        if (range === 'quarter') {
+            const quarter = Math.floor(today.getMonth() / 3);
+            return {date_from: fmt(new Date(today.getFullYear(), quarter * 3, 1)), date_to: fmt(new Date(today.getFullYear(), (quarter + 1) * 3, 0))};
+        }
+        if (range === 'last-month') {
+            return {date_from: fmt(new Date(today.getFullYear(), today.getMonth() - 1, 1)), date_to: fmt(new Date(today.getFullYear(), today.getMonth(), 0))};
+        }
+        if (range === 'last-year') {
+            return {date_from: fmt(new Date(today.getFullYear() - 1, 0, 1)), date_to: fmt(new Date(today.getFullYear() - 1, 11, 31))};
+        }
+        if (range === 'last-quarter') {
+            const quarter = Math.floor((today.getMonth() - 3) / 3);
+            return {date_from: fmt(new Date(today.getFullYear(), quarter * 3, 1)), date_to: fmt(new Date(today.getFullYear(), (quarter + 1) * 3, 0))};
+        }
+        return {date_from: false, date_to: false};
+    }
+    async audit_report(ev) {
+        ev?.preventDefault && ev.preventDefault();
+        const dates = this.getAuditDateRange();
+        return this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: 'Auditoría Financiera',
+            res_model: 'ai.financial.audit.wizard',
+            view_mode: 'form',
+            views: [[false, 'form']],
+            target: 'new',
+            context: {
+                report_type: 'general_ledger',
+                date_from: dates.date_from,
+                date_to: dates.date_to,
+                journal_ids: this.state.selected_journal_list || [],
+                account_ids: this.state.selected_account_list || [],
+            },
+        });
+    }
     gotoJournalEntry(ev) {
         return this.action.doAction({
             type: "ir.actions.act_window",

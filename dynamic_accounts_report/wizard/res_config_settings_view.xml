@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_dynamic_audit" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.dynamic.audit</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='account']" position="inside">
+                <block title="Dynamic Reports Audit"
+                       name="dynamic_reports_audit">
+                    <setting id="enable_static_audit"
+                             string="Static Audit"
+                             help="Allow static accounting-rule audits on the dynamic reports.">
+                        <field name="enable_static_audit"/>
+                    </setting>
+                    <setting id="enable_ai_audit" string="AI Audit"
+                             help="Allow AI-generated analysis using an OpenAI-compatible endpoint.">
+                        <field name="enable_ai_audit"/>
+                    </setting>
+                    <setting id="lm_studio_api_url" string="AI Server URL"
+                             help="Base URL of the OpenAI-compatible server, for example http://localhost:1234/v1."
+                             invisible="not enable_ai_audit">
+                        <field name="lm_studio_api_url"
+                               placeholder="http://localhost:1234/v1"/>
+                    </setting>
+                    <setting id="lm_studio_api_key" string="AI API Key"
+                             help="Optional bearer token for the AI server."
+                             invisible="not enable_ai_audit">
+                        <field name="lm_studio_api_key" password="True"/>
+                    </setting>
+                    <setting id="lm_studio_model" string="AI Model"
+                             help="Model identifier exposed by the AI server."
+                             invisible="not enable_ai_audit">
+                        <field name="lm_studio_model"
+                               placeholder="lmstudio-community/meta-llama-3-8b-instruct"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

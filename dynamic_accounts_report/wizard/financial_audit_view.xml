@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ai_financial_audit_wizard_form" model="ir.ui.view">
+        <field name="name">ai.financial.audit.wizard.form</field>
+        <field name="model">ai.financial.audit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Financial Audit">
+                <field name="report_type" invisible="1"/>
+                <field name="active_model" invisible="1"/>
+                <field name="active_id" invisible="1"/>
+                <field name="date_from" invisible="1"/>
+                <field name="date_to" invisible="1"/>
+                <field name="journal_ids" invisible="1"/>
+                <field name="partner_ids" invisible="1"/>
+                <field name="account_ids" invisible="1"/>
+                <field name="is_ai_configured" invisible="1"/>
+
+                <group>
+                    <field name="audit_type" widget="radio"
+                           options="{'horizontal': true}"/>
+                </group>
+
+                <div class="alert alert-warning" role="alert"
+                     invisible="is_ai_configured or audit_type == 'static' or audit_type == 'none'">
+                    <strong>Atención:</strong> el Análisis Inteligente con IA
+                    requiere configurar la URL del servidor de IA en
+                    Ajustes → Contabilidad → Dynamic Reports Audit.
+                </div>
+
+                <field name="result_html" readonly="1" widget="html"
+                       options="{'style-inline': true}"/>
+
+                <footer>
+                    <button name="action_run_analysis" string="Run Analysis"
+                            type="object" class="btn-primary"/>
+                    <button string="Close" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

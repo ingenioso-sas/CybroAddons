@@ -49,3 +49,14 @@
 - Added journal and reconciliation filters to the Partner Ledger.
 - Reworked the Partner Ledger date ranges, opening balance and closing balance
   calculation, and added the filter information to PDF/XLSX.
+
+#### 24.11.2026
+#### Version 19.0.1.6.0
+#### ADD
+- Independent financial audit wizard for the dynamic reports.
+- Static audit rules for trial balance, general ledger, partner balances,
+  balance sheet and profit and loss.
+- Optional AI analysis through an OpenAI-compatible endpoint, configurable
+  from Accounting settings.
+- Audit buttons in Trial Balance, General Ledger and Partner Ledger with the
+  current report dates, journals and partners.

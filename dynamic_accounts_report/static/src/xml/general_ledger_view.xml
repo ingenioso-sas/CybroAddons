@@ -29,6 +29,11 @@
                                         t-on-click="print_xlsx">
                                     Export (XLSX)
                                 </button>
+                                <button type="button"
+                                        class="btn btn-warning btn-report-print mr-2"
+                                        t-on-click="audit_report">
+                                    Auditar Cifras
+                                </button>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end">
