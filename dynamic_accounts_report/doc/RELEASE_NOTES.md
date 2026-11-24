@@ -42,3 +42,10 @@
 - Added opening balance and closing balance to the General Ledger, with the
   opening balance calculated from the same journal, analytic and entry-state
   filters.
+
+#### 24.11.2026
+#### Version 19.0.1.5.0
+#### UPDT
+- Added journal and reconciliation filters to the Partner Ledger.
+- Reworked the Partner Ledger date ranges, opening balance and closing balance
+  calculation, and added the filter information to PDF/XLSX.

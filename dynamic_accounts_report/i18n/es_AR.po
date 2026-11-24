@@ -2439,3 +2439,39 @@ msgstr "Saldo inicial"
 #: code:addons/dynamic_accounts_report/static/src/xml/general_ledger_view.xml:0
 msgid "Closing Balance"
 msgstr "Saldo de cierre"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
+msgid "Reconciliation"
+msgstr "Conciliación"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
+msgid "Reconciled"
+msgstr "Conciliado"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
+msgid "Unreconciled"
+msgstr "No conciliado"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
+msgid "All Entries"
+msgstr "Todos los asientos"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
+msgid "Reconciled Only"
+msgstr "Solo conciliados"
+
+#. module: dynamic_accounts_report
+#. odoo-javascript
+#: code:addons/dynamic_accounts_report/static/src/xml/partner_ledger_view.xml:0
+msgid "Unreconciled Only"
+msgstr "Solo no conciliados"

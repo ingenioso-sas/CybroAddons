@@ -170,6 +170,88 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Journals Dropdown -->
+                            <div class="px-2">
+                                <div class="journal" style="">
+                                    <a type="button" class="dropdown-toggle"
+                                       data-bs-toggle="dropdown">
+                                        <span class="fa fa-book" title="Journals"
+                                              role="img"/>
+                                        Journals
+                                        <t t-if="state.selected_journal_list">:
+                                            <t t-foreach="state.selected_journal_list"
+                                               t-as="journal_key"
+                                               t-key="journal_key_index">
+                                                <t t-foreach="state.journals"
+                                                   t-as="journal"
+                                                   t-key="journal.id">
+                                                    <t t-if="journal.id == journal_key">
+                                                        <t t-esc="journal.name"/>
+                                                    </t>
+                                                </t>
+                                                <t t-if="journal_key_index != state.selected_journal_list.length - 1">
+                                                    ,
+                                                </t>
+                                            </t>
+                                        </t>
+                                    </a>
+                                    <div class="dropdown-menu" role="menu"
+                                         style="max-height:400px;overflow-y:auto;">
+                                        <div class="list-group">
+                                            <t t-if="state.journals">
+                                                <t t-foreach="state.journals"
+                                                   t-as="journal"
+                                                   t-key="journal.id">
+                                                    <button class="report-filter-button"
+                                                            t-att-data-value="'journal'"
+                                                            t-att-data-id="journal.id"
+                                                            type="button"
+                                                            t-on-click="applyFilter">
+                                                        <t t-esc="journal.name"/>
+                                                    </button>
+                                                </t>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Reconciliation Dropdown -->
+                            <div class="px-2">
+                                <div class="reconciled" style="">
+                                    <a type="button" class="dropdown-toggle"
+                                       data-bs-toggle="dropdown">
+                                        <span class="fa fa-check-square-o"
+                                              title="Reconciliation"
+                                              role="img"/>
+                                        Reconciliation :
+                                        <t t-if="state.reconciled == 'reconciled'">Reconciled</t>
+                                        <t t-elif="state.reconciled == 'unreconciled'">Unreconciled</t>
+                                        <t t-else="">All</t>
+                                    </a>
+                                    <div class="dropdown-menu" role="menu">
+                                        <div class="list-group">
+                                            <button class="report-filter-button"
+                                                    t-att-data-value="'reconciled-all'"
+                                                    type="button"
+                                                    t-on-click="applyFilter">
+                                                All Entries
+                                            </button>
+                                            <button class="report-filter-button"
+                                                    t-att-data-value="'reconciled-reconciled'"
+                                                    type="button"
+                                                    t-on-click="applyFilter">
+                                                Reconciled Only
+                                            </button>
+                                            <button class="report-filter-button"
+                                                    t-att-data-value="'reconciled-unreconciled'"
+                                                    type="button"
+                                                    t-on-click="applyFilter">
+                                                Unreconciled Only
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Options Dropdown -->
                             <div class="px-2">
                                 <div class="option" style="">

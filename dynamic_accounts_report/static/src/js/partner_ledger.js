@@ -33,6 +33,9 @@ class PartnerLedger extends owl.Component {
             date_range: null,
             account: null,
             options: null,
+            selected_journal_list: [],
+            journals: null,
+            reconciled: 'all',
             message_list : [],
         });
         this.load_data(self.initial_render = true);
@@ -54,7 +57,7 @@ class PartnerLedger extends owl.Component {
          * Loads the data for the partner ledger report.
          */
         let partner_list = []
-        let partner_totals = ''
+        let partner_totals = {}
         let totalDebitSum = 0;
         let totalCreditSum = 0;
         let currency;
@@ -65,7 +68,9 @@ class PartnerLedger extends owl.Component {
             self.state.data = await self.orm.call("account.partner.ledger", "view_report", [[this.wizard_id], action_title,]);
             const dataArray = self.state.data;
              Object.entries(dataArray).forEach(([key, value]) => {
-            if (key !== 'partner_totals') {
+            if (key === 'journal_ids') {
+                self.state.journals = value;
+            } else if (key !== 'partner_totals') {
                 partner_list.push(key);
                 value.forEach(entry => {
                     entry[0].debit_display = this.formatNumberWithSeparators(entry[0].debit || 0);
@@ -173,9 +178,16 @@ class PartnerLedger extends owl.Component {
         endDay = endDate.getDate();
         }
         }
+        const selectedJournalIDs = Object.values(self.state.selected_journal_list || []);
+        const selectedJournalNames = selectedJournalIDs.map((journalID) => {
+            const journal = (self.state.journals || []).find((item) => item.id === journalID);
+            return journal ? journal.name : '';
+        }).filter((name) => name);
         let filters = {
             'partner': self.state.selected_partner_rec,
             'account': self.state.account,
+            'journal': selectedJournalNames,
+            'reconciled': self.state.reconciled,
             'options': self.state.options,
             'start_date': null,
             'end_date': null,
@@ -284,7 +296,7 @@ class PartnerLedger extends owl.Component {
          */
         let partner_list = []
         let partner_value = []
-        let partner_totals = ''
+        let partner_totals = {}
         let month = null
         this.state.partners = null
         this.state.data = null
@@ -325,6 +337,18 @@ class PartnerLedger extends owl.Component {
                 this.state.date_range = val.target.attributes["data-value"].value
             } else if (val.target.attributes["data-value"].value == 'last-quarter') {
                 this.state.date_range = val.target.attributes["data-value"].value
+            } else if (val.target.attributes["data-value"].value == 'journal') {
+                const journalId = parseInt(val.target.attributes["data-id"].value, 10);
+                if (!val.target.classList.contains("selected-filter")) {
+                    this.state.selected_journal_list.push(journalId)
+                    val.target.classList.add("selected-filter");
+                } else {
+                    const updatedList = this.state.selected_journal_list.filter(item => item !== journalId);
+                    this.state.selected_journal_list = updatedList
+                    val.target.classList.remove("selected-filter");
+                }
+            } else if (val.target.attributes["data-value"].value.startsWith('reconciled-')) {
+                this.state.reconciled = val.target.attributes["data-value"].value.replace('reconciled-', '');
             } else if (val.target.attributes["data-value"].value === 'receivable') {
                 // Check if the target has 'selected-filter' class
                 if (val.target.classList.contains("selected-filter")) {
@@ -372,7 +396,7 @@ class PartnerLedger extends owl.Component {
                 }
             }
         }
-        let filtered_data = await this.orm.call("account.partner.ledger", "get_filter_values", [this.state.selected_partner, this.state.date_range, this.state.account, this.state.options,]);
+        let filtered_data = await this.orm.call("account.partner.ledger", "get_filter_values", [this.state.selected_partner, this.state.date_range, this.state.account, this.state.options, this.state.selected_journal_list, this.state.reconciled]);
         for (let index in filtered_data) {
             const value = filtered_data[index];
             if (index !== 'partner_totals') {

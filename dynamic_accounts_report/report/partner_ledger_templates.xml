@@ -25,6 +25,8 @@
                                     <th>Date Range</th>
                                     <th>Partner</th>
                                     <th>Account</th>
+                                    <th>Journal</th>
+                                    <th>Reconciliation</th>
                                     <th>Options</th>
                                 </tr>
                             </thead>
@@ -51,6 +53,24 @@
                                            t-as="selected_account"
                                            t-key="account_index">
                                             <t t-out="selected_account"/>,
+                                        </t>
+                                    </th>
+                                    <th>
+                                        <t t-foreach="filters.get('journal', [])"
+                                           t-as="selected_journal"
+                                           t-key="journal_index">
+                                            <t t-out="selected_journal"/>,
+                                        </t>
+                                    </th>
+                                    <th>
+                                        <t t-if="filters.get('reconciled') == 'reconciled'">
+                                            Reconciled
+                                        </t>
+                                        <t t-elif="filters.get('reconciled') == 'unreconciled'">
+                                            Unreconciled
+                                        </t>
+                                        <t t-else="">
+                                            All
                                         </t>
                                     </th>
                                     <th>
